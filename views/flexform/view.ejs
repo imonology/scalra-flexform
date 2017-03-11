@@ -1,0 +1,162 @@
+<% layout('template/common') %>
+<% block('title').append('<title>'+form.name+'</title>') %>
+<script src="/web/moment.min.js"></script>	
+<script>
+	
+	var field = {};
+<%
+	if (!form) {
+		LOG.error('id [' + id + '] does not have form format');
+		return;
+	}		
+
+	LOG.warn(form);	
+	
+	// create reference to all the fields
+	var fields = form.data.fields;
+	
+	for (var i in fields) { 
+		console.log('' + fields[i].id + ':' + fields[i].name);
+		%>field['<%= fields[i].id %>'] = '<%= fields[i].name %>';<%
+	}
+		
+%>
+
+function submit() {
+	
+	var without_must = [];
+	var values = {};
+	
+<%
+	for (var i=0; i < fields.length; i++) {
+		var field_id = fields[i].id;
+		if (fields[i].show === false)
+			continue;
+
+		// check value correctness
+		if (fields[i].type === 'date') {
+%>
+			var time = moment(document.getElementById('<%= field_id %>').value);
+			console.log('timestamp: ' + time.toDate().getTime());
+			if (time.isValid() === false) {
+				return alert('[<%= fields[i].name %>] 需為日期及時間 (如: 2017-01-01 09:00)');
+			}
+<%			
+		}
+	
+		if (fields[i].type === 'checkbox') {
+%>
+			values['<%= field_id %>'] = document.getElementById('<%= field_id %>').checked;
+<%
+		} else if (fields[i].type === 'choice') {	
+%>
+			values['<%= field_id %>'] = document.getElementById('<%= field_id %>').value;
+<%
+		} else {	
+%>
+			values['<%= field_id %>'] = document.getElementById('<%= field_id %>').value;	
+<%
+		}
+%>
+		if (<%= fields[i].must %> && (!values['<%= field_id %>'] || values['<%= field_id %>'] === '')) {
+			without_must.push('<%= fields[i].name %>');
+		}
+<%
+	}
+
+%>
+	if (without_must.length > 0) {
+		alert(without_must.join('\n') + "\n\n為必填欄位");
+		console.log(without_must);
+		return;
+	}
+			
+	var confirm_data = '確定送出：\n';
+	for (var key in values) {
+		confirm_data += field[key] + ':' + values[key] + '\n'; 			
+	}
+			
+	var r = confirm(confirm_data);
+	if (r == false) {
+		return;
+	} 
+
+	console.log('form data to send to sever:');
+	console.log(values);
+	// submit to server
+	SR.API.UPDATE_FORM({
+			form_id: '<%= form.id %>',
+			values: values
+	}, function (err, result) {
+		if (err) {
+			alert(result.err);
+			return console.error(result.err);
+		}
+		console.log(result);
+		alert('送出成功');
+		window.location = '/main';		
+	});
+}
+
+</script>
+		<!-- Header -->
+<% if (typeof hiding !== 'undefined' && hiding !== 'top') { %>
+			<header id="header" class="alt">
+				<h1><a href="/">表單</a></h1>
+			</header>
+<% } %>
+				
+			<section id="four" class="wrapper style2 special">
+				<div class="inner">
+					<header class="major narrow">
+						<h2><%= form.name %></h2>
+						<!-- 表格名稱: <input type="text" value="<%= form.name %>" id="form_name"><p> -->
+						<p>請詳細填寫以下各欄資料</p>
+					</header>
+
+<form name="form" action="" method="GET">
+<table id="register_form" border="1">
+<%
+		
+for (var i=0; i < fields.length; i++) {
+%>
+<% 
+	if (fields[i].show) {
+%>
+<tr>
+<td><%= fields[i].name %><% if (fields[i].must) { %>*<% } %> </td>
+<td>
+	<% if (fields[i].type === 'checkbox') { %>
+		<input type="checkbox" id="<%= fields[i].id %>">
+	<% } else if (fields[i].type === 'choice') { %> 
+		<select id="<%= fields[i].id %>"> 
+	<%		
+			var options = fields[i].option.split(',');
+			for (var j=0; j < options.length; j++) {
+	%>
+				<option value="<%= options[j] %>"><%= options[j] %></option>
+	<%		} %>
+		</select>;
+	<% } else if (fields[i].type === 'date') {	%>
+		<input type="text" value="" id="<%= fields[i].id %>">		
+	<% } else {	%>
+		<input type="text" value="" id="<%= fields[i].id %>">
+	<% } %>
+</td>
+<td><%= fields[i].desc %></td></tr>
+<%
+	}
+}
+%>
+
+</table>
+<% if (typeof hiding !== 'undefined' && hiding !== 'bottom') { %>
+
+						<ul class="actions">						
+							<li><a class="button special" href="javascript:submit()">送出</a></li>
+							<li><a class="button special" href="/main">回主畫面</a></li>					
+						</ul>
+<% } %>
+</form>
+				</div>
+			</section>

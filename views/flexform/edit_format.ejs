@@ -1,0 +1,105 @@
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script src="/lib/scalra.js"></script>
+<script src="/web/form_logic.js"></script>
+<script>
+
+function submit() {
+	var rows = document.getElementById("form_generator").rows;
+	var size = rows.length;
+	
+	var form_format = [];
+	
+	for (var i=1; i < size; i++) {
+		var id_id = 'id-' + i;
+		var name_id = 'name-' + i;
+		var type_id = 'type-' + i;
+		var desc_id = 'desc-' + i;
+		var must_id = 'must-' + i;
+		var show_id = 'show-' + i;
+		var option_id = 'option-' + i;		
+		
+		var id = document.getElementById(id_id).value;
+		var name = document.getElementById(name_id).value;
+		var type = document.getElementById(type_id).value;
+		var desc = document.getElementById(desc_id).value;
+		var must = document.getElementById(must_id).checked;
+		var show = document.getElementById(show_id).checked;
+		var option = document.getElementById(option_id).value;
+		//console.log('must_value:' + must);
+	
+		form_format.push({
+			id: id,
+			name: name,
+			type: type,
+			desc: desc,
+			must: must,
+			show: show,
+			option: (option !== '' ? option : undefined)
+		});
+	}
+	console.log(form_format);
+	
+	var form_name = document.getElementById('form_name').value;
+	
+	// submit to server
+	SR.API.CREATE_FORM({
+		name: form_name,
+		fields: form_format
+	}, function (err, result) {
+		if (err) {
+			console.error(err);
+			alert(err);
+			return;
+		}
+		alert('建立/編輯成功!');
+		console.log(result);
+		window.location = '/view_form?id=' + result.result.id;
+	});
+}
+
+function add_field() {
+	var table = document.getElementById("form_generator");
+	var row_count = table.rows.length;
+	var row = table.insertRow(row_count);
+	var cell1 = row.insertCell(0);
+	var cell2 = row.insertCell(1);
+	var cell3 = row.insertCell(2);
+	var cell4 = row.insertCell(3);
+	var cell5 = row.insertCell(4);
+	var cell6 = row.insertCell(5);
+	var cell7 = row.insertCell(6);
+	
+	cell1.innerHTML = '<input type="text" value="" id="id-' + row_count + '">';
+	cell2.innerHTML = '<input type="text" value="" id="name-' + row_count + '">';
+	cell3.innerHTML = '<select name="formtype" id="type-' + row_count + '">' + 
+						'<option value="string">字串</option>' +
+						'<option value="number">數字</option>' +
+						'<option value="choice">單選</option>' +
+	//					'<option value="multi-choice">多選</option>' +
+						'<option value="checkbox">打勾</option>' +
+						'<option value="date">日期</option>' +
+ 					    '</select>';
+	cell4.innerHTML = '<input type="text" size="20" value="" id="option-' + row_count + '">';	
+	cell5.innerHTML = '<input type="text" size="50" value="" id="desc-' + row_count + '">';
+	cell6.innerHTML = '<input type="checkbox" id="must-' + row_count + '">';
+	cell7.innerHTML = '<input type="checkbox" checked id="show-' + row_count + '">';
+}
+
+</script>
+</head>
+<body>
+表格名稱: <input type="text" value="<%= form_name || '' %>" id="form_name"><p>
+
+<form name="create_form" action="" method="GET">
+<table id="form_generator" border="1">
+<tr><td>欄位 id (英文)</td><td>欄位名稱 (中文)</td><td>類型</td><td>選項</td><td>描述 (可簡短描述該欄位目的)</td><td>必填</td><td>顯示</td></tr>
+</table>
+<a href="javascript:add_field()">新增一欄</a><br>
+<a href="javascript:submit()">建立</a><br>
+
+</form>
+</body>
+</html>

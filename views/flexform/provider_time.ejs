@@ -1,0 +1,631 @@
+<% layout('template/common') %>
+<% block('title').append('<title>' + (typeof title === 'string' ? title : '表格填寫') + '</title>') %>
+<script src="/web/moment.min.js"></script>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>	
+
+<script>
+	
+
+// get data first
+// ref: http://stackoverflow.com/questions/11151632/passing-an-object-to-client-in-node-express-ejs
+	
+/*
+	format:
+		{forms: [
+			{name: '法師對外申請表'}, 
+			{name: '活動內容', multi: true}
+		]}	
+*/
+	
+// step1
+function uploadFile() {
+	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
+	var formData = new FormData($("#frmUploadFile")[0]);
+	var fullPath = document.getElementById('upload_file').value;
+	var filename;
+	
+	console.log(formData);
+	
+	if (fullPath) {
+		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+		filename = fullPath.substring(startIndex);
+		if (filename.indexOf('\\') === 0 || filename.indexOf('/') === 0) {
+			filename = filename.substring(1);
+		}
+		console.log(filename);
+	}
+	if (!filename || typeof(filename) !== 'string' || filename.length < 6) {
+		alert("invalid filename");
+		return;
+	}
+
+	var filename_extension = filename.split(".")[1].toLowerCase()
+	if ( !(filename_extension === 'jpg') ) {
+		alert("請上傳 .jpg 的檔案");
+		return;
+	}
+	
+	
+	$.ajax({
+		url: upload_url + '/upload',
+		type: 'POST',
+		data: formData,
+		async: false,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+
+			if (data.message === 'success') {
+				$("#spanMessage").html("Upload success!");
+				console.log('upload success, data:');
+				console.log(data.upload);
+				
+				SR.API.UPLOAD_IMAGE({
+					filename: filename,
+					account: '<%=login.account%>'
+				}, function (err, result) {
+					if (err) {
+						console.error(err);
+						return alert(err);
+					}
+					
+					console.log(result);
+					window.location.reload();
+				});		
+				// SR.API.CALCULATE({
+				// 	filename: filename,
+				// 	para: {time_limit: 10}
+				// }, function (err, result) {
+				// 	if (err) {
+				// 		console.error(err);
+				// 		return alert(err);
+				// 	}
+				// 	$("#spanMessage").html('<pre>' + JSON.stringify(result) + '</pre>');									
+				// });			
+
+			} else {
+				$("#spanMessage").html("Upload failed");
+				return;
+			}
+		},
+		error: function() {
+			$("#spanMessage").html("failure to connect to server");
+		}
+	});
+}
+
+$(function() {
+	$("#datepicker").datepicker({
+		//可使用下拉式選單 - 月份
+		changeMonth : true,
+		//可使用下拉式選單 - 年份
+		changeYear : true,
+		//設定 下拉式選單月份 在 年份的後面
+		showMonthAfterYear : true,
+		dateFormat: 'yy-mm-dd'
+	});
+});
+	
+var forms = JSON.parse('<%-JSON.stringify(forms) %>');
+console.log(typeof forms);
+console.log(forms);
+
+console.log(forms[0]['name']); // 服務提供者時間
+
+// form_id -> form fields mapping
+var form_fields = {};
+
+
+// generate a single form table from form_id
+var generate_table = function (form_id, entry_id, no_delete) {
+	if (!form_fields[form_id]) {
+		console.error('cannot find fields info for [' + form_id + ']');
+		return undefined;
+	}
+	
+	var fields = form_fields[form_id].fields;
+	
+	// start to build html table
+	var html = '<table id="form-' + entry_id + '" border="1">';
+		
+
+		
+	html += ('<tr><td width="200">可提供服務時間</td>');
+	html += '<td><input type="text" value="" id="' + entry_id + '-date"></td>';	
+	html += '<td width="300">格式填寫為 "2017-01-01"</td></tr>';
+
+	var hour_time = ["0:00","0:30","1:00","1:30","2:00","2:30","3:00","3:30","4:00","4:30","5:00","5:30","6:00","6:30","7:00","7:30","8:00","8:30","9:00","9:30","10:00","10:30",
+				"11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00",
+				"20:30","21:00","21:30","22:00","22:30","23:00","23:30","24:00"];
+	html += ('<tr><td width="200">開始時間</td>');
+	html += '<td><select id="' + entry_id + '-start_time">';
+	for (var j=0; j <= 48; j++) 
+		html += '<option value="' + j + '">' + hour_time[j] + '</option>';
+	html += '</select></td>';
+	html += '<td width="300">服務的開始時間</td></tr>';
+	
+	html += ('<tr><td width="200">結束時間</td>');
+	html += '<td><select id="' + entry_id + '-end_time">';
+	for (var j=0; j <= 48; j++) 
+		html += '<option value="' + j + '">' + hour_time[j] + '</option>';
+	html += '</select></td>';
+	html += '<td width="300">服務的結束時間</td></tr>';
+	
+	// check whether to add 'add' 'remove' button
+	if (form_fields[form_id].multi) {
+		html += '<tr><td colspan="3"><a href="javascript:add_form(\'' + form_id + '\')">新增</a>';
+		
+		// add delete button by default
+		if (no_delete !== true) {
+			html += '&nbsp<a href="javascript:delete_form(this, \'' + form_id + '\', \'' + entry_id + '\');">刪除</a></td></tr>';			
+		}
+	}
+	
+	html += '</table>';
+	return html;
+}
+
+// remove a given form based on its form_id and entry_id
+var delete_form = function (t, form_id, entry_id) {
+	
+	if (form_fields.hasOwnProperty(form_id) === false) {
+		alert('no form can be found for form_id:' + form_id);
+		return;
+	}
+	
+	// remove the entry from the form's form_field data
+	var entries = form_fields[form_id].entries;
+	//console.log('entries:');
+	//console.log(entries);
+	//alert('delete_form called');
+	//alert(entries);
+	
+	for (var i=0; i < entries.length; i++) {
+		console.log('entries[' + i + ']: ' + entries[i]);
+		
+		if (entries[i] === entry_id) {
+			// remove entry with the remote id
+			console.log('removing entry: ' + entry_id);
+			entries.splice(i, 1);
+			
+			// remove the entry from display
+			//deleteRow(t);
+			deleteRow(entry_id);
+			return;
+		}
+	}
+	
+	// something is wrong if nothing's found	
+	if (i === entries.length) {
+		alert('cannot find form to delete! form_id: ' + form_id + ' entry_id: ' + entry_id);
+		return;
+	}
+	
+}
+
+// remove row by id
+// ref: http://stackoverflow.com/questions/4967223/delete-a-row-from-a-table-by-id
+function deleteRow(rowid)  
+{   
+    var row = document.getElementById(rowid);
+    var table = row.parentNode;
+    while ( table && table.tagName != 'TABLE' )
+        table = table.parentNode;
+    if ( !table )
+        return;
+    table.deleteRow(row.rowIndex);
+}
+
+
+/*
+// remove a given row from table
+// ref: 
+// http://stackoverflow.com/questions/20147605/delete-row-from-table-dynamically-created-in-javascript
+function deleteRow(t)
+{
+    var row = t.parentNode.parentNode;
+    document.getElementById("form_table").deleteRow(row.rowIndex);
+    console.log(row);
+}
+*/
+
+// add a form given form_id
+var add_form = function (form_id, no_delete) {
+	
+	// produce an entry_id string
+	var entry_id = Math.floor((Math.random() * 10000) + 1) + '';
+	
+	// record entry_id
+	form_fields[form_id].entries.push(entry_id);
+	//console.dir(form_fields[form_id].entries);
+	
+	// first generate table html
+	var html = generate_table(form_id, entry_id, no_delete);
+	if (!html) {
+		return;
+	}
+	
+	// add after last row
+	// TODO: should add at a given insertion point
+    var num = document.getElementById("form_table").rows.length;
+    var tr = document.getElementById("form_table").insertRow(num);
+	
+	// set row's ID (important for deleting it)
+	tr.id = entry_id;
+    td = tr.insertCell(tr.cells.length);
+    td.innerHTML = html;
+	$(function() {
+		$("#" + entry_id + "-date").datepicker({
+			//可使用下拉式選單 - 月份
+			changeMonth : true,
+			//可使用下拉式選單 - 年份
+			changeYear : false,
+			//設定 下拉式選單月份 在 年份的後面
+			showMonthAfterYear : true,
+			dateFormat: 'yy-mm-dd'
+		});
+	});
+}
+
+// build whole page from form data
+var generate_page = function () {
+	
+	// we generate one table for each form first
+	for (var form_id in form_fields) {
+		add_form(form_id, true);
+	}
+}
+
+// attempt to load form fields and generate form page after connecting to server
+var onConnect = function () {
+	console.log('onConnect forms:');
+	console.log(forms);
+	
+	// 告知有新表單用
+	SR.subscribe('main', 0, onMessage);
+	SR.subscribe('lobby', 50, onMessage);
+
+	
+	// fill in title (assume using first form)
+	document.getElementById("form_title").innerText = forms[0].name;
+	
+	// whether this form allows multiple records
+	// NOTE: multi flag is accessed by form_name
+	var info = {};
+	
+	for (var i=0; i < forms.length; i++) {
+		info[forms[i].name] = {multi: (forms[i].multi === true), index: i};
+		
+		SR.API.GET_FORM_FIELDS({name: forms[i].name}, function (err, data) {
+			if (err) {
+				return console.error(err);	
+			}
+			
+			form_fields[data.id] = {name: data.name, fields: data.fields, multi: info[data.name].multi, entries: []};
+			
+			// also store form_id to 'forms' (for submit purpose)
+			forms[info[data.name].index].id = data.id;
+									
+			// check for done
+			if (Object.keys(form_fields).length === forms.length) {
+				
+				// cache form_id to 'forms' structure as well
+				generate_page();
+			}
+		});
+	}	
+};
+
+var onSocketEvent = function (connectionResponse){
+	console.log( '*** connection response: '	+ connectionResponse);
+
+	// check connection response returned by Scalra socket server
+	switch (connectionResponse){
+		// socket.io library loaded failed
+		case 'load_failed': {
+			alert('web socket library must be loaded');
+		}
+		break;
+
+		// Scalra socket server connected successfully
+		case 'connect':	{
+			onConnect();
+		}
+		break;
+
+		/*
+		// Scalra socket server reconnected successfully
+		case 'reconnect': {
+			SR.subscribe(channel, 0, onMessage);
+			SR.subscribe('lobby', 0, onMessage);
+		}
+		break;
+		*/
+
+		case 'disconnect': {
+			alert('***disconnect, connection response: '  + connectionResponse);
+		}
+		break;
+
+		// Scalra socket server connection failed
+		case 'error': {
+			alert('***error, connection response: '  + connectionResponse);
+		}
+		break;
+
+		// Scalra socket server reconnected failed
+		case 'reconnect_failed': {
+			alert('***reconnect_fail, connection response: '  + connectionResponse);
+		}
+		break;
+
+		// Scalra socket server reconnection error
+		case 'reconnect_error': {
+			 alert('***reconnect_error, connection response: '  + connectionResponse);
+		}
+		break;
+	}
+};
+
+var onMessage = function (data, ch) {
+	console.log('onMessage')
+}
+
+// submit all forms
+function submit() {
+
+	// check if all values are correct first
+	// TODO: find a better approach?
+	for (var form_id in form_fields) {
+		var entries = form_fields[form_id].entries;
+		
+		for (var i=0; i < entries.length; i++) {
+			var entry_id = entries[i];
+
+			if (!get_values(form_id, entry_id)) {
+				return;
+			}
+		}
+	}
+	
+	// store first form, then store rest once the record_id is obtained
+	var form_id = forms[0].id;
+	
+	var onSuccess = function () {
+		// 告知有新的表單
+		SR.publish('main', { msg: 'new'});
+		
+		alert('填寫成功!');
+		document.location = '/main';		
+	}
+	
+	submit_form(form_id, function (err, info) {
+		if (err) {
+			alert(err);
+			return;
+		}
+		
+		// if just single form, we're done!
+		if (forms.length <= 1) {
+			return onSuccess();
+		}
+		
+		// otherwise we'll record the record_id with all other form entries
+		var record_id = info.record_ids[0];
+		
+		for (var i=1; i < forms.length; i++) {
+			form_id = forms[i].id;				
+			submit_form(form_id, function (err, i) {
+				if (err) {
+					alert(err);
+					return;
+				}
+				
+				if (i === forms.length) {
+					return onSuccess();	
+				}
+			}, record_id);
+		}
+	});
+}
+
+// submit a single form data
+function submit_form(form_id, onDone, record_id) {
+
+	if (!form_fields[form_id]) {
+		return onDone('cannot find form fields for [' + form_id + ']');
+	}
+
+	// mapping from field id to name
+	var fields = form_fields[form_id].fields;
+	var field_name = {};	
+	for (var i=0; i < fields.length; i++) {
+		field_name[fields[i].id] = fields[i].name;
+	}
+
+	var value_array = [];
+
+	var confirm_data = '確定送出：\n';
+	
+	console.log("end");
+	var entries = form_fields[form_id].entries;
+	var entry_id = entries[0];
+	console.log(entry_id+"-date");
+	var t_date = document.getElementById(entry_id+"-date").value
+	var t_start_time = parseInt(document.getElementById(entry_id+"-start_time").value)
+	var t_end_time = parseInt(document.getElementById(entry_id+"-end_time").value)
+	var t_provider_account = "<%=login.account%>";
+	
+	if ( t_start_time >= t_end_time ) {
+		alert("請選擇正確的開始與結束時間");
+		return;
+	}
+	// console.log(t_date);
+	// console.log(t_start_time);
+	// console.log(t_end_time);
+	// console.log(t_provider_account);
+	
+	var hour_time = ["0:00","0:30","1:00","1:30","2:00","2:30","3:00","3:30","4:00","4:30","5:00","5:30","6:00","6:30","7:00","7:30","8:00","8:30","9:00","9:30","10:00","10:30",
+			"11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00",
+			"20:30","21:00","21:30","22:00","22:30","23:00","23:30","24:00"];
+	
+	for (var j = t_start_time+1 ; j <= t_end_time ; j++ ) {
+		var values = {};
+		values['date'] = t_date;
+		values['provide_time'] = j.toString();
+		values['provide_time_desc'] = hour_time[j-1] + " ~ " + hour_time[j];
+		values['reservation'] = "";
+		values['account'] = t_provider_account;
+		value_array.push(values);
+	}
+	
+	console.log(hour_time[0]);
+	
+	confirm_data += '可提供服務日期 : ' + t_date;
+	confirm_data += '\n';
+	confirm_data += '開始時間 : ' + hour_time[t_start_time];
+	confirm_data += '\n';
+	confirm_data += '結束時間 : ' + hour_time[t_end_time];
+	
+	
+// 	// get an array of values for a given form
+// 	var entries = form_fields[form_id].entries;
+// 	for (var i=0; i < entries.length; i++) {
+// 		var entry_id = entries[i];
+		
+// 		// get values for a given entry, invalid entries are ignored
+// 		var values = get_values(form_id, entry_id);
+// 		if (!values) {
+// 			return;
+// 		}
+		
+// 		// store confirm 
+// 		for (var key in values) {
+// 			if ( key !== 'account' && key !== 'photo'  )
+// 				confirm_data += field_name[key] + ':' + values[key] + '\n'; 			
+// 		}
+		
+// 		confirm_data += '\n';
+		
+// 		value_array.push(values);
+// 	}
+
+	
+	// confirm data correctness
+	var r = confirm(confirm_data);
+	if (r == false) {
+		return;
+	} 
+
+	console.log('form data to send to sever:');
+	console.log(value_array);
+	
+	// submit to server
+	// NOTE: all entries for a given form are submitted at once
+	SR.API.UPDATE_FORM({
+		form_id:		form_id,
+		value_array:	value_array,
+		record_id:		record_id
+	}, function (err, result) {
+		if (err) {
+			console.error(err);
+			return onDone(err); 
+		}
+		
+		// result format: {form_id: 'string', record_id: 'string'}
+		// submit success
+		onDone(null, result);
+	});
+}
+
+// get values for a given entry 
+function get_values(form_id, entry_id) {
+	
+	if (!form_fields[form_id]) {
+		console.error('cannot find form fields for [' + form_id + ']');
+		return undefined;
+	}
+		
+	var fields = form_fields[form_id].fields;
+
+	var without_must = [];
+	var warning = [];
+	var values = {};
+	
+	for (var i=0; i < fields.length; i++) {
+		var field_id = fields[i].id;
+		var element_id = entry_id + '-' + field_id;
+		console.log('ele_id: ' + element_id);
+		
+		if (fields[i].show === false)
+			continue;
+		
+		// if element doesn't exist, something's wrong, should stop
+		// possible this entry was deleted
+		if (!document.getElementById(element_id)) {
+			console.warn('form [' + form_id + '] cannot find element: ' + element_id);
+			return undefined;
+		}
+
+		// check value correctness
+		if (fields[i].type === 'date') {
+			var time = moment(document.getElementById(element_id).value);
+			console.log('timestamp: ' + time.toDate().getTime());
+			if (time.isValid() === false) {
+				warning.push('[' + fields[i].name + '] 格式為: 2017-01-01');
+				continue;
+			}
+		}
+	
+		if (fields[i].type === 'checkbox') {
+			values[field_id] = document.getElementById(element_id).checked;
+		} else if (fields[i].type === 'choice') {	
+			values[field_id] = document.getElementById(element_id).value;
+		} else {	
+			values[field_id] = document.getElementById(element_id).value;	
+		}
+		
+		if (fields[i].must && (!values[field_id] || values[field_id] === '')) {
+			without_must.push(fields[i].name);
+		}
+	}
+
+	if (without_must.length > 0) {
+		warning.unshift(without_must.join('\n') + "\n\n為必填欄位\n");
+	}
+	
+	if (warning.length > 0) {
+		alert(warning.join('\n'));
+		return;
+	}
+	
+	values["account"] = "<%=login.account%>";
+	return values;
+}
+
+
+</script>
+				
+			<section id="four" class="wrapper style2 special">
+				<div class="inner">
+					<header class="major narrow">
+						<h2><div id="form_title"></div></h2>
+						<p>請詳細填寫以下各欄資料</p>
+					</header>
+
+					<table class="" id="form_table">   
+						<!-- <tbody></tbody> -->
+						<!-- <tr><td><a href="javascript:">新增紀錄</a></td></tr> -->
+					</table>
+					
+					<p>
+					<ul class="actions">						
+						<li><a class="button special" href="javascript:submit()">送出</a></li>
+						<li><a class="button special" href="/main">回主畫面</a></li>					
+					</ul>
+				</div>
+			</section>

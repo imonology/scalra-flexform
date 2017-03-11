@@ -1,0 +1,20 @@
+#centerBtn
+{
+  text-align: center;
+}
+
+.contactUs
+{
+  margin-top: 80px !important;
+}
+
+textarea
+{
+  height: 150px;
+}
+
+.ui-helper-center 
+{
+    text-align: center;
+	vertical-align: middle;
+}
