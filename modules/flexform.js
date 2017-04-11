@@ -79,7 +79,7 @@ SR.API.add('CREATE_FORM', {
 		}
 	};
 
-	LOG.warn(form);
+	//LOG.warn(form);
 
 	if (!l_form) {
 		return onDone('l_form not init, cannot add');
@@ -119,13 +119,37 @@ SR.API.add('UPDATE_FORM', {
 	
 	LOG.warn('value_array:');
 	LOG.warn(value_array);
-	
+
+	var keymap = undefined;
+	if (typeof form.key_field === 'string' && form.key_field !== '') {
+		keymap = SR.State.get(form.name + 'Map');
+	}
+		
 	// store each with unique record_id
 	for (var i=0; i < value_array.length; i++) {
+
 		var record_id = UTIL.createToken();
 		
+		// check for existing record_id
+		if (value_array[i]['_record_id']) {
+			record_id = value_array[i]['_record_id'];
+			delete value_array[i]['_record_id'];
+			LOG.warn('updateing existing record [' + record_id + ']');
+		}
+		
+		if (!values[record_id]) {
+			values[record_id] = {};
+		}
+
 		// TODO: no type check is performed? (for example, input is string but should expect number)
-		values[record_id] = value_array[i];
+		for (var key in value_array[i]) {
+			values[record_id][key] = value_array[i][key];
+		}
+		
+		// add new record to key-value map
+		if (keymap) {
+			keymap[values[record_id][form.key_field]] = values[record_id];
+		}	
 		
 		// check whether to store optional associated record_id
 		if (args.record_id) {
@@ -143,42 +167,43 @@ SR.API.add('UPDATE_FORM', {
 		}
 
 		onDone(null, {form_id: args.form_id, record_ids: record_ids});
-
-		// register success, send notify e-mail if available
-		//if (typeof args.values.email === 'undefined' || args.values.email === '') {
-		//	return;
-		//}
-
-		// TODO: more complete content text (move to post-form action)
-		//var content = {
-		//	from: '福智台中學院報名系統 <admin@blisswisdom.org>',
-		//	to: args.values.email,
-		//	subject: '[' + form.name + '] 報名成功', 
-		//	text: '您已報名成功'
-		//};
-
-		//LOG.warn('email content:');
-		//LOG.warn(content);
-		//UTIL.emailText(content);
-
 	});	
 });
 
+// update values for certain fields (record_id optional)
 SR.API.add('UPDATE_FIELD', {
-	form_id: 	'string',		// form id
+	form_id: 	'+string',		// form id
+	form_name:	'+string',		// form name
 	record_id: 	'+string',		// unique record id, if not exist, then it's same as UPDATE_FORM
 	values: 	'object',		// data to be stored
 }, function (args, onDone) {
 
+	if (!args.form_id && !args.form_name)
+		return onDone('values not found for form_id or form_name ');
+	
+	var form = undefined;
+	
 	// get form
-	if (l_form.hasOwnProperty(args.form_id) === false) {
-		return onDone('form id invalid: ' + args.form_id);
-	}
+	if (args.form_name) { // by name
+		for (var form_id in l_form) {
+			if (l_form[form_id].name === args.form_name)  {
+				form = l_form[form_id];
+				break;
+			}
+		}
+		if (!form) {
+			return onDone('form name invalid: ' + args.form_name);
+		}
+	} else { // by id
+		if (l_form.hasOwnProperty(args.form_id) === false) {
+			return onDone('form id invalid: ' + args.form_id);
+		}
 
+		form = l_form[args.form_id];
+	}
+	
 	LOG.warn('values to update:');
 	LOG.warn(args.values);
-	
-	var form = l_form[args.form_id];
 	var values_map = form.data.values;
 	
 	// check if this is new record
@@ -226,6 +251,12 @@ SR.API.add('UPDATE_FIELD', {
 		}
 	}
 	
+	// record to form map if form's 'key_field' exists
+	if (typeof form.key_field === 'string' && form.key_field !== '') {
+		var keymap = SR.State.get(form.name + 'Map');
+		keymap[values_map[args.record_id][form.key_field]] = values_map[args.record_id];	
+	}
+	
 	//LOG.warn('final data to sync:');
 	//LOG.warn(values_map[args.record_id]);
 
@@ -233,7 +264,7 @@ SR.API.add('UPDATE_FIELD', {
 		if (err) {
 			return onDone('save to DB error: ' + err);
 		}
-		onDone(null, 'form [' + args.form_id + '] record [' + args.record_id + '] updated');
+		onDone(null, {desc:'form [' + args.form_id + '] record [' + args.record_id + '] updated', record_id:args.record_id});
 	});
 });
 
@@ -312,16 +343,18 @@ SR.API.add('QUERY_FORM', {
 	id:		'+string',			// form id
 	name:	'+string',			// form name
 	query:	'+object',			// optional query finding exact matches
+	query_partial: '+object',	// query for any value partially matching the specified query keys' values
 	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval  
 	show:	'+array',			// only show specific fields
-	show_unchecked: '+object'	// only show if specified checkboxes are unchecked
+	show_unchecked: '+object',	// only show if specified checkboxes are unchecked
+	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
+	end_date:	'+string'
 }, function (args, onDone) {
 
 	var form = l_get(args.id, args.name);	
 
 	// no valid form found
 	if (!form) {
-		LOG.stack();
 		return onDone('no form can be found by id [' + args.id + '] or name [' + args.name + ']');
 	}
 	
@@ -404,7 +437,14 @@ SR.API.add('QUERY_FORM', {
 					LOG.warn('key: ' + key);
 					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.query[key]); 
 					
-					if (record[key].startsWith(args.query[key]) === false) {
+					if (args.start_date && args.end_date) {
+						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );
+						if( record[key] < args.start_date || record[key] > args.end_date ) {
+							matched = false;
+							break;
+						}
+					}
+					else if (record[key].startsWith(args.query[key]) === false) {
 						matched = false;
 						break;
 					}
@@ -433,6 +473,7 @@ SR.API.add('QUERY_FORM', {
 			}
 		}
 
+		// query for any value partially matching the specified query keys' values
 		if (args.query_partial) {
 			var non_matched = 0;
 			for (var key in args.query_partial) {						
@@ -501,3 +542,51 @@ SR.API.add('QUERY_FORM', {
 	onDone(null, form);
 	
 });
+
+SR.API.add('INIT_FORM', {
+	name:	'string',
+	fields:	'array'
+}, function (args, onDone) {
+
+	var map = SR.State.get(args.name + 'Map');
+	var ref = {};
+	
+	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
+		if (!err) {
+			
+			if (form.key_field && form.key_field !== '') {
+				var values = form.data.values;
+				for (var id in values) {
+					map[values[id][form.key_field]] = values[id];
+				}
+			}
+			ref[args.name] = map;			
+			return onDone(null, ref);
+		}
+		
+		LOG.warn('form [' + args.name + '] does not exist, create one...');
+		var key_field = undefined;
+		
+		for (var i=0; i < args.fields.length; i++) {
+			if (args.fields[i].id.charAt(0) === '*') {
+				key_field = args.fields[i].id = args.fields[i].id.substring(1);
+				LOG.warn('[' + args.name + '] form has key_field: ' + key_field);
+			}
+		}
+				
+		SR.API.CREATE_FORM({
+			name:		args.name,
+			fields: 	args.fields,
+			key_field:	key_field
+		}, function (err) {
+			if (err) {
+				LOG.error(err);
+				return onDone(err);
+			}
+			ref[args.name] = map;	
+			onDone(null, ref);
+		});
+	});	
+});
+
+

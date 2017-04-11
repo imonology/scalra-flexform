@@ -19,7 +19,20 @@
 			{name: '活動內容', multi: true}
 		]}	
 */
-	
+
+function create_provider_time_array(start_time, end_time) { // ex: create_provider_time_array(0,3) 代表 0:00~3:00
+	var time_array = [];
+	for ( i = 0 ; i < 24 ; i++ )
+		if (i >= start_time && i < end_time)
+			time_array[i] = 1;
+		else
+			time_array[i] = 0;
+	return time_array;
+}
+
+var hour_time = ["0:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00","9:00","10:00","11:00","12:00","13:00","14:00",
+				"15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00","24:00"];	
+
 // step1
 function uploadFile() {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
@@ -96,20 +109,8 @@ function uploadFile() {
 			$("#spanMessage").html("failure to connect to server");
 		}
 	});
-}
+} // function uploadFile()
 
-$(function() {
-	$("#datepicker").datepicker({
-		//可使用下拉式選單 - 月份
-		changeMonth : true,
-		//可使用下拉式選單 - 年份
-		changeYear : true,
-		//設定 下拉式選單月份 在 年份的後面
-		showMonthAfterYear : true,
-		dateFormat: 'yy-mm-dd'
-	});
-});
-	
 var forms = JSON.parse('<%-JSON.stringify(forms) %>');
 console.log(typeof forms);
 console.log(forms);
@@ -135,22 +136,20 @@ var generate_table = function (form_id, entry_id, no_delete) {
 
 		
 	html += ('<tr><td width="200">可提供服務時間</td>');
-	html += '<td><input type="text" value="" id="' + entry_id + '-date"></td>';	
+	html += '<td><input type="text" value="" id="' + entry_id + '-date" readonly="readonly"></td>';	
 	html += '<td width="300">格式填寫為 "2017-01-01"</td></tr>';
 
-	var hour_time = ["0:00","0:30","1:00","1:30","2:00","2:30","3:00","3:30","4:00","4:30","5:00","5:30","6:00","6:30","7:00","7:30","8:00","8:30","9:00","9:30","10:00","10:30",
-				"11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00",
-				"20:30","21:00","21:30","22:00","22:30","23:00","23:30","24:00"];
+
 	html += ('<tr><td width="200">開始時間</td>');
 	html += '<td><select id="' + entry_id + '-start_time">';
-	for (var j=0; j <= 48; j++) 
+	for (var j=0; j <= 24; j++) 
 		html += '<option value="' + j + '">' + hour_time[j] + '</option>';
 	html += '</select></td>';
 	html += '<td width="300">服務的開始時間</td></tr>';
 	
 	html += ('<tr><td width="200">結束時間</td>');
 	html += '<td><select id="' + entry_id + '-end_time">';
-	for (var j=0; j <= 48; j++) 
+	for (var j=0; j <= 24; j++) 
 		html += '<option value="' + j + '">' + hour_time[j] + '</option>';
 	html += '</select></td>';
 	html += '<td width="300">服務的結束時間</td></tr>';
@@ -260,6 +259,9 @@ var add_form = function (form_id, no_delete) {
     td.innerHTML = html;
 	$(function() {
 		$("#" + entry_id + "-date").datepicker({
+			dayNamesMin : ['日', '一', '二', '三', '四', '五', '六'],
+			monthNamesShort	: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+			minDate : '-0',
 			//可使用下拉式選單 - 月份
 			changeMonth : true,
 			//可使用下拉式選單 - 年份
@@ -288,7 +290,6 @@ var onConnect = function () {
 	// 告知有新表單用
 	SR.subscribe('main', 0, onMessage);
 	SR.subscribe('lobby', 50, onMessage);
-
 	
 	// fill in title (assume using first form)
 	document.getElementById("form_title").innerText = forms[0].name;
@@ -371,9 +372,6 @@ var onSocketEvent = function (connectionResponse){
 	}
 };
 
-var onMessage = function (data, ch) {
-	console.log('onMessage')
-}
 
 // submit all forms
 function submit() {
@@ -409,29 +407,40 @@ function submit() {
 			return;
 		}
 		
-		// if just single form, we're done!
-		if (forms.length <= 1) {
+		
+		
+		if ( info['result']==1 )
 			return onSuccess();
-		}
+		else
+			alert(info['desc']);
+		
+		
+		//先暫停
+		// if just single form, we're done!
+		// if (forms.length <= 1) {
+		// 	return onSuccess();
+		// }
 		
 		// otherwise we'll record the record_id with all other form entries
-		var record_id = info.record_ids[0];
+// 		var record_id = info.record_ids[0];
 		
-		for (var i=1; i < forms.length; i++) {
-			form_id = forms[i].id;				
-			submit_form(form_id, function (err, i) {
-				if (err) {
-					alert(err);
-					return;
-				}
+// 		for (var i=1; i < forms.length; i++) {
+// 			form_id = forms[i].id;				
+// 			submit_form(form_id, function (err, i) {
+// 				if (err) {
+// 					alert(err);
+// 					return;
+// 				}
 				
-				if (i === forms.length) {
-					return onSuccess();	
-				}
-			}, record_id);
-		}
+				
+
+// 				// if (i === forms.length) {
+// 				// 	return onSuccess();	
+// 				// }
+// 			}, record_id);
+// 		}
 	});
-}
+} // function submit()
 
 // submit a single form data
 function submit_form(form_id, onDone, record_id) {
@@ -453,44 +462,40 @@ function submit_form(form_id, onDone, record_id) {
 	
 	console.log("end");
 	var entries = form_fields[form_id].entries;
-	var entry_id = entries[0];
-	console.log(entry_id+"-date");
-	var t_date = document.getElementById(entry_id+"-date").value
-	var t_start_time = parseInt(document.getElementById(entry_id+"-start_time").value)
-	var t_end_time = parseInt(document.getElementById(entry_id+"-end_time").value)
-	var t_provider_account = "<%=login.account%>";
-	
-	if ( t_start_time >= t_end_time ) {
-		alert("請選擇正確的開始與結束時間");
-		return;
-	}
-	// console.log(t_date);
-	// console.log(t_start_time);
-	// console.log(t_end_time);
-	// console.log(t_provider_account);
-	
-	var hour_time = ["0:00","0:30","1:00","1:30","2:00","2:30","3:00","3:30","4:00","4:30","5:00","5:30","6:00","6:30","7:00","7:30","8:00","8:30","9:00","9:30","10:00","10:30",
-			"11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00",
-			"20:30","21:00","21:30","22:00","22:30","23:00","23:30","24:00"];
-	
-	for (var j = t_start_time+1 ; j <= t_end_time ; j++ ) {
+	for (var i=0; i < entries.length; i++) {
+		var entry_id = entries[i];
+		console.log(entry_id+"-date");
+		var t_date = document.getElementById(entry_id+"-date").value
+		var t_start_time = parseInt(document.getElementById(entry_id+"-start_time").value)
+		var t_end_time = parseInt(document.getElementById(entry_id+"-end_time").value)
+		var t_provider_account = "<%=login.account%>";
+
+		if ( t_start_time >= t_end_time ) {
+			alert("請選擇正確的開始與結束時間");
+			return;
+		}
+		
+		// 確認選擇時間是否有重疊
+		
+		// console.log(t_date);
+		// console.log(t_start_time);
+		// console.log(t_end_time);
+		// console.log(t_provider_account);
+		
+		
 		var values = {};
 		values['date'] = t_date;
-		values['provide_time'] = j.toString();
-		values['provide_time_desc'] = hour_time[j-1] + " ~ " + hour_time[j];
-		values['reservation'] = "";
+		values['provide_time'] = create_provider_time_array(t_start_time,t_end_time);
 		values['account'] = t_provider_account;
 		value_array.push(values);
+
+		confirm_data += '可提供服務日期 : ' + t_date;
+		confirm_data += '\n';
+		confirm_data += '開始時間 : ' + hour_time[t_start_time];
+		confirm_data += '\n';
+		confirm_data += '結束時間 : ' + hour_time[t_end_time];
+		confirm_data += '\n';
 	}
-	
-	console.log(hour_time[0]);
-	
-	confirm_data += '可提供服務日期 : ' + t_date;
-	confirm_data += '\n';
-	confirm_data += '開始時間 : ' + hour_time[t_start_time];
-	confirm_data += '\n';
-	confirm_data += '結束時間 : ' + hour_time[t_end_time];
-	
 	
 // 	// get an array of values for a given form
 // 	var entries = form_fields[form_id].entries;
@@ -526,21 +531,22 @@ function submit_form(form_id, onDone, record_id) {
 	
 	// submit to server
 	// NOTE: all entries for a given form are submitted at once
-	SR.API.UPDATE_FORM({
+	SR.API.UPDATE_PROVIDER_TIME({
 		form_id:		form_id,
-		value_array:	value_array,
-		record_id:		record_id
+		account:		"<%=login.account%>",
+		values:			value_array
 	}, function (err, result) {
 		if (err) {
 			console.error(err);
 			return onDone(err); 
 		}
 		
+		// alert(result['desc']);
 		// result format: {form_id: 'string', record_id: 'string'}
 		// submit success
 		onDone(null, result);
 	});
-}
+} // function submit_form()
 
 // get values for a given entry 
 function get_values(form_id, entry_id) {
@@ -605,7 +611,7 @@ function get_values(form_id, entry_id) {
 	
 	values["account"] = "<%=login.account%>";
 	return values;
-}
+} // function get_values
 
 
 </script>

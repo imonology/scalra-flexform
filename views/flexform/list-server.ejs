@@ -1,0 +1,245 @@
+<% layout('template/common') %>
+<% block('title').append('<title>Event Page</title>') %>
+	
+<script src="/lib/scalra.js"></script>
+<script>
+
+// TODO: update all fields if 'id' is not specified?
+function update (id) {
+	var values = {};
+<%
+	for (var i in form.data.fields) {
+		var field_id = form.data.fields[i].id;
+		if (form.data.fields[i].type === 'checkbox') {
+%>
+			values['<%= field_id %>'] = document.getElementById(id + '-<%= field_id %>').checked;
+<%
+		} else if (field_id !== 'id') {
+%>
+			values['<%= field_id %>'] = document.getElementById(id + '-<%= field_id %>').value;		
+<%
+		}
+	}
+%>
+			
+	SR.API.UPDATE_FIELD({
+			form_id: '<%= form.id %>',
+			record_id: id,
+			values: values,
+		}, function (err, result) {
+			if (err) {
+				return console.error(err);
+			}
+			console.log(result);
+			alert('更新成功');
+			
+			location.reload();
+		}
+	);
+}
+
+function toggleRow(id) {
+  var row = document.getElementsByClassName(id);
+	console.log("row");
+	console.log(row);
+  //var next = row.parentNode.rows[ row.rowIndex ];
+  //next.style.display = next.style.display == "none" ? "table-row" : "none";
+}
+
+function list_filter () {
+	var filter = document.getElementById('filter_text').value;
+	console.log(filter);
+	var t = document.getElementById('form_table');
+	console.log("table rows.length: " + t.rows.length);
+
+	for (var i = 1; i < t.rows.length; i++) {
+
+		if (t.rows[i].cells[0].children.length === 0)
+			continue;
+		
+		// default to not show row
+		var show = false;
+				
+		// console.log(t.rows[i].cells[0]);
+		var id = t.rows[i].cells[0].children[0].id.split('-')[0]; // ID
+
+		for (var j in t.rows[i].cells) {
+			if (!t.rows[i].cells[j].children || t.rows[i].cells[j].children.length === 0) {
+				break;
+			}
+			var h = t.rows[i].cells[j].children[0].value;
+			if (h && h.indexOf(filter) >= 0) {
+				show = true;
+				break;
+			} else {
+			}
+		}
+		
+		if (i > 0 && t.rows[i] && t.rows[i].style) {
+			if (show === false) {
+				t.rows[i].style.display = 'none';
+			} else {
+				t.rows[i].style.display = 'table-row';
+			}
+		}
+	}
+	calculate_sum();
+}
+				
+function filter_text (event) {
+	console.log(event.keyCode);
+	if (event.keyCode === 13) 
+		list_filter();
+}				
+
+</script>
+		<!-- Header -->
+			<header id="header" class="alt">
+				<h1><a href="/">表單</a></h1>
+			</header>
+			
+			<section id="four" class="wrapper style2 special">
+				<div class="inner">
+					<header class="major narrow">
+						<h2><%= form_title || form.name %></h2>
+						<input type='text' value='' id='filter_text' onkeypress="return filter_text(event)"></input>
+						<a href="javascript:list_filter()">關鍵字篩選</a>
+					</header>
+<!--	
+<p>	
+<b><%= form_title || form.name %></b><br>
+<input type='text' value='' id='filter_text' onkeypress="return filter_text(event)"></input> 
+<a href="javascript:list_filter()">關鍵字篩選</a>
+<p>
+-->
+
+<table border="1" id='form_table'>
+<tr>
+<%	
+	// keep track of count of single-choices
+	// TODO: keep each of these independent of each other
+	var choice_count = {};	
+		
+	if (typeof associated_form !== 'undefined') {		
+%>
+		<td></td>
+<%	
+	}
+	for (var i=0; i < form.data.fields.length; i++) {
+
+		var field_id = form.data.fields[i].id;
+		var field_name = form.data.fields[i].name;
+		var field_type = form.data.fields[i].type;
+		
+		//LOG.warn("[i]=" + i + ' field_id: ' + field_id);
+		// extra fixed space for date fields
+		if (field_type === 'date') {
+%>
+		<td width="180"><%= field_name %></td>
+<%		
+		} else {
+%>
+		<td><%= field_name %></td>		
+<%
+		}
+		// build single-choice options
+		if (form.data.fields[i].type !== 'choice')
+			continue;
+		
+		var option = form.data.fields[i].option;
+		var options = option.split(',') || [];
+		choice_count[field_name] = {};
+		for (var j in options) {
+			choice_count[field_name][options[j]] = 0;	
+		}
+	}
+%>
+	<td>操作</td>
+</tr>
+
+<!-- beginning of a data row -->
+
+<%		
+	var value_records = form.data.values;
+		
+	LOG.warn('total number of rows: ' + Object.keys(value_records).length);		
+		
+	
+	for (var record_id in value_records) {
+		var values = value_records[record_id];
+		//LOG.warn('values:');
+		//LOG.warn(values);
+		//LOG.warn(associated_form);
+		
+		if (typeof associated_form !== 'undefined') {
+%>
+<tr>	
+<td><a href="/list_form?title=<%= associated_form %>&form_name=<%= associated_form %>&record_id=<%= record_id %>" target="_blank"><%= associated_form %></a></td>
+<%
+		}			
+	
+		for (var k=0; k < form.data.fields.length; k++) {
+			var field_id = form.data.fields[k].id;
+			var field_name = form.data.fields[k].name;
+			var type = form.data.fields[k].type;
+			var option = form.data.fields[k].option;
+			//console.log('field_id: ' + field_id);
+%>
+<td>
+	<%
+	// for check-boxes
+	if (type === 'checkbox') {
+	%>
+		<input type="checkbox" <%= (values[field_id] ? 'checked' : '') %> id="<%= record_id %>-<%= field_id %>">
+	<%
+	// for single choices
+	} else if (type === 'choice' && typeof option !== 'undefined' && option !== '') {
+		
+		// count this choice first
+		choice_count[field_name][values[field_id]]++;
+		
+		var options = option.split(',') || [];
+	%>
+		<select id="<%= record_id %>-<%= field_id %>">
+	<%	var default_selected = (values.hasOwnProperty(field_id) === false);
+		for (var l=0; l < options.length; l++) { %>
+		<option value="<%= options[l] %>" <% if (values[field_id] === options[l] || (l === 0 && default_selected)) { %>selected="selected"<% } %> ><%= options[l] %></option>
+	<%	} %>  
+		</select>
+	<%
+	// for numbers
+	} else if (type === 'number') {
+	%>
+		<input type="text" size="10" value="<%= (values[field_id] || '') %>" class="" id="<%= record_id %>-<%= field_id %>">
+	<%
+	// for others (just treat as text strings)
+	} else {
+	%>
+		<input type="text" size="10" value="<%= (values[field_id] || '') %>" class="" id="<%= record_id %>-<%= field_id %>">	
+	<%
+	}
+	%>
+</td>
+<%
+		}
+%>
+	<td><% if (!display_only) { %> <a href="javascript:update('<%= record_id %>')">更新</a> <% } %></td>
+</tr>
+<!-- end of data row -->
+<%
+	}
+%>
+
+	
+</table>
+
+<%
+	//LOG.warn('choice_count:');
+	//LOG.warn(choice_count);
+%>													   
+						<ul class="actions">						
+							<li><a class="button special" href="/main">回主畫面</a></li>					
+						</ul>
+
+				</div>
+			</section>

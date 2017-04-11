@@ -54,9 +54,77 @@ $('.contactUs').on('click', function(e){
           return false;
       });
     }
-	});
+	});	
 });
-  
-$('.contactUs').click();
+  	
+// test button
+//$('.contactUs').click();
+});
 
-});
+
+function uploadFile(account, onDone) {
+	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
+	var formData = new FormData($("#frmUploadFile")[0]);
+	var fullPath = document.getElementById('upload_file').value;
+	var filename;
+	
+	console.log(formData);
+	
+	if (fullPath) {
+		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+		filename = fullPath.substring(startIndex);
+		if (filename.indexOf('\\') === 0 || filename.indexOf('/') === 0) {
+			filename = filename.substring(1);
+		}
+		console.log(filename);
+	}
+	if (!filename || typeof(filename) !== 'string' || filename.length < 6) {
+		alert("invalid filename");
+		return;
+	}
+
+	var filename_extension = filename.split(".")[1].toLowerCase()
+	if ( !(filename_extension === 'jpg') ) {
+		alert("請上傳 .jpg 的檔案");
+		return;
+	}
+	
+
+	$.ajax({
+		url: upload_url + '/upload',
+		type: 'POST',
+		data: formData,
+		async: false,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+
+			if (data.message === 'success') {
+				$("#spanMessage").html("Upload success!");
+				console.log('upload success, data:');
+				console.log(data.upload);
+				
+				SR.API.UPLOAD_IMAGE({
+					filename: filename
+				}, function (err, result) {
+					if (err) {
+						console.error(err);
+						return alert(err);
+					}
+					
+					//console.log(result);
+					onDone(null);
+					//window.location.reload();
+				});
+			} else {
+				$("#spanMessage").html("Upload failed");
+				onDone('upload failed');
+				return;
+			}
+		},
+		error: function() {
+			$("#spanMessage").html("failure to connect to server");
+		}
+	});
+} // function uploadFile()
