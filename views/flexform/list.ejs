@@ -23,14 +23,19 @@ var	single_row = true;
 var html = undefined;
 
 var onConnect = function () {
+	var para = {name: parameters.form_info.name, 
+			   id: parameters.form_info.id, 
+			   query: parameters.query};
+	console.log('QUERY_FORM para');
+	console.log(para);
 	
-	SR.API.GET_FORM(parameters.query, function (err, f) {
+	SR.API.QUERY_FORM(para, function (err, f) {
 		if (err) {
 			console.error(err);	
 			alert(err);
 			return;
 		}
-		console.log('GET_FORM result:');
+		console.log('QUERY_FORM result:');
 		console.log(f);
 		form = f;
 		
@@ -41,6 +46,7 @@ var onConnect = function () {
 			for (var i=0; i < form.data.fields.length; i++) {
 				if (form.data.fields[i].break === true) {
 					single_row = false;
+					console.warn('list form in multiple rows...');
 					break;
 				}
 			}
