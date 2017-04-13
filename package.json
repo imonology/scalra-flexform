@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://imonology:eee3503d9d85375404f17cc07c1a635cab761838@github.com/imonology/scalra-flexform.git"
+    "url": "https://github.com/imonology/scalra.git"
   },
   "keywords": [
     "form",
