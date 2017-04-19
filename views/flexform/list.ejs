@@ -37,6 +37,7 @@ var onConnect = function () {
 		}
 		console.log('QUERY_FORM result:');
 		console.log(f);
+
 		form = f;
 		
 		// make sure generate() is called only once
@@ -145,7 +146,6 @@ function filter_text (event) {
 
 
 function generate () {
-	
 	// build html
 	var html = '<table id="data_table"><tr>';
 	
@@ -154,7 +154,6 @@ function generate () {
 	var choice_count = {};		
 				
 	for (var i=0; i < form.data.fields.length; i++) {
-
 		var field_id = form.data.fields[i].id;
 		var field_name = form.data.fields[i].name;
 		var field_type = form.data.fields[i].type;
@@ -262,7 +261,6 @@ function generate_multi () {
 	var column_sizes = [];		// how many columns exist for each row
 	var column_count = 0;
 	for (var i=0; i < form.data.fields.length; i++) {
-
 		var field_id = form.data.fields[i].id;
 		var field_name = form.data.fields[i].name;
 		var field_type = form.data.fields[i].type;
@@ -339,7 +337,16 @@ function generate_multi () {
 		console.log('colspan: ' + colspan);
 		
 		for (var k=0; k < form.data.fields.length; k++) {
+			// 去掉不用show的
+			if (!form.data.fields[k].show){
+				continue;
+			}
 			var field_id = form.data.fields[k].id;
+			if (typeof(values[field_id]) === 'string' ) {
+				values[field_id] = values[field_id].replace(/\"/g, '&#34;');
+				values[field_id] = values[field_id].replace(/\'/g, "&#39;");
+			}
+			// values[field_id] = "\\&quot";
 			var field_name = form.data.fields[k].name;
 			var field_type = form.data.fields[k].type;
 			var option = form.data.fields[k].option;
@@ -406,11 +413,11 @@ function generate_multi () {
 					
 			} else if (field_type === 'number') {
 				// for numbers
-				html += '<input type="text" size="10" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '">';
+				html += '<input type="text" size="10" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '" '+ (parameters.display_only !== true ? '' : 'readonly="readonly"'); +'>';
 
 			} else {
 				// for others (just treat as text strings)
-				html += '<input type="text" size="20" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '">';							
+				html += '<input type="text" size="20" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '" '+ (parameters.display_only !== true ? '' : 'readonly="readonly"'); +'>';							
 			}
 	
 			html += '</td>';

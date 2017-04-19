@@ -350,7 +350,6 @@ SR.API.add('QUERY_FORM', {
 	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
 	end_date:	'+string'
 }, function (args, onDone) {
-
 	var form = l_get(args.id, args.name);	
 
 	// no valid form found
@@ -380,7 +379,7 @@ SR.API.add('QUERY_FORM', {
 		values: {}
 	};
 	
-	var full_fields = full_form.data.fields
+	var full_fields = full_form.data.fields;
 	var full_values = full_form.data.values;
 	
 	// check which fields will be shown (if 'show' parameter is supplied)
@@ -539,6 +538,17 @@ SR.API.add('QUERY_FORM', {
 		}
 	}		
 
+	LOG.warn('++++++++++++');
+
+	for (i in form.data.fields){
+		if (form.data.fields[i].sorting) {
+			LOG.warn('sotring ' + form.data.fields[i].name);
+			var id = form.data.fields[i].id;
+			datas = form.data;
+			LOG.warn(datas);
+			
+		}
+	}
 	onDone(null, form);
 	
 });
