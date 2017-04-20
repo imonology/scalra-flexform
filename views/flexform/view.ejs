@@ -190,11 +190,12 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			//var value = encodeURIComponent(values_data);
 			//var value = values_data;
 			console.log(value);
-			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '">';
+			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="'+fields[i].desc+'">';
 		}
 		
 		html += '</td>';
-		html += '<td width="300">' + fields[i].desc + '</td></tr>';
+		// html += '<td width="300">' + fields[i].desc + '</td>';
+		html += '</tr>';
 	}
 	
 	// check whether to add 'add' 'remove' button
