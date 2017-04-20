@@ -147,7 +147,7 @@ function filter_text (event) {
 
 function generate () {
 	// build html
-	var html = '<table id="data_table"><tr>';
+	var html = '<table class="customTable" id="data_table"><tr>';
 	
 	// keep track of count of single-choices (used to show how many each single-choice has been selected)
 	// TODO: keep each of these independent of each other
@@ -250,7 +250,7 @@ function generate () {
 function generate_multi () {
 	
 	// build html
-	var html = '<table id="data_table">';
+	var html = '<table class="customTable" id="data_table">';
 	
 	// keep track of count of single-choices (used to show how many each single-choice has been selected)
 	// TODO: keep each of these independent of each other
@@ -449,7 +449,7 @@ function generate_multi () {
 						<a href="javascript:list_filter()">關鍵字篩選</a>
 					</header>
 
-					<table border="1" id='form_table'>
+					<table class="customTable" border="1" id='form_table'>
 					</table>
 					
 					<ul class="actions">
