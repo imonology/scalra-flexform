@@ -129,8 +129,8 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			continue;
 		}
 		
-		html += ('<tr><td width="20%">' + fields[i].name + (fields[i].must ? '*' : '') + '</td>');
-		html += '<td>';
+		html += ('<tr><td width="30%">' + fields[i].name + (fields[i].must ? '*' : '') + '</td>');
+		html += '<td width="70%">';
 		
 		//console.log('fields[i].id: ');
 		console.log(fields[i].id + '[' + fields[i].type + ']: ' + values[fields[i].id]);
@@ -181,7 +181,7 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			html += '<input type="hidden" value="" id="' + entry_id + '-' + fields[i].id + '">'
 			// if photo exists then display, otherwise make it hidden first			
 			//var display = (values[fields[i].id] ? 'block' : 'none');
-			html += '<div id="uploaded_photo"><img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: none;" onload="has_img(this, \''+entry_id + '-' + fields[i].id +'\')" onerror="no_img(\''+entry_id + '-' + fields[i].id +'\')" ></div>'
+			html += '<div id="uploaded_photo"><img id="show_image" width="250" src="/web/images/<%=login.account%>.jpg" style="display: none;" onload="has_img(this, \''+entry_id + '-' + fields[i].id +'\')" onerror="no_img(\''+entry_id + '-' + fields[i].id +'\')" ></div>'
 
 		} else {
 			// for strings			
@@ -190,7 +190,7 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			//var value = encodeURIComponent(values_data);
 			//var value = values_data;
 			console.log(value);
-			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="'+fields[i].desc+'">';
+			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="'+fields[i].desc+'" >';
 		}
 		
 		html += '</td>';
