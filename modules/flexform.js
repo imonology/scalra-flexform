@@ -350,6 +350,7 @@ SR.API.add('QUERY_FORM', {
 	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
 	end_date:	'+string'
 }, function (args, onDone) {
+	LOG.warn('使用QUERY_FORM');
 	var form = l_get(args.id, args.name);	
 
 	// no valid form found
