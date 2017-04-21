@@ -473,12 +473,16 @@ SR.API.add('QUERY_FORM', {
 		}
 
 		// query for any value partially matching the specified query keys' values
+		LOG.warn('比較開始');
 		if (args.query_partial) {
 			var non_matched = 0;
-			for (var key in args.query_partial) {						
+			for (var key in args.query_partial) {
 				if (typeof record[key] === 'string' && 
 					record[key].indexOf(args.query_partial[key]) === (-1)) {
 					non_matched++;
+				}
+				if (typeof record[key] === 'string') {
+					LOG.warn('比較 ' + record[key] + ' v.s. ' + args.query_partial[key] );
 				}
 			}
 			// non of the fields have partial matches at all
