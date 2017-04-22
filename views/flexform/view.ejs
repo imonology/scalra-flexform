@@ -189,8 +189,8 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			//var value = values_data;
 			//var value = encodeURIComponent(values_data);
 			//var value = values_data;
-			console.log(value);
-			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="'+fields[i].desc+'" >';
+			//console.log(value);
+			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">';
 		}
 		
 		html += '</td>';
@@ -596,7 +596,7 @@ function get_values(form_id, entry_id) {
 			if (numb !== null)
 				numb = numb.join("");
 			
-			console.log('numb: ' + numb);
+			//console.log('numb: ' + numb);
 			if (numb === null || numb.length !== 10) {
 				warning.push('[' + fields[i].name + '] 格式為: 09XX-XXXXXX');
 			} else {
