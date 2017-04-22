@@ -130,7 +130,7 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 		}
 		
 		html += ('<tr><td width="30%">' + fields[i].name + (fields[i].must ? '*' : '') + '</td>');
-		html += '<td width="70%">';
+		html += '<td width="70%" style="align=left">';
 		
 		//console.log('fields[i].id: ');
 		console.log(fields[i].id + '[' + fields[i].type + ']: ' + values[fields[i].id]);
@@ -582,7 +582,7 @@ function get_values(form_id, entry_id) {
 			var time = moment(document.getElementById(element_id).value);
 			console.log('timestamp: ' + time.toDate().getTime());
 			if (time.isValid() === false) {
-				warning.push('[' + fields[i].name + '] 格式為: 2017-01-01 09:00');
+				warning.push('[' + fields[i].name + '] 格式為: 2017-01-01');
 				continue;
 			}
 			values[field_id] = document.getElementById(element_id).value;
