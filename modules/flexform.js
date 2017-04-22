@@ -350,7 +350,6 @@ SR.API.add('QUERY_FORM', {
 	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
 	end_date:	'+string'
 }, function (args, onDone) {
-	LOG.warn('使用QUERY_FORM');
 	var form = l_get(args.id, args.name);	
 
 	// no valid form found
@@ -474,7 +473,6 @@ SR.API.add('QUERY_FORM', {
 		}
 
 		// query for any value partially matching the specified query keys' values
-		LOG.warn('比較開始');
 		if (args.query_partial) {
 			var non_matched = 0;
 			for (var key in args.query_partial) {
@@ -482,9 +480,9 @@ SR.API.add('QUERY_FORM', {
 					record[key].indexOf(args.query_partial[key]) === (-1)) {
 					non_matched++;
 				}
-				if (typeof record[key] === 'string') {
-					LOG.warn('比較 ' + record[key] + ' v.s. ' + args.query_partial[key] );
-				}
+				// if (typeof record[key] === 'string') {
+				// 	LOG.warn('比較 ' + record[key] + ' v.s. ' + args.query_partial[key] );
+				// }
 			}
 			// non of the fields have partial matches at all
 			if (non_matched === Object.keys(args.query_partial).length) {
@@ -542,8 +540,6 @@ SR.API.add('QUERY_FORM', {
 			form.data.values[id] = record;	
 		}
 	}		
-
-	LOG.warn('++++++++++++');
 
 	for (i in form.data.fields){
 		if (form.data.fields[i].sorting) {
