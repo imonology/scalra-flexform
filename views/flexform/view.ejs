@@ -57,7 +57,7 @@ var datepicker_setting = {
 
 // Chinese settings
 var datepicker_setting = {
-	defaultDate : (new Date(new Date().getFullYear() - 30
+	defaultDate : (new Date(new Date().getFullYear() - 60
 						+ "/01/01") - new Date())
 						/ (1000 * 60 * 60 * 24),
 	yearRange : "-100:+0",
@@ -130,7 +130,7 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 		}
 		
 		html += ('<tr><td width="30%">' + fields[i].name + (fields[i].must ? '*' : '') + '</td>');
-		html += '<td width="70%" style="align=left">';
+		html += '<td width="70%" align="left">';
 		
 		//console.log('fields[i].id: ');
 		console.log(fields[i].id + '[' + fields[i].type + ']: ' + values[fields[i].id]);
