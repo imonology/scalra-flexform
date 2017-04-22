@@ -588,11 +588,20 @@ function get_values(form_id, entry_id) {
 			values[field_id] = document.getElementById(element_id).value;
 		} else if (field_type === 'tel') {
 			var tel = document.getElementById(element_id).value;
-			var telRegxp = /^09[0-9]{2}-[0-9]{3}-[0-9]{3}$/; //格式需為09XX-XXX-XXX
-			if (telRegxp.test(tel) != true){ 
-				warning.push('[' + fields[i].name + '] 格式為: 09XX-XXX-XXX');
+			//var telRegxp = /^09[0-9]{2}-[0-9]{6}$/; //格式需為09XX-XXXXXX
+			// if (telRegxp.test(tel) != true){ 
+			
+			// ref: http://stackoverflow.com/questions/10003683/javascript-get-number-from-string
+			var numb = tel.match(/\d/g);
+			if (numb !== null)
+				numb = numb.join("");
+			
+			console.log('numb: ' + numb);
+			if (numb === null || numb.length !== 10) {
+				warning.push('[' + fields[i].name + '] 格式為: 09XX-XXXXXX');
+			} else {
+				values[field_id] = numb.slice(0, 4) + "-" + numb.slice(4);			
 			}
-			values[field_id] = document.getElementById(element_id).value;
 		}
 		else if (field_type === 'choice') {	
 			values[field_id] = document.getElementById(element_id).value;
