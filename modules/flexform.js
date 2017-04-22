@@ -424,13 +424,15 @@ SR.API.add('QUERY_FORM', {
 		if (args.query) {
 			var nonmatch_count = 0;
 			var match_count = 0;
-			
+						
 			for (var key in args.query) {
 				
 				// skip invalid query keys (that are not field names)
-				if (fields.hasOwnProperty(key) === false)
+				if (fields.hasOwnProperty(key) === false) {
+					LOG.warn('key [' + key + '] does not exist in fields records');
 					continue;
-				
+				}
+						
 				// partial match for 'date' type
 				if (fields[key].type === 'date') {
 					LOG.warn('key: ' + key);
@@ -461,9 +463,12 @@ SR.API.add('QUERY_FORM', {
 						match_count++;
 					}
 				}
-				else if (record[key] !== args.query[key]) {
-					matched = false;
-					break;
+				else {
+					LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + args.query[key]);
+					if (record[key] !== args.query[key]) {
+						matched = false;
+						break;
+					}
 				}
 			}
 			
@@ -480,9 +485,6 @@ SR.API.add('QUERY_FORM', {
 					record[key].indexOf(args.query_partial[key]) === (-1)) {
 					non_matched++;
 				}
-				// if (typeof record[key] === 'string') {
-				// 	LOG.warn('比較 ' + record[key] + ' v.s. ' + args.query_partial[key] );
-				// }
 			}
 			// non of the fields have partial matches at all
 			if (non_matched === Object.keys(args.query_partial).length) {
@@ -541,17 +543,17 @@ SR.API.add('QUERY_FORM', {
 		}
 	}		
 
+	// not used?
 	for (i in form.data.fields){
 		if (form.data.fields[i].sorting) {
-			LOG.warn('sotring ' + form.data.fields[i].name);
+			LOG.warn('sorting: ' + form.data.fields[i].name);
 			var id = form.data.fields[i].id;
 			datas = form.data;
 			LOG.warn(datas);
-			
 		}
 	}
-	onDone(null, form);
 	
+	onDone(null, form);
 });
 
 SR.API.add('INIT_FORM', {
@@ -561,29 +563,45 @@ SR.API.add('INIT_FORM', {
 
 	var map = SR.State.get(args.name + 'Map');
 	var ref = {};
+
+	// identify key_field, if any
+	var key_field = "";
+	for (var i=0; i < args.fields.length; i++) {
+		if (args.fields[i].id.charAt(0) === '*') {
+			key_field = args.fields[i].id = args.fields[i].id.substring(1);
+			LOG.warn('[' + args.name + '] form has key_field: ' + key_field);
+		}
+	}	
 	
 	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
 		if (!err) {
 			
-			if (form.key_field && form.key_field !== '') {
-				var values = form.data.values;
-				for (var id in values) {
-					map[values[id][form.key_field]] = values[id];
+			// update field info
+			form.data.fields = args.fields;
+			form.key_field = key_field;			
+			
+			form.sync(function (err) {
+				if (err) {
+					return onDone(err);
 				}
-			}
-			ref[args.name] = map;			
-			return onDone(null, ref);
+				
+				// re-build key_field based mapping
+				if (form.key_field && form.key_field !== '') {
+					var values = form.data.values;
+					for (var id in values) {
+						map[values[id][form.key_field]] = values[id];
+					}
+				}
+				ref[args.name] = map;
+				
+				return onDone(null, ref);
+			})
+			
+			// NOTE: return here in needed as sync above won't return immediately
+			return;
 		}
 		
 		LOG.warn('form [' + args.name + '] does not exist, create one...');
-		var key_field = undefined;
-		
-		for (var i=0; i < args.fields.length; i++) {
-			if (args.fields[i].id.charAt(0) === '*') {
-				key_field = args.fields[i].id = args.fields[i].id.substring(1);
-				LOG.warn('[' + args.name + '] form has key_field: ' + key_field);
-			}
-		}
 				
 		SR.API.CREATE_FORM({
 			name:		args.name,
