@@ -1,7 +1,12 @@
 <% layout('template/common') %>
 <% block('title').append('<title>Form Listing Page</title>') %>
-<script src="/lib/scalra.js"></script>
+<script src="/web/moment.min.js"></script>
 <script src="/web/flexform/flexform.js"></script>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<!-- <script src="http://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>	
+
 <script>
 
 // get data first
@@ -25,8 +30,33 @@ var edit_mode = false;
 // fields to produce summation
 var sum_fields = [];
 
+// which fields can be used as filters
+var filters = [];
+
 // generatd page
 var html = undefined;
+
+var getArrayParameter = function (field_name) {
+	var str = getParameterByName(field_name);
+	//console.log('str');
+	//console.log(str);
+	
+	var arr = [];
+	
+	// get sum fields (if any)
+	if (str !== null) {
+		try {
+			str = '{"arr":' + str + '}';
+			arr = JSON.parse(str).arr;
+		} catch (e) {
+			console.error('cannot properly parse sum_fields: ' + str);
+			console.error(e);
+		}
+	}
+	console.log('array para [' + field_name +']:');
+	console.log(arr);
+	return arr;
+}
 
 var onConnect = function () {
 	var query = {name: para.form_name, 
@@ -39,22 +69,8 @@ var onConnect = function () {
 	if (getParameterByName('edit') === 'true')
 		edit_mode = true;
 	
-	var str = getParameterByName('sum_fields');
-	console.log('str');
-	console.log(str);
-	
-	// get sum fields (if any)
-	if (str !== null) {
-		try {
-			str = '{"arr":' + str + '}';
-			sum_fields = JSON.parse(str).arr;
-			console.log('sum_fields:');
-			console.log(sum_fields);
-		} catch (e) {
-			console.error('cannot properly parse sum_fields: ' + str);
-			console.error(e);
-		}
-	}
+	sum_fields = getArrayParameter('sum_fields');
+	filters = getArrayParameter('filters');
 	
 	SR.API.QUERY_FORM(query, function (err, f) {
 		if (err) {
@@ -67,11 +83,16 @@ var onConnect = function () {
 
 		form = f;
 		
+		// mapping form field_id to various field info
+		var field_info = {};
+		
 		// make sure generate() is called only once
 		if (!html) {
 			
 			// check whether to display in single-row or multi-row format (if any field has a valid 'break' attribute)
 			for (var i=0; i < form.data.fields.length; i++) {
+				field_info[form.data.fields[i].id] = form.data.fields[i];
+				
 				if (form.data.fields[i].break === true) {
 					single_row = false;
 					console.warn('list form in multiple rows...');
@@ -88,7 +109,46 @@ var onConnect = function () {
 			td = tr.insertCell(tr.cells.length);
 			td.innerHTML = html;				
 		}
+		
+		// build custom filter
+		var filter_table = document.getElementById("filter_table");
+			
+		var tr;
+		var row_count = 0;
+		for (var i=0; i < filters.length; i++) {
+
+			if (field_info[filters[i]].type === 'date') {
+				tr = filter_table.insertRow(row_count++);
+				tr.innerHTML = '<td>開始日期</td><td><input type="text" class="date" id="start_date" value="" readonly="readonly"></td>';
+				tr = filter_table.insertRow(row_count++);
+				tr.innerHTML = '<td>結束日期</td><td><input type="text" class="date" id="end_date" value="" readonly="readonly"></td>';				
+			} else if (field_info[filters[i]].type === 'string') {
+				tr = filter_table.insertRow(row_count++);
+				tr.innerHTML = '<td>' + field_info[filters[i]].name + '</td><td><input type="text" id="account" value="" onchange="change_all()" onkeypress="return onKeyPress(event);"></td>';
+			}
+		}
+		
+		// helper
+		// NOTE: setup must be performed after all HTML elements are loaded
+		// setup datepickers
+		$(function() {
+			$("input[class='date']").datepicker({
+				dayNamesMin : ['日', '一', '二', '三', '四', '五', '六'],
+				monthNamesShort	: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+				maxDate : '+30',
+				//可使用下拉式選單 - 月份
+				changeMonth : true,
+				//可使用下拉式選單 - 年份
+				changeYear : false,
+				//設定 下拉式選單月份 在 年份的後面
+				showMonthAfterYear : true,
+				dateFormat: 'yy-mm-dd'
+			});
+		});	
+
 	});
+	
+
 }
 	
 // TODO: update all fields if 'id' is not specified?
@@ -277,7 +337,7 @@ function generate () {
 				}
 				// add up sum if specified as a 'sum_field'
 				if (sum_fields.indexOf(field_id) >= 0) {
-					console.log('[' + field_id + '] amount: ' + values[field_id]);
+					//console.log('[' + field_id + '] amount: ' + values[field_id]);
 					sums[field_id] += (values[field_id] || 0);
 				}
 				
@@ -527,8 +587,15 @@ function generate_multi () {
 				<div class="inner">
 					<header class="major narrow">
 						<h2><%= (para.form_title || para.form_name) %></h2>
+						
+						<!-- filter table -->
+						<table class="customTable" id="filter_table">
+						</table>						
+<!-- old keyword filter
 						<input type='text' value='' id='filter_text' onkeypress="return filter_text(event)"></input>
 						<a href="javascript:list_filter()">關鍵字篩選</a>
+-->
+
 					</header>
 
 					<table class="customTable" border="1" id='form_table'>
