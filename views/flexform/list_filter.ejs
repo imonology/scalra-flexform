@@ -1,0 +1,561 @@
+<% layout('template/common') %>
+<% block('title').append('<title>Form Listing Page</title>') %>
+<script src="/lib/scalra.js"></script>
+<script src="/web/flexform/flexform.js"></script>
+<script>
+
+// get data first
+// ref: http://stackoverflow.com/questions/11151632/passing-an-object-to-client-in-node-express-ejs
+
+var para = JSON.parse('<%-JSON.stringify(para) %>');
+console.log('para:');
+console.log(para);
+var login = JSON.parse('<%-JSON.stringify(login) %>');
+console.log('login:');
+console.log(login);
+
+var form = undefined;
+
+// whether we display results in single-row or multi-row format
+var	single_row = true;
+
+// whether in edit mode
+var edit_mode = false;
+
+// fields to produce summation
+var sum_fields = [];
+
+// generatd page
+var html = undefined;
+
+var onConnect = function () {
+	var query = {name: para.form_name, 
+			   id: para.form_id, 
+			   query: para.query};
+	console.log('QUERY_FORM query');
+	console.log(query);
+	
+	// check edit mode
+	if (getParameterByName('edit') === 'true')
+		edit_mode = true;
+	
+	var str = getParameterByName('sum_fields');
+	console.log('str');
+	console.log(str);
+	
+	// get sum fields (if any)
+	if (str !== null) {
+		try {
+			str = '{"arr":' + str + '}';
+			sum_fields = JSON.parse(str).arr;
+			console.log('sum_fields:');
+			console.log(sum_fields);
+		} catch (e) {
+			console.error('cannot properly parse sum_fields: ' + str);
+			console.error(e);
+		}
+	}
+	
+	SR.API.QUERY_FORM(query, function (err, f) {
+		if (err) {
+			console.error(err);	
+			alert(err);
+			return;
+		}
+		console.log('QUERY_FORM result:');
+		console.log(f);
+
+		form = f;
+		
+		// make sure generate() is called only once
+		if (!html) {
+			
+			// check whether to display in single-row or multi-row format (if any field has a valid 'break' attribute)
+			for (var i=0; i < form.data.fields.length; i++) {
+				if (form.data.fields[i].break === true) {
+					single_row = false;
+					console.warn('list form in multiple rows...');
+					break;
+				}
+			}
+			
+			html = (single_row ? generate() : generate_multi());
+			//html = generate_multi();
+			
+			// add after last row
+			var num = document.getElementById("form_table").rows.length;
+			var tr = document.getElementById("form_table").insertRow(num);
+			td = tr.insertCell(tr.cells.length);
+			td.innerHTML = html;				
+		}
+	});
+}
+	
+// TODO: update all fields if 'id' is not specified?
+function update (id) {
+	var values = {};
+
+	for (var i in form.data.fields) {
+		var field_id = form.data.fields[i].id;
+		if (form.data.fields[i].type === 'checkbox') {
+			values[field_id] = document.getElementById(id + '-' + field_id).checked;
+		} else {
+			values[field_id] = document.getElementById(id + '-' + field_id).value;
+		}
+	}
+			
+	SR.API.UPDATE_FIELD({
+			form_id: form.id,
+			record_id: id,
+			values: values,
+		}, function (err, result) {
+			if (err) {
+				return console.error(err);
+			}
+			console.log(result);
+			alert('更新成功');
+			
+			location.reload();
+		}
+	);
+}
+
+function toggleRow(id) {
+  var row = document.getElementsByClassName(id);
+	console.log("row");
+	console.log(row);
+  //var next = row.parentNode.rows[ row.rowIndex ];
+  //next.style.display = next.style.display == "none" ? "table-row" : "none";
+}
+
+function list_filter () {
+	var filter = document.getElementById('filter_text').value;
+	var value_records = form.data.values;
+	
+	console.log(filter);
+	var t = document.getElementById('data_table');
+	console.log("table rows.length: " + t.rows.length);
+	
+	// go over each record
+	var index = 0;
+	for (var record_id in value_records) {
+		
+		var record = value_records[record_id];
+		
+		// default to not show row
+		var show = false;
+		//console.log('record [' + record_id + ']:');
+		//console.log(record);
+		
+		for (var key in record) {
+			if (typeof record[key] !== 'string')
+				continue;
+			
+			//console.log('checking [' + record[key] + '] for [' + filter +']');
+			if (record[key].indexOf(filter) >= 0) {
+				show = true;
+				//console.log('match found!');
+				break;
+			}
+		}
+		
+		var i = (single_row ? index+1 : index);
+		if (show || filter === '') {
+			t.rows[i].style.display = 'table-row';
+		} else {
+			t.rows[i].style.display = 'none';			
+		}
+		index++;
+	}
+}
+				
+function filter_text (event) {
+	console.log(event.keyCode);
+	if (event.keyCode === 13) 
+		list_filter();
+}
+
+
+
+function generate () {
+	
+	// keep track of field sums (if specified as a sum_field)
+	var sums = {};
+	
+	// build html
+	var html = '<table class="customTable" id="data_table"><tr>';	
+	
+	// keep track of count of single-choices (used to show how many each single-choice has been selected)
+	// TODO: keep each of these independent of each other
+	var choice_count = {};		
+				
+	for (var i=0; i < form.data.fields.length; i++) {
+		var field_id = form.data.fields[i].id;
+		var field_name = form.data.fields[i].name;
+		var field_type = form.data.fields[i].type;
+			
+		// init sums calculation 
+		if (sum_fields.indexOf(field_id) >= 0) {
+			sums[field_id] = 0;
+		}
+			
+		// extra fixed space for date fields
+		if (field_type === 'date') {
+			html += '<td width="160" style="font-weight:bold">' + field_name + '</td>';
+		} else {
+			html += '<td style="font-weight:bold">' + field_name + '</td>';
+		}
+		
+		// build single-choice options
+		if (field_type !== 'choice')
+			continue;
+		
+		var option = form.data.fields[i].option;
+		var options = option.split(',') || [];
+		choice_count[field_name] = {};
+		for (var j in options) {
+			choice_count[field_name][options[j]] = 0;	
+		}
+	}
+	if (edit_mode) {
+		html += '<td width=\'40\'>操作</td>';	
+	}
+	html += '</tr>';
+
+<!-- beginning of a data row -->
+
+	var value_records = form.data.values;
+		
+	console.warn('total number of rows: ' + Object.keys(value_records).length);		
+			
+	for (var record_id in value_records) {
+		var values = value_records[record_id];
+		
+		html += '<tr>';	
+		
+		for (var k=0; k < form.data.fields.length; k++) {
+			var field_id = form.data.fields[k].id;
+			var field_name = form.data.fields[k].name;
+			var type = form.data.fields[k].type;
+			var option = form.data.fields[k].option;
+
+			html += '<td class="ui-helper-center">';
+			
+			// for check-boxes
+			if (type === 'checkbox') {
+				html += '<input type="checkbox" ' + (values[field_id] ? 'checked' : '') + ' id="' + record_id + '-' + field_id + '">';
+
+			// for single choices
+			} else if (type === 'choice' && typeof option !== 'undefined' && option !== '') {
+		
+				if (edit_mode) {
+					// count this choice first
+					choice_count[field_name][values[field_id]]++;
+
+					var options = option.split(',') || [];
+
+					html += '<select id="' + record_id + '-' + field_id + '">';
+
+					var default_selected = (values.hasOwnProperty(field_id) === false);
+
+					// show the options while mark the selected one
+					for (var l=0; l < options.length; l++) { 
+						html += '<option value="' + options[l] + '" ' + ((values[field_id] === options[l] || (l === 0 && default_selected)) ? 'selected="selected"' : '') + '>' + options[l] + '</option>';
+					}
+
+					html += '</select>';					
+				} else {
+					html += values[field_id];						
+				}
+			
+				// for numbers
+			} else if (type === 'number') {
+				if (!edit_mode) {
+					html += (values[field_id] || '');
+				} else {
+					html += '<input type="text" size="10" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '">';				
+				}
+				// add up sum if specified as a 'sum_field'
+				if (sum_fields.indexOf(field_id) >= 0) {
+					console.log('[' + field_id + '] amount: ' + values[field_id]);
+					sums[field_id] += (values[field_id] || 0);
+				}
+				
+			// for others (just treat as text strings)
+			} else {
+				if (!edit_mode) {
+					html += (values[field_id] || '');
+				} else {
+					html += '<input type="text" size="10" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '">';					
+				}
+			}
+	
+			html += '</td>';		
+		}
+		
+		if (edit_mode) {
+			html += '<td class="ui-helper-center">';
+			if (typeof para.associated_form !== 'undefined') {	
+				html += '<a href="/list_form?title=' + para.associated_form + '&form_name=' + para.associated_form + '&client=true&record_id=' + record_id + '">' + '細節' + '</a>';
+			}
+			html += (para.display_only !== true ? '<a href="javascript:update(\'' + record_id + '\')">更新</a>' : '');
+			html += '</td>';			
+		}
+		
+		html += '</tr>';
+<!-- end of data row -->
+	}
+	
+	// list sums if sum_fields are specified
+	// NOTE: we use sums (and not sum_fields) as sum_fields may contain invalid field names
+	if (Object.keys(sums).length > 0) {
+		for (var i=0; i < form.data.fields.length; i++) {
+			var field_id = form.data.fields[i].id;
+			var field_name = form.data.fields[i].name;
+			var field_type = form.data.fields[i].type;
+
+			// show summation results
+			if (field_type === 'number' && sum_fields.indexOf(field_id) >= 0) {
+				html += '<td>' + sums[field_id] + '</td>';
+			} else {
+				html += '<td></td>';	
+			}
+		}		
+	}	
+
+	html += '</table>';
+	
+	return html;
+}
+
+
+function generate_multi () {
+	
+	// build html
+	var html = '<table class="customTable" id="data_table">';
+	
+	// keep track of count of single-choices (used to show how many each single-choice has been selected)
+	// TODO: keep each of these independent of each other
+	var choice_count = {};	
+			
+	// first analyze all the fields to record max number of columns among all rows
+	var max_column_count = 0;		
+	var column_sizes = [];		// how many columns exist for each row
+	var column_count = 0;
+	for (var i=0; i < form.data.fields.length; i++) {
+		var field_id = form.data.fields[i].id;
+		var field_name = form.data.fields[i].name;
+		var field_type = form.data.fields[i].type;
+		var break_line = form.data.fields[i].break;
+		var allow_list = form.data.fields[i].allow;
+		
+		console.log('allow_list:');
+		console.log(allow_list);
+		
+		// modify the 'allow' flag for this field by checking if the current user is allowed to modify
+		if (allow_list && allow_list instanceof Array) {
+			var roles = login.control.groups;
+			console.log('roles:');
+			console.log(roles);
+			for (var j=0; j < roles.length; j++) {
+				if (allow_list.indexOf(roles[j]) >= 0) {
+					form.data.fields[i].allow = true;
+					break;
+				}	
+			}
+			// if roles not match
+			if (j === roles.length) {
+				form.data.fields[i].allow = false;
+			}
+			
+		} else {
+			form.data.fields[i].allow = true;
+		}
+		console.log('allow type:');
+		console.log(form.data.fields[i].allow);
+
+		// re-start column counting if line-break
+		if (break_line) {
+			column_sizes.push(column_count);
+			column_count = 0;
+		}
+		column_count++;
+		
+		if (column_count > max_column_count) {
+			max_column_count = column_count;
+		}
+		
+		// build single-choice options
+		if (field_type !== 'choice')
+			continue;
+		
+		var option = form.data.fields[i].option;
+		//console.log('splitting option: ' + option);
+		var options = option.split(',') || [];
+		choice_count[field_name] = {};
+		for (var j in options) {
+			choice_count[field_name][options[j]] = 0;	
+		}
+	}
+	column_sizes.push(column_count);
+	
+<!-- beginning of a data row -->
+
+	var value_records = form.data.values;
+	console.warn('total number of rows: ' + Object.keys(value_records).length);		
+			
+	for (var record_id in value_records) {
+		var values = value_records[record_id];
+		
+		// NOTE: actual fields will be put into another table
+		html += '<tr><td>';
+
+		// create a table to show this data row
+		html += '<table style="margin:auto;border:solid; width:100%"><tr>';
+		
+		// calculate average colspan for this row
+		var row_count = 0;
+		var colspan = (max_column_count * 2 - column_sizes[row_count]) / column_sizes[row_count];
+		console.log('colspan: ' + colspan);
+		
+		for (var k=0; k < form.data.fields.length; k++) {
+			// 去掉不用show的
+			if (!form.data.fields[k].show){
+				continue;
+			}
+			var field_id = form.data.fields[k].id;
+			if (typeof(values[field_id]) === 'string' ) {
+				values[field_id] = values[field_id].replace(/\"/g, '&#34;');
+				values[field_id] = values[field_id].replace(/\'/g, "&#39;");
+			}
+			// values[field_id] = "\\&quot";
+			var field_name = form.data.fields[k].name;
+			var field_type = form.data.fields[k].type;
+			var option = form.data.fields[k].option;
+			var break_line = form.data.fields[k].break;
+			var allow = form.data.fields[k].allow;
+			
+			if (break_line) {
+				html += '</tr><tr>';
+				row_count++;
+				// re-calculate average colspan for this row
+				colspan = (max_column_count * 2 - column_sizes[row_count]) / column_sizes[row_count];
+				console.log('colspan: ' + colspan);				
+			}
+			
+			//
+			// show field name
+			//			
+			html += '<td class="ui-helper-center" width="100">' + field_name + '</td>';
+									
+			//
+			// show field data
+			//
+			
+			if (field_type === 'date') {
+				html += '<td width="200" ';
+			} else {
+				html += '<td ';
+			}
+			if (colspan > 1) {
+				html += ' colspan="' + colspan + '">';
+			} else {
+				html += '>';
+			}
+			
+			// for check-boxes
+			if (field_type === 'checkbox') {
+				html += '<input type="checkbox" ' + (values[field_id] ? 'checked' : '') + ' id="' + record_id + '-' + field_id + '">';
+
+			// for single choices
+			} else if (field_type === 'choice' && typeof option !== 'undefined' && option !== '') {
+		
+				// count this choice first
+				choice_count[field_name][values[field_id]]++;
+
+				var options = option.split(',') || [];
+				var value = (values.hasOwnProperty(field_id) ? values[field_id] : options[0]);
+				
+				// whether to show selection or just value (cannot change)
+				if (allow && allow === true) {
+					console.log('allow to show selection');
+					html += '<select id="' + record_id + '-' + field_id + '">';
+
+					for (var l=0; l < options.length; l++) { 
+						html += '<option value="' + options[l] + '" ' + (value === options[l] ? 'selected="selected"' : '') + '>' + options[l] + '</option>';
+					}
+					html += '</select>';					
+				} else {
+					console.log('selection not allowed, value:');
+					console.log(value);
+					html += value;
+					// add a hidden field for the original value
+					html += '<input type="hidden" id="' + record_id + '-' + field_id + '" value="' + value + '"/>';
+				}				
+					
+			} else if (field_type === 'number') {
+				// for numbers
+				html += '<input type="text" size="10" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '" '+ (para.display_only !== true ? '' : 'readonly="readonly"'); +'>';
+
+			} else {
+				// for others (just treat as text strings)
+				html += '<input type="text" size="20" value="' + (values[field_id] || '') + '" class="" id="' + record_id + '-' + field_id + '" '+ (para.display_only !== true ? '' : 'readonly="readonly"'); +'>';							
+			}
+	
+			html += '</td>';
+		} 
+		html += '</tr></table>';
+		
+		// actions
+		html += '</td><td class="ui-helper-center" width="70">';
+		if (typeof para.associated_form !== 'undefined') {	
+			html += '<a href="/list_form?title=' + para.associated_form + '&form_name=' + para.associated_form + '&client=true&record_id=' + record_id + '">' + '細節' + '</a><br>';
+		}
+		html += (para.display_only !== true ? '<a href="javascript:update(\'' + record_id + '\')">更新</a>' : '');
+		html += '</td></tr>';
+<!-- end of data row -->
+	}
+
+	html += '</table>';
+	
+	return html;
+}
+
+</script>
+
+			<section id="four" class="wrapper style2 special">
+				<div class="inner">
+					<header class="major narrow">
+						<h2><%= (para.form_title || para.form_name) %></h2>
+						<input type='text' value='' id='filter_text' onkeypress="return filter_text(event)"></input>
+						<a href="javascript:list_filter()">關鍵字篩選</a>
+					</header>
+
+					<table class="customTable" border="1" id='form_table'>
+					</table>
+					
+					<ul class="actions">
+<%					if (para.detailed_page === true) {	%>
+						<li><a class="button special" href="javascript:window.history.back();">回列表</a></li>
+<%					} else {		%>
+						<li><a class="button special" href="/main">回主畫面</a></li>					
+<%					}				%>
+					</ul>
+
+				</div>
+			</section>
+<!--
+<div id='centerBtn'>
+  <a href='#' class='contactUs ja_btn ja_btn_blue'><i class='fa fa-envelope'></i> Contact Us</a>
+</div>
+-->
+    <script>
+    $(document).ready(function () {
+          //$.jAlert({
+          //  'title': 'It works!',
+          //  'content': 'YAY!',
+          //  'theme': 'green',
+          //  'btns': { 'text': 'close' }
+          //});
+    });
+    </script>
