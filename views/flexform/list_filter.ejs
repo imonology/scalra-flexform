@@ -19,6 +19,11 @@ var login = JSON.parse('<%-JSON.stringify(login) %>');
 console.log('login:');
 console.log(login);
 
+<% if (typeof(query_obj)!== 'undefined') { %>
+var query_obj = JSON.parse('<%-JSON.stringify(query_obj) %>');
+console.log('query_obj:');
+console.log(query_obj);
+<% } %>
 // form data to be listed (to be queried from server)
 var form = undefined;
 
@@ -64,8 +69,19 @@ var onConnect = function () {
 	var query = {name: para.form_name, 
 			   id: para.form_id, 
 			   query: para.query};
+	if (para.start_date !== '' && para.end_date !== '') {
+		query['start_date'] = para.start_date;
+		query['end_date'] = para.end_date;
+		query['query'] = {date:'set'};
+	}
+	
+	if (typeof(query_obj) != 'undefined')
+		query['query'] = query_obj;
+	
 	console.log('QUERY_FORM query');
 	console.log(query);
+	
+
 	
 	// check edit mode
 	if (getParameterByName('edit') === 'true')
@@ -118,23 +134,46 @@ var onConnect = function () {
 			var field_id = field_info[filters[i]].id;
 			var field_name = field_info[filters[i]].name;
 			
+			var field_value = undefined;
+			if (typeof(query_obj) != 'undefined' && typeof(query_obj[field_id]) !== 'undefined') {
+				field_value = query_obj[field_id];
+				console.log('將 '+ field_id + ' 帶入預設值 ' + field_value);
+			}
+			
+			
+			
 			tr = filter_table.insertRow(row_count++);
 			if (field_info[filters[i]].type === 'date') {
-				tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" id="' + (field_id + '_start') + '" value="" readonly="readonly"></td>';
+				if (para.start_date === '')
+					tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" name="filters" id="start_date" value="" readonly="readonly"></td>';
+				else
+					tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" name="filters" id="start_date" value="'+para.start_date+'" readonly="readonly"></td>';
 				tr = filter_table.insertRow(row_count++);
-				tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" id="' + (field_id + '_end') + '" value="" readonly="readonly"></td>';				
+				if (para.end_date === '')
+					tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="filters" id="end_date" value="" readonly="readonly"></td>';				
+				else
+					tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="filters" id="end_date" value="'+ para.end_date +'" readonly="readonly"></td>';				
 			} else if (field_info[filters[i]].type === 'string') {
-				tr.innerHTML = '<td>' + field_name + '</td><td><input type="text" id="' + field_id + '" value="" onchange="filter()" onkeypress=""></td>';
+				var temp = '<td>' + field_name + '</td><td><input type="text" name="filters" id="' + field_id + '" value="' ;
+				if (typeof(field_value) !== 'undefined')
+					temp += field_value;
+				temp += '" onchange="filter()" onkeypress=""></td>';
+				tr.innerHTML = temp;
 			} else if (field_info[filters[i]].type === 'choice') {
 
 				var options = field_info[filters[i]].option.split(',');
 
 				// pull-down version
-				var html = '<select id="' + field_id + '">';
+				var html = '<select name="filters" id="' + field_id + '">';
 				html += '<option value="">不限</option>';
 				
 				for (var j=0; j < options.length; j++) {
-					html += '<option value="' + options[j] + '">' + options[j] + '</option>';
+					
+					
+					html += '<option value="' + options[j] + '" ';
+					if (field_value === options[j])
+						html += 'selected="selected"';
+					html += '>' + options[j] + '</option>';
 				}
 				html += '</select>';				
 				
@@ -608,6 +647,15 @@ function generate_multi () {
 	return html;
 }
 
+function change_filter_search() {
+	console.log('filters = ');
+	var x = document.getElementsByName('filters');
+	console.log(x);
+	for(i in x){
+		console.log(x[i]);
+	}
+} // function change_filter_search() 
+
 </script>
 
 			<section id="four" class="wrapper style2 special">
@@ -617,7 +665,8 @@ function generate_multi () {
 						
 						<!-- filter table -->
 						<table class="customTable" id="filter_table">
-						</table>						
+						</table>	
+						<a class="button special" href="javascript:change_filter_search();">搜尋</a>
 <!-- old keyword filter
 						<input type='text' value='' id='filter_text' onkeypress="return filter_text(event)"></input>
 						<a href="javascript:list_filter()">關鍵字篩選</a>
@@ -628,6 +677,7 @@ function generate_multi () {
 					<table class="customTable" border="1" id='form_table'>
 					</table>
 					
+										  
 					<ul class="actions">
 <%					if (para.detailed_page === true) {	%>
 						<li><a class="button special" href="javascript:window.history.back();">回列表</a></li>
