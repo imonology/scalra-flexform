@@ -3,8 +3,8 @@
 <script src="/web/moment.min.js"></script>
 <script src="/web/flexform/flexform.js"></script>
 
+<!-- for calander -->
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-<!-- <script src="http://code.jquery.com/jquery-1.10.2.js"></script> -->
 <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>	
 
 <script>
@@ -19,6 +19,7 @@ var login = JSON.parse('<%-JSON.stringify(login) %>');
 console.log('login:');
 console.log(login);
 
+// form data to be listed (to be queried from server)
 var form = undefined;
 
 // whether we display results in single-row or multi-row format
@@ -26,6 +27,9 @@ var	single_row = true;
 
 // whether in edit mode
 var edit_mode = false;
+
+// mapping form field_id to various field info
+var field_info = {};
 
 // fields to produce summation
 var sum_fields = [];
@@ -38,8 +42,6 @@ var html = undefined;
 
 var getArrayParameter = function (field_name) {
 	var str = getParameterByName(field_name);
-	//console.log('str');
-	//console.log(str);
 	
 	var arr = [];
 	
@@ -83,9 +85,6 @@ var onConnect = function () {
 
 		form = f;
 		
-		// mapping form field_id to various field info
-		var field_info = {};
-		
 		// make sure generate() is called only once
 		if (!html) {
 			
@@ -101,7 +100,6 @@ var onConnect = function () {
 			}
 			
 			html = (single_row ? generate() : generate_multi());
-			//html = generate_multi();
 			
 			// add after last row
 			var num = document.getElementById("form_table").rows.length;
@@ -116,22 +114,25 @@ var onConnect = function () {
 		var tr;
 		var row_count = 0;
 		for (var i=0; i < filters.length; i++) {
-			tr = filter_table.insertRow(row_count++);
+			
 			var field_id = field_info[filters[i]].id;
 			var field_name = field_info[filters[i]].name;
 			
+			tr = filter_table.insertRow(row_count++);
 			if (field_info[filters[i]].type === 'date') {
 				tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" id="' + (field_id + '_start') + '" value="" readonly="readonly"></td>';
 				tr = filter_table.insertRow(row_count++);
 				tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" id="' + (field_id + '_end') + '" value="" readonly="readonly"></td>';				
 			} else if (field_info[filters[i]].type === 'string') {
-				tr.innerHTML = '<td>' + field_name + '</td><td><input type="text" id="' + field_id + '" value="" onchange="change_all()" onkeypress="return onKeyPress(event);"></td>';
+				tr.innerHTML = '<td>' + field_name + '</td><td><input type="text" id="' + field_id + '" value="" onchange="filter()" onkeypress=""></td>';
 			} else if (field_info[filters[i]].type === 'choice') {
 
 				var options = field_info[filters[i]].option.split(',');
 
 				// pull-down version
 				var html = '<select id="' + field_id + '">';
+				html += '<option value="">不限</option>';
+				
 				for (var j=0; j < options.length; j++) {
 					html += '<option value="' + options[j] + '">' + options[j] + '</option>';
 				}
@@ -194,6 +195,16 @@ function update (id) {
 			location.reload();
 		}
 	);
+}
+
+//
+// filters
+//
+
+// filter to display only those matching filter criteria
+var filter = function () {
+	var t = document.getElementById('form_table');	
+	
 }
 
 function toggleRow(id) {
