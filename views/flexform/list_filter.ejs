@@ -116,15 +116,31 @@ var onConnect = function () {
 		var tr;
 		var row_count = 0;
 		for (var i=0; i < filters.length; i++) {
-
+			tr = filter_table.insertRow(row_count++);
+			var field_id = field_info[filters[i]].id;
+			var field_name = field_info[filters[i]].name;
+			
 			if (field_info[filters[i]].type === 'date') {
+				tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" id="' + (field_id + '_start') + '" value="" readonly="readonly"></td>';
 				tr = filter_table.insertRow(row_count++);
-				tr.innerHTML = '<td>開始日期</td><td><input type="text" class="date" id="start_date" value="" readonly="readonly"></td>';
-				tr = filter_table.insertRow(row_count++);
-				tr.innerHTML = '<td>結束日期</td><td><input type="text" class="date" id="end_date" value="" readonly="readonly"></td>';				
+				tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" id="' + (field_id + '_end') + '" value="" readonly="readonly"></td>';				
 			} else if (field_info[filters[i]].type === 'string') {
-				tr = filter_table.insertRow(row_count++);
-				tr.innerHTML = '<td>' + field_info[filters[i]].name + '</td><td><input type="text" id="account" value="" onchange="change_all()" onkeypress="return onKeyPress(event);"></td>';
+				tr.innerHTML = '<td>' + field_name + '</td><td><input type="text" id="' + field_id + '" value="" onchange="change_all()" onkeypress="return onKeyPress(event);"></td>';
+			} else if (field_info[filters[i]].type === 'choice') {
+
+				var options = field_info[filters[i]].option.split(',');
+
+				// pull-down version
+				var html = '<select id="' + field_id + '">';
+				for (var j=0; j < options.length; j++) {
+					html += '<option value="' + options[j] + '">' + options[j] + '</option>';
+				}
+				html += '</select>';				
+				
+				tr.innerHTML = 
+					'<td>' + field_name + '</td><td>' +
+					html + 
+					'</td>';
 			}
 		}
 		
