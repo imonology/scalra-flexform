@@ -19,11 +19,6 @@ var login = JSON.parse('<%-JSON.stringify(login) %>');
 console.log('login:');
 console.log(login);
 
-<% if (typeof(query_obj)!== 'undefined') { %>
-var query_obj = JSON.parse('<%-JSON.stringify(query_obj) %>');
-console.log('query_obj:');
-console.log(query_obj);
-<% } %>
 // form data to be listed (to be queried from server)
 var form = undefined;
 
@@ -45,6 +40,9 @@ var filters = [];
 // generatd page
 var html = undefined;
 
+// query for displaying data
+var query_obj = undefined;
+		
 var getArrayParameter = function (field_name) {
 	var str = getParameterByName(field_name);
 	
@@ -67,21 +65,47 @@ var getArrayParameter = function (field_name) {
 
 var onConnect = function () {
 	var query = {name: para.form_name, 
-			   id: para.form_id, 
-			   query: para.query};
-	if (para.start_date !== '' && para.end_date !== '') {
-		query['start_date'] = para.start_date;
-		query['end_date'] = para.end_date;
-		query['query'] = {date:'set'};
+			     id: para.form_id};
+
+	//if (para.start_date !== '' && para.end_date !== '') {
+	//	query['start_date'] = para.start_date;
+	//	query['end_date'] = para.end_date;
+	//	query['query'] = {date:'set'};
+	//}
+
+	/*
+		if (req.query.query_obj) {
+			try {
+				query_obj = JSON.parse(req.query.query_obj);
+				LOG.warn('query_obj.type = ');
+				LOG.warn(query_obj.type);
+			} catch (e) {
+				console.error('cannot properly parse query_obj: ' + req.query.query_obj);
+				console.error(e);
+			}
+			args.query_obj = query_obj || {};
+		}
+	*/
+	
+	// get query_obj
+	var str = getParameterByName('query_obj');
+	try {
+		if (str !== null) {
+			query_obj = JSON.parse(str);		
+		}
+	} catch (e) {
+		console.error('cannot properly parse query_obj: ');
+		console.error(e);	
 	}
 	
-	if (typeof(query_obj) != 'undefined')
-		query['query'] = query_obj;
+	if (typeof(query_obj) != 'undefined') {
+		console.log('query to query_obj:');
+		console.log(query_obj);
+		query['query'] = query_obj;		
+	}
 	
 	console.log('QUERY_FORM query');
 	console.log(query);
-	
-
 	
 	// check edit mode
 	if (getParameterByName('edit') === 'true')
@@ -132,33 +156,21 @@ var onConnect = function () {
 		for (var i=0; i < filters.length; i++) {
 			
 			var field_id = field_info[filters[i]].id;
-			var field_name = field_info[filters[i]].name;
+			var field_name = field_info[filters[i]].name;			
+			var field_value = '';
 			
-			var field_value = undefined;
-			if (typeof(query_obj) != 'undefined' && typeof(query_obj[field_id]) !== 'undefined') {
+			if (typeof(query_obj) === 'object' && typeof(query_obj[field_id]) !== 'undefined') {
 				field_value = query_obj[field_id];
 				console.log('將 '+ field_id + ' 帶入預設值 ' + field_value);
 			}
 			
-			
-			
 			tr = filter_table.insertRow(row_count++);
 			if (field_info[filters[i]].type === 'date') {
-				if (para.start_date === '')
-					tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" name="filters" id="start_date" value="" readonly="readonly"></td>';
-				else
-					tr.innerHTML = '<td>' +  field_name + '-開始' + '</td><td><input type="text" class="date" name="filters" id="start_date" value="'+para.start_date+'" readonly="readonly"></td>';
+				tr.innerHTML = '<td>' + field_name + '-開始' + '</td><td><input type="text" class="date" name="filters" id="' + field_id + '_start' + '" value="' + field_value + '" readonly="readonly"></td>';
 				tr = filter_table.insertRow(row_count++);
-				if (para.end_date === '')
-					tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="filters" id="end_date" value="" readonly="readonly"></td>';				
-				else
-					tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="filters" id="end_date" value="'+ para.end_date +'" readonly="readonly"></td>';				
+				tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="filters" id="' + field_id + '_end'   + '" value="' + field_value + '" readonly="readonly"></td>';				
 			} else if (field_info[filters[i]].type === 'string') {
-				var temp = '<td>' + field_name + '</td><td><input type="text" name="filters" id="' + field_id + '" value="' ;
-				if (typeof(field_value) !== 'undefined')
-					temp += field_value;
-				temp += '" onchange="filter()" onkeypress=""></td>';
-				tr.innerHTML = temp;
+				tr.innerHTML = '<td>' + field_name + '</td><td><input type="text" name="filters" id="' + field_id + '" value="' + field_value + '" onchange="filter()" onkeypress=""></td>';				 
 			} else if (field_info[filters[i]].type === 'choice') {
 
 				var options = field_info[filters[i]].option.split(',');
@@ -168,8 +180,7 @@ var onConnect = function () {
 				html += '<option value="">不限</option>';
 				
 				for (var j=0; j < options.length; j++) {
-					
-					
+										
 					html += '<option value="' + options[j] + '" ';
 					if (field_value === options[j])
 						html += 'selected="selected"';
@@ -182,6 +193,13 @@ var onConnect = function () {
 					html + 
 					'</td>';
 			}
+		}
+		
+		if (filters.length > 0) {
+			tr = filter_table.insertRow(row_count++);
+			tr.innerHTML = '<td colspan="2">' + 
+				'<a class="button special" href="javascript:change_filter_search();">搜尋</a>' +
+				'</td>';
 		}
 		
 		// helper
@@ -649,10 +667,12 @@ function generate_multi () {
 
 function change_filter_search() {
 	console.log('filters = ');
-	var x = document.getElementsByName('filters');
-	console.log(x);
-	for(i in x){
-		console.log(x[i]);
+	var filters = document.getElementsByName('filters');
+	//console.log(x);
+	for (i in filters){
+		if (typeof filters[i] !== 'object')
+			continue;
+		console.log(filters[i].id + ': ' + filters[i].value);
 	}
 } // function change_filter_search() 
 
@@ -665,8 +685,8 @@ function change_filter_search() {
 						
 						<!-- filter table -->
 						<table class="customTable" id="filter_table">
-						</table>	
-						<a class="button special" href="javascript:change_filter_search();">搜尋</a>
+						</table>
+										  
 <!-- old keyword filter
 						<input type='text' value='' id='filter_text' onkeypress="return filter_text(event)"></input>
 						<a href="javascript:list_filter()">關鍵字篩選</a>
@@ -679,9 +699,9 @@ function change_filter_search() {
 					
 										  
 					<ul class="actions">
-<%					if (para.detailed_page === true) {	%>
-						<li><a class="button special" href="javascript:window.history.back();">回列表</a></li>
-<%					} else {		%>
+						<li><a class="button special" href="javascript:window.history.back();">回上一頁</a></li>
+						
+<%					if (para.detailed_page !== true) {	%>
 						<li><a class="button special" href="/main">回主畫面</a></li>					
 <%					}				%>
 					</ul>

@@ -440,7 +440,7 @@ SR.API.add('QUERY_FORM', {
 					
 					if (args.start_date && args.end_date) {
 						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );
-						if( record[key] < args.start_date || record[key] > args.end_date ) {
+						if (record[key] < args.start_date || record[key] > args.end_date) {
 							matched = false;
 							break;
 						}
