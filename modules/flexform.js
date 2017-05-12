@@ -95,18 +95,40 @@ SR.API.add('CREATE_FORM', {
 });
 
 SR.API.add('UPDATE_FORM', {
-	form_id:	'string',		// form id
+	form_id:	'+string',		// form id
+	form_name:	'+string',		// form name
 	values:		'+object',		// data to be stored
 	value_array: '+array',		// an array of values
 	record_id:	'+string'		// optional id to assoicate the values being stored with another record
 }, function (args, onDone) {
 
+	if (!args.form_id && !args.form_name)
+		return onDone('values not found for form_id or form_name ');
+	
+	var form = undefined;
+	
 	// get form
-	if (l_form.hasOwnProperty(args.form_id) === false) {
-		return onDone('form id invalid: ' + args.form_id);
-	}
+	if (args.form_name) { // by name
+		for (var form_id in l_form) {
+			if (l_form[form_id].name === args.form_name)  {
+				form = l_form[form_id];
+				break;
+			}
+		}
+		if (!form) {
+			return onDone('form name invalid: ' + args.form_name);
+		}
+	} else { // by id
+		if (l_form.hasOwnProperty(args.form_id) === false) {
+			return onDone('form id invalid: ' + args.form_id);
+		}
 
-	var form = l_form[args.form_id];
+		form = l_form[args.form_id];
+	}
+	
+	LOG.warn('form = ');
+	LOG.warn(form);
+	
 	var values = form.data.values;
 	
 	// set of record_id stored, to be returned
@@ -348,10 +370,11 @@ SR.API.add('QUERY_FORM', {
 	show:	'+array',			// only show specific fields
 	show_unchecked: '+object',	// only show if specified checkboxes are unchecked
 	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
-	end_date:	'+string'
+	end_date:	'+string',
+	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
 }, function (args, onDone) {
 	var form = l_get(args.id, args.name);	
-
+	
 	// no valid form found
 	if (!form) {
 		return onDone('no form can be found by id [' + args.id + '] or name [' + args.name + ']');
@@ -421,9 +444,23 @@ SR.API.add('QUERY_FORM', {
 		var matched = true;
 		
 		// ignore rows where the fields do not match
-		if (args.query) {
+		if (args.query || args.select_time) {
 			var nonmatch_count = 0;
 			var match_count = 0;
+			
+			for (var key in args.select_time) {
+				if (fields[key] && fields[key].type === 'date') {
+					LOG.warn('key: ' + key);
+					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.select_time[key]); 
+					if (args.select_time[key].start && args.select_time[key].end) {
+						LOG.warn('compare '+ record[key]+ ' start: ' + args.select_time[key].start + ' end: ' + args.select_time[key].end );
+						if (record[key] < args.select_time[key].start || record[key] > args.select_time[key].end) {
+							matched = false;
+							break;
+						}
+					}
+				}
+			}
 						
 			for (var key in args.query) {
 				
@@ -437,6 +474,8 @@ SR.API.add('QUERY_FORM', {
 				if (fields[key].type === 'date') {
 					LOG.warn('key: ' + key);
 					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.query[key]); 
+					
+
 					
 					if (args.start_date && args.end_date) {
 						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );

@@ -98,10 +98,28 @@ var onConnect = function () {
 		console.error(e);	
 	}
 	
+	var str = getParameterByName('select_time');
+	try {
+		if (str !== null) {
+			select_time = JSON.parse(str);	
+			console.log('select_time = ');
+			console.log(select_time);
+		}
+	} catch (e) {
+		console.error('cannot properly parse select_time: ');
+		console.error(e);	
+	}
+	
 	if (typeof(query_obj) != 'undefined') {
 		console.log('query to query_obj:');
 		console.log(query_obj);
 		query['query'] = query_obj;		
+	}
+	
+	if (typeof(select_time) != 'undefined') {
+		console.log('query to select_time:');
+		console.log(select_time);
+		query['select_time'] = select_time;		
 	}
 	
 	console.log('QUERY_FORM query');
@@ -158,6 +176,14 @@ var onConnect = function () {
 			var field_id = field_info[filters[i]].id;
 			var field_name = field_info[filters[i]].name;			
 			var field_value = '';
+			var start_date = '';
+			var end_date = '';
+			if (typeof(select_time) != 'undefined' && select_time[field_id] !== undefined) {
+				if (select_time[field_id].start !== undefined) start_date = select_time[field_id].start;
+				if (select_time[field_id].end !== undefined) end_date = select_time[field_id].end;
+			} 
+	
+
 			
 			if (typeof(query_obj) === 'object' && typeof(query_obj[field_id]) !== 'undefined') {
 				field_value = query_obj[field_id];
@@ -166,9 +192,9 @@ var onConnect = function () {
 			
 			tr = filter_table.insertRow(row_count++);
 			if (field_info[filters[i]].type === 'date') {
-				tr.innerHTML = '<td>' + field_name + '-開始' + '</td><td><input type="text" class="date" name="filters" id="' + field_id + '_start' + '" value="' + field_value + '" readonly="readonly"></td>';
+				tr.innerHTML = '<td>' + field_name + '-開始' + '</td><td><input type="text" class="date" name="date_filters" id="' + field_id + '_start' + '" value="' + start_date + '" readonly="readonly"></td>';
 				tr = filter_table.insertRow(row_count++);
-				tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="filters" id="' + field_id + '_end'   + '" value="' + field_value + '" readonly="readonly"></td>';				
+				tr.innerHTML = '<td>' + field_name + '-結束' + '</td><td><input type="text" class="date" name="date_filters" id="' + field_id + '_end'   + '" value="' + end_date + '" readonly="readonly"></td>';				
 			} else if (field_info[filters[i]].type === 'string') {
 				tr.innerHTML = '<td>' + field_name + '</td><td><input type="text" name="filters" id="' + field_id + '" value="' + field_value + '" onchange="filter()" onkeypress=""></td>';				 
 			} else if (field_info[filters[i]].type === 'choice') {
@@ -667,13 +693,45 @@ function generate_multi () {
 
 function change_filter_search() {
 	console.log('filters = ');
+	var add_url = '?';
+	add_url += 'form_name=' + getParameterByName('form_name');
+	add_url += '&sum_fields=' + getParameterByName('sum_fields');
+	add_url += '&filters=' + getParameterByName('filters');
+	// console.log('add_url');
+	// console.log(add_url);
 	var filters = document.getElementsByName('filters');
 	//console.log(x);
+	var query_obj = {};
+	
 	for (i in filters){
 		if (typeof filters[i] !== 'object')
 			continue;
 		console.log(filters[i].id + ': ' + filters[i].value);
+		if (filters[i].value !== '')
+			query_obj[filters[i].id] = filters[i].value;
 	}
+	
+	add_url += '&query_obj=' + JSON.stringify(query_obj);
+	
+	console.log('date_filters = ');
+	var select_time = {};
+	var date_filters = document.getElementsByName('date_filters');
+	for (i in date_filters){
+		if (typeof date_filters[i] !== 'object')
+			continue;
+		console.log(date_filters[i].id + ': ' + date_filters[i].value);
+		if (date_filters[i].id.substring(5) ==='start') {
+			select_time[date_filters[i].id.substring(0, date_filters[i].id.length - 6)] = {};
+			select_time[date_filters[i].id.substring(0, date_filters[i].id.length - 6)].start = date_filters[i].value;
+		}
+		else {
+			select_time[date_filters[i].id.substring(0, date_filters[i].id.length - 4)].end = date_filters[i].value;
+		}
+	}
+	add_url += '&select_time=' + JSON.stringify(select_time);
+	console.log('add_url');
+	console.log(add_url);
+	document.location = '/list' + add_url;
 } // function change_filter_search() 
 
 </script>
