@@ -15,6 +15,7 @@ LOG.warn('FlexForm is being loaded as a module...', l_name);
 
 // define form model
 var l_form;
+var l_form_values = {};
 var l_dbForm = 'FlexForm';
 
 var l_models = {};
@@ -92,6 +93,59 @@ SR.API.add('CREATE_FORM', {
 		LOG.warn('CREATE_FORM [' + args.name + '] success');
 		onDone(null, {id: form.id});
 	});
+});
+
+SR.API.add('CREATE_FORM_2', {
+	name:		'string',
+	key_field:	'+string',
+	fields: 	'object', // 欄位名稱
+}, function (args, onDone) {
+	LOG.warn('使用CREATE_FORM_2');
+	var form = {
+		id: UTIL.createUUID(),
+		name: args.name,
+		key_field: args.key_field || '',
+		data: {
+			fields: args.fields
+		}
+	};
+
+	//LOG.warn(form);
+
+	if (!l_form) {
+		return onDone('l_form not init, cannot add');
+	}
+		
+	l_form.add(form, function (err, result) {
+		if (err) {
+			return onDone(err);	
+		}
+		LOG.warn('CREATE_FORM [' + args.name + '] success');
+		
+		LOG.warn('create新DB');
+
+
+		var form_name = 'FlexForm:' + args.name;
+		var form_models = {};
+		form_models[form_name] = {
+			values: 		'object' 	// 欄位名稱 & 欄位資料
+		};
+
+		SR.DS.init({models: form_models}, function (err, ref) {
+			if (err) {
+				LOG.error(err, form_name);	
+			}
+			LOG.warn('INIT FORM成功');
+
+			l_form[form.id] = ref[l_dbForm];
+			onDone(null, {id: form.id});
+		});
+		
+		
+	});
+	
+
+
 });
 
 SR.API.add('UPDATE_FORM', {
@@ -615,6 +669,8 @@ SR.API.add('INIT_FORM', {
 	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
 		if (!err) {
 			
+			LOG.warn('existing form [' + args.name + '] found, loading it...', l_name);
+			
 			// update field info
 			form.data.fields = args.fields;
 			form.key_field = key_field;			
@@ -658,3 +714,66 @@ SR.API.add('INIT_FORM', {
 });
 
 
+SR.API.add('INIT_FORM_2', {
+	name:	'string',
+	fields:	'array'
+}, function (args, onDone) {
+
+	var map = SR.State.get(args.name + 'Map');
+	var ref = {};
+
+	// identify key_field, if any
+	var key_field = "";
+	for (var i=0; i < args.fields.length; i++) {
+		if (args.fields[i].id.charAt(0) === '*') {
+			key_field = args.fields[i].id = args.fields[i].id.substring(1);
+			LOG.warn('[' + args.name + '] form has key_field: ' + key_field);
+		}
+	}	
+	
+	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
+		if (!err) {
+			
+			LOG.warn('existing form [' + args.name + '] found, loading it...', l_name);
+			
+			// update field info
+			form.data.fields = args.fields;
+			form.key_field = key_field;			
+			
+			form.sync(function (err) {
+				if (err) {
+					return onDone(err);
+				}
+				
+				// re-build key_field based mapping
+				if (form.key_field && form.key_field !== '') {
+					var values = form.data.values;
+					for (var id in values) {
+						map[values[id][form.key_field]] = values[id];
+					}
+				}
+				ref[args.name] = map;
+				
+				return onDone(null, ref);
+			})
+			
+			// NOTE: return here in needed as sync above won't return immediately
+			return;
+		}
+		
+		LOG.warn('form [' + args.name + '] does not exist, create one...');
+				
+		SR.API.CREATE_FORM_2({
+			name:		args.name,
+			fields: 	args.fields,
+			key_field:	key_field
+		}, function (err) {
+			if (err) {
+				LOG.error(err);
+				return onDone(err);
+			}
+			ref[args.name] = map;	
+			onDone(null, ref);
+		});
+	});	
+});
