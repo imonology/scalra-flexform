@@ -21,6 +21,7 @@ var l_dbForm = 'FlexForm';
 var l_models = {};
 l_models[l_dbForm] = {
 	id:			'*string',
+	flexform_version:	'string',
 	name:		'string',
 	key_field:	'string',
 	data: 		'object', 	// 欄位名稱 & 欄位資料
@@ -43,6 +44,43 @@ l_module.start = function (config, onDone) {
 		}
 		
 		l_form = ref[l_dbForm];
+		
+		// 以下為 flexform 2.0 的記憶體配置
+		var fome_models = {};
+		
+		for (record_id in l_form) {
+			if (l_form[record_id].name === '' || !l_form[record_id].flexform_version || l_form[record_id].flexform_version !== '2.0')
+				continue;
+			
+			form_name = 'FlexForm:' + l_form[record_id].name;
+			fome_models[form_name] = {
+				id:				'*string',
+				values:			'object' 	// 欄位資料
+			}
+		}
+		
+		
+		SR.DS.init({models: fome_models}, function (err, ref) {
+			if (err) {
+				LOG.error(err, l_name);	
+			}
+			for (record_id in l_form) {
+				if (l_form[record_id].name === '' || !l_form[record_id].flexform_version || l_form[record_id].flexform_version !== '2.0')
+					continue;
+				form_name = 'FlexForm:' + l_form[record_id].name;
+				LOG.warn('**********');
+				LOG.warn(l_form[record_id].flexform_version);
+				LOG.warn(ref[form_name]);
+				l_form[record_id].data.values = ref[form_name];
+				
+				// l_form[record_id].add = ref[form_name].add;
+				// l_form[record_id].f_remove = ref[form_name].remove;
+				// l_form[record_id].size = ref[form_name].size;
+				
+			}
+			
+			UTIL.safeCall(onDone);
+		});
 		
 		UTIL.safeCall(onDone);
 	});
@@ -673,6 +711,7 @@ SR.API.add('CREATE_FORM_2', {
 	LOG.warn('使用CREATE_FORM_2');
 	var form = {
 		id: UTIL.createUUID(),
+		flexform_version: '2.0',
 		name: args.name,
 		key_field: args.key_field || '',
 		data: {
@@ -707,8 +746,18 @@ SR.API.add('CREATE_FORM_2', {
 				LOG.error(err, form_name);	
 			}
 			LOG.warn('INIT FORM成功');
-
+			
 			l_form[form.id].data['values'] = ref[form_name];
+			
+			// l_form[form.id].add = ref[form_name].add;
+			// l_form[form.id].f_remove = ref[form_name].remove;
+			// l_form[form.id].size = ref[form_name].size;
+			
+			
+			
+			// l_form[form.id].data['values'][ref[form_name].id] = ref[form_name].values;
+			
+			// l_form[form.id].data['values'][ref[form_name].id].sync = ref[form_name].sync;
 			
 			/*
 			// 測試新增cell
@@ -731,6 +780,240 @@ SR.API.add('CREATE_FORM_2', {
 		
 	});
 
+});
+
+SR.API.add('QUERY_FORM_2', {
+	id:		'+string',			// form id
+	name:	'+string',			// form name
+	query:	'+object',			// optional query finding exact matches
+	query_partial: '+object',	// query for any value partially matching the specified query keys' values
+	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval  
+	show:	'+array',			// only show specific fields
+	show_unchecked: '+object',	// only show if specified checkboxes are unchecked
+	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
+	end_date:	'+string',
+	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
+}, function (args, onDone) {
+	var form = l_get(args.id, args.name);	
+	
+	// no valid form found
+	if (!form) {
+		return onDone('no form can be found by id [' + args.id + '] or name [' + args.name + ']');
+	}
+	
+	delete args['id'];
+	delete args['name'];
+		
+	// check whether to perform conditional query or limit fields to display
+	if (Object.keys(args).length === 0) {
+		return onDone(null, form);
+	}
+
+	// produce custom form content	
+	var full_form = form;
+	form = {};
+	
+	// copy string fields first
+	for (var name in full_form) {
+		if (typeof full_form[name] === 'string')
+			form[name] = full_form[name];
+	}
+	form.data = {
+		fields: [],
+		values: {}
+	};
+	
+	var full_fields = full_form.data.fields;
+	var full_values = full_form.data.values;
+	
+	// check which fields will be shown (if 'show' parameter is supplied)
+	if (args.show) {
+		// preserve to-show fields, also in that order
+		// NOTE: so field ordering in args.show may not match that in full_fields
+		for (var i=0; i < full_fields.length; i++) {
+			var idx = args.show.indexOf(full_fields[i].id);
+			if (idx !== (-1)) {
+				form.data.fields[idx] = full_fields[i];	
+			}
+		}
+
+		delete args['show'];
+		
+	} else {
+		form.data.fields = full_fields;	
+	}
+	
+	// if no query conditions are specified, simply return current data 
+	//LOG.warn('check for query conditions:');
+	//LOG.warn(args);
+	
+	if (Object.keys(args).length === 0) {
+		form.data.values = full_values;
+		return onDone(null, form);
+	}
+		
+	// build mapping from field_id to info
+	var fields = {};
+	for (var i=0; i < full_fields.length; i++) {
+		fields[full_fields[i].id] = full_fields[i];			
+	}
+	
+	// TODO: need to fix these logic (seems too complicated)
+	// go over each row of data, and copy only matching values
+	for (var id in full_values) {
+		var record = full_values[id];
+		var matched = true;
+		
+		// ignore rows where the fields do not match
+		if (args.query || args.select_time) {
+			var nonmatch_count = 0;
+			var match_count = 0;
+			
+			for (var key in args.select_time) {
+				if (fields[key] && fields[key].type === 'date') {
+					LOG.warn('key: ' + key);
+					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.select_time[key]); 
+					if (args.select_time[key].start && args.select_time[key].end) {
+						LOG.warn('compare '+ record[key]+ ' start: ' + args.select_time[key].start + ' end: ' + args.select_time[key].end );
+						if (record[key] < args.select_time[key].start || record[key] > args.select_time[key].end) {
+							matched = false;
+							break;
+						}
+					}
+				}
+			}
+						
+			for (var key in args.query) {
+				
+				// skip invalid query keys (that are not field names)
+				if (fields.hasOwnProperty(key) === false) {
+					LOG.warn('key [' + key + '] does not exist in fields records');
+					continue;
+				}
+						
+				// partial match for 'date' type
+				if (fields[key].type === 'date') {
+					LOG.warn('key: ' + key);
+					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.query[key]); 
+					
+
+					
+					if (args.start_date && args.end_date) {
+						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );
+						if (record[key] < args.start_date || record[key] > args.end_date) {
+							matched = false;
+							break;
+						}
+					}
+					else if (record[key].startsWith(args.query[key]) === false) {
+						matched = false;
+						break;
+					}
+					
+					LOG.warn('match: ' + matched);
+				}
+				// exact match check for other data types
+				else if (typeof args.query[key] === 'string' && args.query[key].charAt(0) === '-') {
+					nonmatch_count++;
+					
+					var query_value = args.query[key].substring(1);
+					//LOG.warn('query_value:' + query_value);
+					
+					if (record[key] === query_value) {
+						match_count++;
+					}
+				}
+				else {
+					LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + args.query[key]);
+					if (record[key] !== args.query[key]) {
+						matched = false;
+						break;
+					}
+				}
+			}
+			
+			if (nonmatch_count > 0 && nonmatch_count === match_count) {
+				matched = false;	
+			}
+		}
+
+		// query for any value partially matching the specified query keys' values
+		if (args.query_partial) {
+			var non_matched = 0;
+			for (var key in args.query_partial) {
+				if (typeof record[key] === 'string' && 
+					record[key].indexOf(args.query_partial[key]) === (-1)) {
+					non_matched++;
+				}
+			}
+			// non of the fields have partial matches at all
+			if (non_matched === Object.keys(args.query_partial).length) {
+				matched = false;
+			}
+		}
+		
+		// also ignore rows for specified checkboxes already checked
+		if (args.show_unchecked) {
+			//LOG.warn('checking if these fields are yet checked: ');
+			//LOG.warn(args.show_unchecked);
+			
+			var checked_count = 0;
+			
+			for (var i=0; i < args.show_unchecked.length; i++) {
+				if (record[args.show_unchecked[i]] === true) {
+					checked_count++;
+				}
+			}
+			
+			if (matched === true && checked_count === args.show_unchecked.length) {
+				matched = false;
+			}
+		}
+		
+		// check if specified period overlaps a period in record
+		// overlap example: {start: start, end: end, period: ['depart_time', 'return_time']};
+		// see: http://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
+		if (args.overlap) {
+			LOG.warn('args.overlap:', l_name);
+			LOG.warn(args.overlap, l_name);
+			
+			try {
+				var startA = moment(record[args.overlap.period[0]]).toDate().getTime();
+				var endA = moment(record[args.overlap.period[1]]).toDate().getTime();
+				var startB = moment(args.overlap.start).toDate().getTime();
+				var endB = moment(args.overlap.end).toDate().getTime();
+								
+				// do not show if there's no overlap
+				if (!((startA <= endB) && (endA >= startB))) {
+					matched = false;
+				} else {
+					//LOG.warn('period overlaps');					
+					//LOG.warn('periodA: ' + startA + '~' + endA);
+					//LOG.warn('periodB: ' + startB + '~' + endB);										
+				}
+				
+			} catch (e) {
+				LOG.error(e);	
+			}
+		}
+	
+		// will keep/return this row only if fully matched
+		if (matched) {
+			form.data.values[id] = record;	
+		}
+	}		
+
+	// not used?
+	for (i in form.data.fields){
+		if (form.data.fields[i].sorting) {
+			LOG.warn('sorting: ' + form.data.fields[i].name);
+			var id = form.data.fields[i].id;
+			datas = form.data;
+			LOG.warn(datas);
+		}
+	}
+	
+	onDone(null, form);
 });
 
 // update values for certain fields (record_id optional)
@@ -830,7 +1113,12 @@ SR.API.add('UPDATE_FIELD_2', {
 	// LOG.warn('values_map = ');
 	// LOG.warn(values_map);
 	
+	LOG.warn('form = ');
+	LOG.warn(form);
+	
 	if (args.record_id) {
+		if (form.data.values.hasOwnProperty(args.record_id) === false)
+			return onDone('values not found for record id [' + args.record_id + ']');
 		form.data.values[args.record_id].values = values_map;
 		form.data.values[args.record_id].sync(function (err) {
 			if (err) {
@@ -843,7 +1131,7 @@ SR.API.add('UPDATE_FIELD_2', {
 			if (err) {
 				return onDone(err);	
 			}
-
+			LOG.warn(form);
 			onDone(null, {desc:'form [' + args.form_id + '] record [' + new_record_id + '] updated', record_id:new_record_id});
 
 		});
