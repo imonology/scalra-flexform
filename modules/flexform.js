@@ -34,6 +34,7 @@ var l_module = exports.module = {};
 var l_handlers = exports.handlers = {};
 var l_checkers = exports.checkers = {};
 
+
 // module init
 l_module.start = function (config, onDone) {
 	LOG.warn('FlexForm module started...', l_name);
@@ -64,19 +65,37 @@ l_module.start = function (config, onDone) {
 			if (err) {
 				LOG.error(err, l_name);	
 			}
-			for (record_id in l_form) {
-				if (l_form[record_id].name === '' || !l_form[record_id].flexform_version || l_form[record_id].flexform_version !== '2.0')
+			for (form_id in l_form) {
+				if (l_form[form_id].name === '' || !l_form[form_id].flexform_version || l_form[form_id].flexform_version !== '2.0')
 					continue;
-				form_name = 'FlexForm:' + l_form[record_id].name;
-				LOG.warn('**********');
-				LOG.warn(l_form[record_id].flexform_version);
-				LOG.warn(ref[form_name]);
-				l_form[record_id].data.values = ref[form_name];
+				form_name = 'FlexForm:' + l_form[form_id].name;
+				l_form_values[form_id] = ref[form_name];
+
+				LOG.warn('---------------------------');
+				LOG.warn( l_form_values[form_id]);
 				
-				// l_form[record_id].add = ref[form_name].add;
-				// l_form[record_id].f_remove = ref[form_name].remove;
-				// l_form[record_id].size = ref[form_name].size;
+				l_form[form_id].data.values = {};
+				l_form[form_id].data.values.add = l_form_values[form_id].add;
+				l_form[form_id].data.values.remove = l_form_values[form_id].remove;
+				l_form[form_id].data.values.size = l_form_values[form_id].size;
 				
+				for (record_id in l_form_values[form_id]) {
+					if (typeof(l_form_values[form_id][record_id]) === 'object') {
+						l_form[form_id].data.values[record_id] = l_form_values[form_id][record_id].values;
+						l_form[form_id].data.values[record_id].sync = l_form_values[form_id][record_id].sync;
+					}
+				}
+				
+				LOG.warn('******************************');
+				LOG.warn('form: ' + l_form[form_id].name );
+				LOG.warn(l_form[form_id].data.values);
+				
+				// l_form[form_id].data.values = ref[form_name];
+				
+				// l_form[form_id].add = ref[form_name].add;
+				// l_form[form_id].f_remove = ref[form_name].remove;
+				// l_form[form_id].size = ref[form_name].size;
+
 			}
 			
 			UTIL.safeCall(onDone);
@@ -747,7 +766,13 @@ SR.API.add('CREATE_FORM_2', {
 			}
 			LOG.warn('INIT FORM成功');
 			
-			l_form[form.id].data['values'] = ref[form_name];
+			l_form[form.id].data.values = {};
+			l_form[form.id].data['values'].add = ref[form_name].add;
+			l_form[form.id].data['values'].f_remove = ref[form_name].f_remove;
+			l_form[form.id].data['values'].size = ref[form_name].size;
+			
+			l_form_values[form.id] = ref[form_name];
+			
 			
 			// l_form[form.id].add = ref[form_name].add;
 			// l_form[form.id].f_remove = ref[form_name].remove;
@@ -1034,6 +1059,7 @@ SR.API.add('UPDATE_FIELD_2', {
 		for (var form_id in l_form) {
 			if (l_form[form_id].name === args.form_name)  {
 				form = l_form[form_id];
+				args.form_id = form_id;
 				break;
 			}
 		}
@@ -1113,13 +1139,13 @@ SR.API.add('UPDATE_FIELD_2', {
 	// LOG.warn('values_map = ');
 	// LOG.warn(values_map);
 	
-	LOG.warn('form = ');
-	LOG.warn(form);
-	
 	if (args.record_id) {
 		if (form.data.values.hasOwnProperty(args.record_id) === false)
 			return onDone('values not found for record id [' + args.record_id + ']');
-		form.data.values[args.record_id].values = values_map;
+		
+		for (key in values_map)
+			form.data.values[args.record_id][key] = values_map[key];
+		// form.data.values[args.record_id].values = values_map;
 		form.data.values[args.record_id].sync(function (err) {
 			if (err) {
 				return onDone('save to DB error: ' + err);
@@ -1127,11 +1153,19 @@ SR.API.add('UPDATE_FIELD_2', {
 			onDone(null, {desc:'form [' + args.form_id + '] record [' + args.record_id + '] updated', record_id:args.record_id});
 		});
 	} else {
+
+		LOG.warn('看這裡');
+		LOG.warn(form.data.values);
+		
 		form.data.values.add({id:new_record_id, values:values_map}, function (err, result) {
 			if (err) {
 				return onDone(err);	
 			}
-			LOG.warn(form);
+			
+			form.data.values[new_record_id] = l_form_values[args.form_id][new_record_id].values;
+			form.data.values[new_record_id].sync = l_form_values[args.form_id][new_record_id].sync;
+			
+			LOG.warn(form.data.values);
 			onDone(null, {desc:'form [' + args.form_id + '] record [' + new_record_id + '] updated', record_id:new_record_id});
 
 		});
