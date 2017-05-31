@@ -49,10 +49,11 @@ l_module.start = function (config, onDone) {
 		// 以下為 flexform 2.0 的記憶體配置
 		var fome_models = {};
 		
+		var count = 0;
 		for (record_id in l_form) {
 			if (l_form[record_id].name === '' || !l_form[record_id].flexform_version || l_form[record_id].flexform_version !== '2.0')
 				continue;
-			
+			count++;
 			form_name = 'FlexForm:' + l_form[record_id].name;
 			fome_models[form_name] = {
 				id:				'*string',
@@ -61,47 +62,47 @@ l_module.start = function (config, onDone) {
 		}
 		
 		
-		SR.DS.init({models: fome_models}, function (err, ref) {
-			if (err) {
-				LOG.error(err, l_name);	
-			}
-			for (form_id in l_form) {
-				if (l_form[form_id].name === '' || !l_form[form_id].flexform_version || l_form[form_id].flexform_version !== '2.0')
-					continue;
-				form_name = 'FlexForm:' + l_form[form_id].name;
-				l_form_values[form_id] = ref[form_name];
-
-				LOG.warn('---------------------------');
-				LOG.warn( l_form_values[form_id]);
-				
-				l_form[form_id].data.values = {};
-				l_form[form_id].data.values.add = l_form_values[form_id].add;
-				l_form[form_id].data.values.remove = l_form_values[form_id].remove;
-				l_form[form_id].data.values.size = l_form_values[form_id].size;
-				
-				for (record_id in l_form_values[form_id]) {
-					if (typeof(l_form_values[form_id][record_id]) === 'object') {
-						l_form[form_id].data.values[record_id] = l_form_values[form_id][record_id].values;
-						l_form[form_id].data.values[record_id].sync = l_form_values[form_id][record_id].sync;
-					}
+		LOG.warn('目前DB內有 ' + count + ' 個form');
+		if (count !== 0 ) {
+			SR.DS.init({models: fome_models}, function (err, ref) {
+				if (err) {
+					LOG.error(err, l_name);	
 				}
-				
-				LOG.warn('******************************');
-				LOG.warn('form: ' + l_form[form_id].name );
-				LOG.warn(l_form[form_id].data.values);
-				
-				// l_form[form_id].data.values = ref[form_name];
-				
-				// l_form[form_id].add = ref[form_name].add;
-				// l_form[form_id].f_remove = ref[form_name].remove;
-				// l_form[form_id].size = ref[form_name].size;
+				for (form_id in l_form) {
+					if (l_form[form_id].name === '' || !l_form[form_id].flexform_version || l_form[form_id].flexform_version !== '2.0')
+						continue;
+					form_name = 'FlexForm:' + l_form[form_id].name;
+					l_form_values[form_id] = ref[form_name];
 
-			}
-			
+					LOG.warn( l_form_values[form_id]);
+
+					l_form[form_id].data.values = {};
+					l_form[form_id].data.values.add = l_form_values[form_id].add;
+					l_form[form_id].data.values.remove = l_form_values[form_id].remove;
+					l_form[form_id].data.values.size = l_form_values[form_id].size;
+
+					for (record_id in l_form_values[form_id]) {
+						if (typeof(l_form_values[form_id][record_id]) === 'object') {
+							l_form[form_id].data.values[record_id] = l_form_values[form_id][record_id].values;
+							l_form[form_id].data.values[record_id].sync = l_form_values[form_id][record_id].sync;
+						}
+					}
+
+					LOG.warn('form: ' + l_form[form_id].name );
+					LOG.warn(l_form[form_id].data.values);
+
+					// l_form[form_id].data.values = ref[form_name];
+
+					// l_form[form_id].add = ref[form_name].add;
+					// l_form[form_id].f_remove = ref[form_name].remove;
+					// l_form[form_id].size = ref[form_name].size;
+
+				}
+
+				UTIL.safeCall(onDone);
+			});
+		} else
 			UTIL.safeCall(onDone);
-		});
-		
-		UTIL.safeCall(onDone);
 	});
 }
 
@@ -184,9 +185,6 @@ SR.API.add('UPDATE_FORM', {
 
 		form = l_form[args.form_id];
 	}
-	
-	LOG.warn('form = ');
-	LOG.warn(form);
 	
 	var values = form.data.values;
 	
@@ -886,6 +884,9 @@ SR.API.add('QUERY_FORM_2', {
 	// TODO: need to fix these logic (seems too complicated)
 	// go over each row of data, and copy only matching values
 	for (var id in full_values) {
+		if (typeof(full_values[id]) !== 'object')
+			continue;
+
 		var record = full_values[id];
 		var matched = true;
 		
@@ -1139,49 +1140,160 @@ SR.API.add('UPDATE_FIELD_2', {
 	// LOG.warn('values_map = ');
 	// LOG.warn(values_map);
 	
-	if (args.record_id) {
-		if (form.data.values.hasOwnProperty(args.record_id) === false)
-			return onDone('values not found for record id [' + args.record_id + ']');
+	if (!args.record_id) 
+		args.new_record_id = new_record_id;
+	
+	l_add_form({form:form, values_map:values_map, para:args}, function(err, result){
+		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:new_record_id});
+	});
+});
+
+// helper
+var l_add = function (para) {
+
+	return function (onD) {
+		l_add_form(para, onD);
+	}
+}
+
+var l_add_form = function( para, onDone ) {
+	if (para.para.record_id) {
+		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
+			return onDone('values not found for record id [' + para.para.record_id + ']');
 		
-		for (key in values_map)
-			form.data.values[args.record_id][key] = values_map[key];
-		// form.data.values[args.record_id].values = values_map;
-		form.data.values[args.record_id].sync(function (err) {
+		for (key in para.values_map)
+			para.form.data.values[para.para.record_id][key] = para.values_map[key];
+		// para.form.data.values[para.para.record_id].values = para.values_map;
+		para.form.data.values[para.para.record_id].sync(function (err) {
 			if (err) {
 				return onDone('save to DB error: ' + err);
 			}
-			onDone(null, {desc:'form [' + args.form_id + '] record [' + args.record_id + '] updated', record_id:args.record_id});
+			onDone(null);
 		});
 	} else {
 
-		LOG.warn('看這裡');
-		LOG.warn(form.data.values);
+		LOG.warn('看這裡2');
+		LOG.warn(para.form.data.values);
 		
-		form.data.values.add({id:new_record_id, values:values_map}, function (err, result) {
+		para.form.data.values.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
 			if (err) {
 				return onDone(err);	
 			}
 			
-			form.data.values[new_record_id] = l_form_values[args.form_id][new_record_id].values;
-			form.data.values[new_record_id].sync = l_form_values[args.form_id][new_record_id].sync;
+			para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
+			para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
 			
-			LOG.warn(form.data.values);
-			onDone(null, {desc:'form [' + args.form_id + '] record [' + new_record_id + '] updated', record_id:new_record_id});
+			LOG.warn(para.form.data.values);
+			onDone(null);
 
 		});
 	}
-	// LOG.warn('找BUG 4');
-	/*
-	form.sync(function (err) {
-		if (err) {
-			return onDone('save to DB error: ' + err);
+}
+
+SR.API.add('UPDATE_FORM_2', {
+	form_id:	'+string',		// form id
+	form_name:	'+string',		// form name
+	values:		'+object',		// data to be stored
+	value_array: '+array',		// an array of values
+	record_id:	'+string'		// optional id to assoicate the values being stored with another record
+}, function (args, onDone) {
+
+	if (!args.form_id && !args.form_name)
+		return onDone('values not found for form_id or form_name ');
+	
+	var form = undefined;
+	
+	// get form
+	if (args.form_name) { // by name
+		for (var form_id in l_form) {
+			if (l_form[form_id].name === args.form_name)  {
+				form = l_form[form_id];
+				args.form_id = form_id;
+				break;
+			}
 		}
-		onDone(null, {desc:'form [' + args.form_id + '] record [' + args.record_id + '] updated', record_id:args.record_id});
+		if (!form) {
+			return onDone('form name invalid: ' + args.form_name);
+		}
+	} else { // by id
+		if (l_form.hasOwnProperty(args.form_id) === false) {
+			return onDone('form id invalid: ' + args.form_id);
+		}
+
+		form = l_form[args.form_id];
+	}
+	
+	var values = form.data.values;
+	
+	// set of record_id stored, to be returned
+	var record_ids = [];
+	
+	// check if just one set of values or multiples
+	var value_array = args.value_array || [];
+	if (args.values)
+		value_array.push(args.values);
+	
+	LOG.warn('value_array:');
+	LOG.warn(value_array);
+
+	var keymap = undefined;
+	if (typeof form.key_field === 'string' && form.key_field !== '') {
+		keymap = SR.State.get(form.name + 'Map');
+	}
+		
+	var jq = SR.JobQueue.createQueue();
+	// store each with unique record_id
+	for (var i=0; i < value_array.length; i++) {
+
+		var record_id = UTIL.createToken();
+		
+		// check for existing record_id
+		if (value_array[i]['_record_id']) {
+			record_id = value_array[i]['_record_id'];
+			delete value_array[i]['_record_id'];
+			LOG.warn('updateing existing record [' + record_id + ']');
+		}
+		
+		// if (!values[record_id]) {
+		// 	values[record_id] = {};
+		// }
+
+		// TODO: no type check is performed? (for example, input is string but should expect number)
+		// for (var key in value_array[i]) {
+		// 	values[record_id][key] = value_array[i][key];
+		// }
+		
+		// add new record to key-value map
+		if (keymap) {
+			keymap[values[record_id][form.key_field]] = value_array[i];
+		}	
+		
+		// check whether to store optional associated record_id
+		if (args.record_id) {
+			// values[record_id]['record_id'] = args.record_id;
+			// LOG.warn('values after storing record_id:');
+			// LOG.warn(values[record_id]);
+		} else {
+			args.new_record_id = record_id;
+		}
+		
+		jq.add(l_add({form:form, values_map:value_array[i], para:args}));
+		
+		record_ids.push(record_id);
+	}
+
+	jq.run(function (err) {
+		onDone(null, {form_id: args.form_id, record_ids: record_ids});
 	});
-	*/
+	
+// 	form.sync(function (err) {
+// 		if (err) {
+// 			return onDone('save to DB error: ' + err);	
+// 		}
+
+// 		onDone(null, {form_id: args.form_id, record_ids: record_ids});
+// 	});	
 });
-
-
 
 SR.API.add('INIT_FORM_2', {
 	name:	'string',
