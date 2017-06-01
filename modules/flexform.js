@@ -1042,6 +1042,24 @@ SR.API.add('QUERY_FORM_2', {
 	onDone(null, form);
 });
 
+SR.API.add('DELETE_FIELD_2', {
+	form_id: 	'+string',		// form id
+	form_name:	'+string',		// form name
+	record_id: 	'string'		// 要刪除的資料的record_id
+}, function (args, onDone) {
+	var form = l_get(args.form_id, args.form_name);
+	
+	if (!form.data.values[args.record_id])
+		return onDone(null, ('沒有record_id為 ' + args.record_id + ' 的資料'));
+	
+	form.data.values.remove({id:args.record_id}, function(err, result){
+		if (err) {
+			return onDone(err); 
+		}
+		onDone(null, '從 form ' + form.name + ' 中刪除 record_id = ' + args.record_id );
+	});
+});
+
 // update values for certain fields (record_id optional)
 SR.API.add('UPDATE_FIELD_2', {
 	form_id: 	'+string',		// form id
@@ -1140,11 +1158,13 @@ SR.API.add('UPDATE_FIELD_2', {
 	// LOG.warn('values_map = ');
 	// LOG.warn(values_map);
 	
-	if (!args.record_id) 
+	if (!args.record_id) {
+		LOG.warn('使用new_record_id');
 		args.new_record_id = new_record_id;
+	}
 	
 	l_add_form({form:form, values_map:values_map, para:args}, function(err, result){
-		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:new_record_id});
+		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
 	});
 });
 
@@ -1158,6 +1178,7 @@ var l_add = function (para) {
 
 var l_add_form = function( para, onDone ) {
 	if (para.para.record_id) {
+		LOG.warn('使用record_id');
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
 			return onDone('values not found for record id [' + para.para.record_id + ']');
 		
@@ -1168,10 +1189,10 @@ var l_add_form = function( para, onDone ) {
 			if (err) {
 				return onDone('save to DB error: ' + err);
 			}
-			onDone(null);
+			return onDone(null);
 		});
 	} else {
-
+		LOG.warn('使用new_record_id');
 		LOG.warn('看這裡2');
 		LOG.warn(para.form.data.values);
 		
@@ -1184,11 +1205,19 @@ var l_add_form = function( para, onDone ) {
 			para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
 			
 			LOG.warn(para.form.data.values);
-			onDone(null);
+			return onDone(null);
 
 		});
 	}
 }
+
+var clone = function(obj) {
+	var new_obj = {};
+	for (key in obj) 
+		new_obj[key] = obj[key];
+	return new_obj;
+} // clone()
+
 
 SR.API.add('UPDATE_FORM_2', {
 	form_id:	'+string',		// form id
@@ -1240,13 +1269,16 @@ SR.API.add('UPDATE_FORM_2', {
 	if (typeof form.key_field === 'string' && form.key_field !== '') {
 		keymap = SR.State.get(form.name + 'Map');
 	}
-		
+	
+	var parent_record_id = args.record_id;
+	delete args['record_id'];
 	var jq = SR.JobQueue.createQueue();
 	// store each with unique record_id
 	for (var i=0; i < value_array.length; i++) {
 
 		var record_id = UTIL.createToken();
-		
+		LOG.warn('record_id = ------------');
+		LOG.warn(record_id);
 		// check for existing record_id
 		if (value_array[i]['_record_id']) {
 			record_id = value_array[i]['_record_id'];
@@ -1264,20 +1296,20 @@ SR.API.add('UPDATE_FORM_2', {
 		// }
 		
 		// add new record to key-value map
-		if (keymap) {
-			keymap[values[record_id][form.key_field]] = value_array[i];
-		}	
+		// if (keymap) {
+		// 	keymap[values[record_id][form.key_field]] = value_array[i];
+		// }	
 		
 		// check whether to store optional associated record_id
-		if (args.record_id) {
-			// values[record_id]['record_id'] = args.record_id;
-			// LOG.warn('values after storing record_id:');
-			// LOG.warn(values[record_id]);
-		} else {
-			args.new_record_id = record_id;
-		}
+		if (parent_record_id) {
+			value_array[i]['record_id'] = parent_record_id;
+			LOG.warn('values after storing record_id:');
+			LOG.warn(value_array[i]);
+		} 
 		
-		jq.add(l_add({form:form, values_map:value_array[i], para:args}));
+		args.new_record_id = record_id;
+		var new_para = clone(args);
+		jq.add(l_add({form:form, values_map:value_array[i], para:new_para}));
 		
 		record_ids.push(record_id);
 	}
