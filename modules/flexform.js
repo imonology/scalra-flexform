@@ -122,6 +122,7 @@ fields: 	'object', // 欄位名稱
 data:  		'object', // 欄位資料
 */
 
+/*
 SR.API.add('CREATE_FORM', {
 	name:		'string',
 	key_field:	'+string',
@@ -152,8 +153,9 @@ SR.API.add('CREATE_FORM', {
 		onDone(null, {id: form.id});
 	});
 });
+*/
 
-
+/*
 SR.API.add('UPDATE_FORM', {
 	form_id:	'+string',		// form id
 	form_name:	'+string',		// form name
@@ -248,7 +250,9 @@ SR.API.add('UPDATE_FORM', {
 		onDone(null, {form_id: args.form_id, record_ids: record_ids});
 	});	
 });
+*/
 
+/*
 // update values for certain fields (record_id optional)
 SR.API.add('UPDATE_FIELD', {
 	form_id: 	'+string',		// form id
@@ -346,6 +350,7 @@ SR.API.add('UPDATE_FIELD', {
 		onDone(null, {desc:'form [' + args.form_id + '] record [' + args.record_id + '] updated', record_id:args.record_id});
 	});
 });
+*/
 
 // allow string to check if it begins with something
 // ref: http://stackoverflow.com/questions/1767246/javascript-check-if-string-begins-with-something
@@ -417,6 +422,7 @@ SR.API.add('GET_FORM', {
 	});
 });
 
+/*
 // query content of a particular form based on form id or form name
 SR.API.add('QUERY_FORM', {
 	id:		'+string',			// form id
@@ -651,7 +657,9 @@ SR.API.add('QUERY_FORM', {
 	
 	onDone(null, form);
 });
+*/
 
+/*
 SR.API.add('INIT_FORM', {
 	name:	'string',
 	fields:	'array'
@@ -715,17 +723,17 @@ SR.API.add('INIT_FORM', {
 		});
 	});	
 });
-
+*/
 
 // ------------------------------------ flexform2 -----------------------------------------------
 
 
-SR.API.add('CREATE_FORM_2', {
+SR.API.add('CREATE_FORM', {
 	name:		'string',
 	key_field:	'+string',
 	fields: 	'object', // 欄位名稱
 }, function (args, onDone) {
-	LOG.warn('使用CREATE_FORM_2');
+	LOG.warn('使用CREATE_FORM');
 	var form = {
 		id: UTIL.createUUID(),
 		flexform_version: '2.0',
@@ -805,7 +813,7 @@ SR.API.add('CREATE_FORM_2', {
 
 });
 
-SR.API.add('QUERY_FORM_2', {
+SR.API.add('QUERY_FORM', {
 	id:		'+string',			// form id
 	name:	'+string',			// form name
 	query:	'+object',			// optional query finding exact matches
@@ -1042,7 +1050,7 @@ SR.API.add('QUERY_FORM_2', {
 	onDone(null, form);
 });
 
-SR.API.add('DELETE_FIELD_2', {
+SR.API.add('DELETE_FIELD', {
 	form_id: 	'+string',		// form id
 	form_name:	'+string',		// form name
 	record_id: 	'string'		// 要刪除的資料的record_id
@@ -1061,7 +1069,7 @@ SR.API.add('DELETE_FIELD_2', {
 });
 
 // update values for certain fields (record_id optional)
-SR.API.add('UPDATE_FIELD_2', {
+SR.API.add('UPDATE_FIELD', {
 	form_id: 	'+string',		// form id
 	form_name:	'+string',		// form name
 	record_id: 	'+string',		// unique record id, if not exist, then it's same as UPDATE_FORM
@@ -1178,7 +1186,7 @@ var l_add = function (para) {
 
 var l_add_form = function( para, onDone ) {
 	if (para.para.record_id) {
-		LOG.warn('使用record_id');
+		LOG.warn('使用record_id');                           
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
 			return onDone('values not found for record id [' + para.para.record_id + ']');
 		
@@ -1219,7 +1227,7 @@ var clone = function(obj) {
 } // clone()
 
 
-SR.API.add('UPDATE_FORM_2', {
+SR.API.add('UPDATE_FORM', {
 	form_id:	'+string',		// form id
 	form_name:	'+string',		// form name
 	values:		'+object',		// data to be stored
@@ -1327,7 +1335,7 @@ SR.API.add('UPDATE_FORM_2', {
 // 	});	
 });
 
-SR.API.add('INIT_FORM_2', {
+SR.API.add('INIT_FORM', {
 	name:	'string',
 	fields:	'array'
 }, function (args, onDone) {
@@ -1376,7 +1384,7 @@ SR.API.add('INIT_FORM_2', {
 		
 		LOG.warn('form [' + args.name + '] does not exist, create one...');
 				
-		SR.API.CREATE_FORM_2({
+		SR.API.CREATE_FORM({
 			name:		args.name,
 			fields: 	args.fields,
 			key_field:	key_field

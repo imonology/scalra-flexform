@@ -335,6 +335,7 @@ var generate_page = function () {
 
 // attempt to load form fields and generate form page after connecting to server
 var onConnect = function () {
+
 	console.log('onConnect forms:');
 	console.log(forms);
 	
@@ -498,6 +499,7 @@ function submit_form(form_id, onDone, parent_record_id) {
 	
 	// submit to server
 	// NOTE: all entries for a given form are submitted at once
+
 	SR.API.UPDATE_FORM({
 		form_id:		form_id,
 		value_array:	value_array,
@@ -507,7 +509,7 @@ function submit_form(form_id, onDone, parent_record_id) {
 			console.error(err);
 			return onDone(err);
 		}
-		
+
 		// result format: {form_id: 'string', record_id: 'string'}
 		// submit success
 		onDone(null, result);
