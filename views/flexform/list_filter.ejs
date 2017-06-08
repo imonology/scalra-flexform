@@ -66,7 +66,7 @@ var getArrayParameter = function (field_name) {
 var onConnect = function () {
 	var query = {name: para.form_name, 
 			     id: para.form_id};
-
+	
 	//if (para.start_date !== '' && para.end_date !== '') {
 	//	query['start_date'] = para.start_date;
 	//	query['end_date'] = para.end_date;
@@ -132,6 +132,7 @@ var onConnect = function () {
 	sum_fields = getArrayParameter('sum_fields');
 	filters = getArrayParameter('filters');
 	
+		
 	SR.API.QUERY_FORM(query, function (err, f) {
 		if (err) {
 			console.error(err);	
@@ -247,8 +248,6 @@ var onConnect = function () {
 		});	
 
 	});
-	
-
 }
 	
 // TODO: update all fields if 'id' is not specified?
