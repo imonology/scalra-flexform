@@ -77,9 +77,9 @@ l_module.start = function (config, onDone) {
 					LOG.warn( l_form_values[form_id]);
 
 					l_form[form_id].data.values = {};
-					l_form[form_id].data.values.add = l_form_values[form_id].add;
-					l_form[form_id].data.values.remove = l_form_values[form_id].remove;
-					l_form[form_id].data.values.size = l_form_values[form_id].size;
+					l_form[form_id].data.add = l_form_values[form_id].add;
+					l_form[form_id].data.remove = l_form_values[form_id].remove;
+					l_form[form_id].data.size = l_form_values[form_id].size;
 
 					for (record_id in l_form_values[form_id]) {
 						if (typeof(l_form_values[form_id][record_id]) === 'object') {
@@ -773,11 +773,12 @@ SR.API.add('CREATE_FORM', {
 			LOG.warn('INIT FORM成功');
 			
 			l_form[form.id].data.values = {};
-			l_form[form.id].data['values'].add = ref[form_name].add;
-			l_form[form.id].data['values'].f_remove = ref[form_name].f_remove;
-			l_form[form.id].data['values'].size = ref[form_name].size;
+			l_form[form.id].data.add = ref[form_name].add;
+			l_form[form.id].data.remove = ref[form_name].remove;
+			l_form[form.id].data.size = ref[form_name].size;
 			
 			l_form_values[form.id] = ref[form_name];
+			
 			
 			
 			// l_form[form.id].add = ref[form_name].add;
@@ -1060,7 +1061,7 @@ SR.API.add('DELETE_FIELD', {
 	if (!form.data.values[args.record_id])
 		return onDone(null, ('沒有record_id為 ' + args.record_id + ' 的資料'));
 	
-	form.data.values.remove({id:args.record_id}, function(err, result){
+	form.data.remove({id:args.record_id}, function(err, result){
 		if (err) {
 			return onDone(err); 
 		}
@@ -1204,7 +1205,7 @@ var l_add_form = function( para, onDone ) {
 		LOG.warn('看這裡2');
 		LOG.warn(para.form.data.values);
 		
-		para.form.data.values.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
+		para.form.data.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
 			if (err) {
 				return onDone(err);	
 			}
