@@ -26,23 +26,9 @@ l_models[l_dbForm] = {
 	data: 		'object', 	// 欄位名稱 & 欄位資料
 };
 
-//2017/5/28
-
-var dbNameGroup = 'UserGroups';
-var models = {};
-models[dbNameGroup] = {
-		name:		'*string',
-		users:		'array',
-		cameraGroups:'object',
-};
-
-//var l_groups = SR.State.get(dbNameGroupMap);
-
-//2017/05/28
 
 // module object
 var l_module = exports.module = {};
-
 
 // a pool for all message handlers
 var l_handlers = exports.handlers = {};
@@ -51,16 +37,6 @@ var l_checkers = exports.checkers = {};
 // module init
 l_module.start = function (config, onDone) {
 	LOG.warn('FlexForm module started...', l_name);
-	
-	SR.DS.init({models: models}, function (err, ref) {
-		if (err) {
-			LOG.error(err, l_name);	
-		}
-		
-		l_groups = ref[dbNameGroup];
-		
-		UTIL.safeCall(onDone);
-	});		
 	
 	SR.DS.init({models: l_models}, function (err, ref) {
 		if (err) {
@@ -80,42 +56,6 @@ l_module.stop = function (onDone) {
 
 // register this module
 SR.Module.add('FlexForm', l_module);
-SR.Module.add('UserGroups', l_module);
-
-SR.API.add('createUserGroup', {//新增Group內容
-	//_private:	true,
-	_summary:		'create a UserGroup',
-	_desc:			'provide user to creat a member group or madify group name',
-	group:			'string',//群組名稱
-	users:			'array',
-	cameraGroups:	'+object',//可觀看的攝影機群組
-	_response: {
-		list: ['group name has been created!']
-	}
-}, function (args, onDone , extra) {
-	
-	LOG.warn('creating group: ' + args.group);
-	LOG.warn('l_groups keys: ');
-	LOG.warn(Object.keys(l_groups));
-	
-	if (l_groups.hasOwnProperty(args.group) === true) {
-		return onDone('group [' + args.group + '] already exists');
-	}
-	
-	l_groups.add({
-		name:			args.group,
-		//account:	extra.session._user.account,		// collection of vid (storing in map form)
-		users:			[],
-		cameraGroups:	{list: args.cameraGroups},
-	}, function (err, record) {
-
-		if (err) {
-			LOG.error(err, l_name);	
-		}
-		return onDone(null, record);
-	});
-})
-
 
 /*
 id:			'string',
