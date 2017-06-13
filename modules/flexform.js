@@ -27,6 +27,7 @@ l_models[l_dbForm] = {
 	data: 		'object', 	// 欄位名稱 & 欄位資料
 };
 
+
 // module object
 var l_module = exports.module = {};
 
