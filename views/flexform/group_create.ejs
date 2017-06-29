@@ -1,0 +1,196 @@
+<% layout('template/common') %>
+<% block('title').append('<title>創建群組</title>') %>
+
+<script>
+var l_groups = {};	
+
+var list = [];
+var type;
+
+
+var group_id;
+var group_title;
+var form_name;
+var field;
+var onConnect = function () {
+	type = getParameterByName('type');
+	group_id = getParameterByName('group_id');
+	group_title = getParameterByName('group_title');
+	form_name = getParameterByName('form_name');
+	field = getParameterByName('field');
+	if (type === 'create') {
+		document.getElementById("title_text").innerHTML = '請輸入群組名稱與選取組員名單';
+		document.getElementById("submit_btn").innerHTML = 'CREATE';
+	}
+	else if (type === 'modify') {
+		document.getElementById("title_text").innerHTML = '修改群組名稱或組員名單';
+		document.getElementById("submit_btn").innerHTML = 'MODIFY';
+	}
+	else {
+		alert('type錯誤');
+		window.history.back();
+	}
+
+	load_group_name_table( );
+
+	SR.API.QUERY_ALL_LIST({form_name: form_name, field: field}, function (err, data) {
+		if (err){
+			console.log(err);
+			return;
+		}
+		if (data.result === 0) {
+			alert(data.desc);
+			history.back();
+			return;
+		}
+		list = data.list;
+		if (type === 'create') 
+			show_group_list();
+		else {
+			SR.API.QUERY_GROUP_MEMBER_LIST({
+				group_id: group_id,
+				group_name: getParameterByName('name'),
+			}, function (err, result) {
+				select_account = result.gm_list;
+				show_group_list();
+			});
+		}
+	});
+
+
+}
+
+var select_account = [];
+
+var load_group_name_table = function(  ) {
+
+	var html = '';
+	html += '<table>';
+	if (type === 'modify') {
+		html += '<tr>';
+		html += '<td>原群組名稱</td>';
+		html += '<td>'+getParameterByName('name')+'</td>';
+		html += '</tr>';
+	}
+	html += '<tr>';
+	if (type === 'modify') 
+		html += '<td>新的群組名稱</td>';
+	else 
+		html += '<td>群組名稱</td>';
+	html += '<td>';
+	html += '<input type = "text" id="group_create" value="'+(type === 'modify'?getParameterByName('name'):'')+'">';
+	html += '</td>';
+	html += '</tr>';
+	html += '</table>';
+	document.getElementById("group_name_table").innerHTML = html;
+
+} // load_group_name_table()
+
+var show_group_list = function() {
+	var html = '';
+	html += '<table class="customTable">';
+	for (var i in select_account) {
+		html += '<tr>';
+		html += '<td>'+select_account[i]+'</td>';
+		html += '<td><a class="button alt" href="javascript:del_account(\''+select_account[i]+'\')">刪除</a></td>';
+		html += '</tr>';
+	}
+		
+	
+	html += '<tr>';
+	html += '<td align="center" width="50%">';
+	html += '<select id="add_account">';
+	html += '<option value="">請選擇欲加入的帳號</option>';
+	for (var i in list) {
+		if (!check_select(list[i])) 
+			html += '<option value="'+list[i]+'">'+list[i]+'</option>';
+	}
+	html += '</select>';
+	html += '</td>';
+	html += '<td align="center" width="50%"><button onclick="add_account()">新增</button></td>';
+	html += "</tr>";
+	html += "</table>";
+	document.getElementById("form_table").innerHTML = html;
+} // show_group_list()
+
+var check_select = function(account) {
+	for (var i in select_account)
+		if (select_account[i] === account)
+			return true;
+	return false;
+} // check_select()
+
+var add_account = function() {
+	var account = document.getElementById("add_account").value;
+	if (account === '') {
+		alert('請選擇想加入此群組的帳號');
+		return;
+	}
+		
+	select_account.push(account);
+	show_group_list();
+} // add_account()
+
+var del_account = function(account){
+	console.log(account);
+	select_account.splice(select_account.indexOf(account), 1);
+
+	show_group_list();
+} // del_account()
+
+
+
+// create new device
+var checkGroup = function() {
+
+	// get device name / IP / port .. etc.
+	var group_name = document.getElementById('group_create').value;
+	if (group_name === '') {
+		alert('請輸入群組名稱');
+		return;
+	}
+	var para = {
+		group_id: group_id,
+		group: group_name,
+		users: select_account
+	};
+	if (getParameterByName('type')==='modify')
+		para.old_group = getParameterByName('name');
+
+
+	SR.API.createOrModifyGroup(para, function (err, result) {
+		if (err) {
+			alert(err);	
+		}
+		alert(result.desc);
+		if (result.result===1)
+			window.location='test_group_exchange?query=' + group_name + '&group=' + group_name + '&group_id=' + group_id + '&group_title=' + group_title + '&form_name=' + form_name + '&field=' + field ;
+	});
+}
+</script>
+			
+<section id="three" class="wrapper style2 special">
+	<div class="inner">
+		<header class="major narrow">
+			<h2><div id="form_title"></div></h2>
+			<p id = "title_text"></p>
+		</header>
+
+			<div class="" id="group_name_table">
+				
+			</div>
+
+			<p>組員名單</p>
+			<div class="" id="form_table">
+				
+			</div>
+
+			<ul class="actions">
+				<li><a class="button alt" href="javascript:checkGroup()" id="submit_btn"></a></li>
+				<li><a class="button special" href="/main">回主頁面</a></li>
+			</ul>
+
+
+	</div>
+</section>
+

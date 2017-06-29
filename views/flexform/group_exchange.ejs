@@ -1,0 +1,152 @@
+<% layout('template/common') %>
+<% block('title').append('<title>變更群組</title>') %>
+
+<script>
+var query = getParameterByName('query');
+var group = getParameterByName('group');
+var group_id = getParameterByName('group_id');
+var group_title = getParameterByName('group_title');
+var form_name = getParameterByName('form_name');
+var field = getParameterByName('field');
+var query_result = undefined;
+	
+var onConnect = function () {
+	if (query) {
+		document.getElementById("query_group").value = query;
+		query_group_by_partial();
+	}
+	
+	
+} // onConnect()
+
+function reload(query, group){
+	var url = 'test_group_exchange';
+	url += '?group_id=' + group_id + '&group_title=' + group_title + '&form_name=' + form_name + '&field=' + field ;
+	if (query) 
+		url += '&query=' + query;
+	if (group) 
+		url += '&group=' + group;
+	window.location.href=url;
+}
+
+function submit(){
+	if (document.getElementById("query_group").value === "") {
+		alert("搜尋欄不能為空");
+		return;
+	}
+
+	reload(document.getElementById("query_group").value);
+} // function submit()
+
+// 依照輸入的query，找出partial符合的group name
+var query_group_by_partial = function() {
+	var value = document.getElementById("query_group").value;
+	SR.API.QUERY_GROUP_BY_PARTIAL({group_id:group_id, value:value}, function (err, data) {
+		if (err) {
+			console.error('no form can be found');
+			alert(err);
+			return;
+		}
+
+		if (Object.keys(data).length === 0) {
+			alert('查不到名稱包含 ' + value + ' 的群組');
+			return;
+		}
+
+		query_result = {};
+		for (var record_id in data) {
+			var group_name = data[record_id].name;
+			query_result[group_name] = {};
+			query_result[group_name].name = data[record_id].name;
+			query_result[group_name].gm_list = data[record_id].gm_list;
+			if (Object.keys(data).length === 1 && group === null)
+				group = data[record_id].name;
+		}
+		
+		if (group) {
+			one_group_result(group);
+			return;
+		}
+
+		multi_group_result();
+		
+	});
+	
+	
+} // query_group_by_partial()
+
+var one_group_result = function(group_name) {
+	var html = '';
+	html += '<p>群組資料</p>';
+	html += '<table class="customTable">';
+
+	html += '<tr>';
+	html += '<td>群組名稱</td>' + '<td>' + group_name + '</td>';
+	html += '</tr>';
+	
+	html += '<tr>';
+	html += '<td>組員名單</td>' + '<td>' + query_result[group_name].gm_list + '</td>';
+	html += '</tr>';
+	
+	html += "</table>";
+	
+	html += '<table class="customTable">';
+	html += '<tr>';
+	html += '<td><button onclick="location.href=\'/test_group_create?type=modify&name='+group_name + '&group_id=' + group_id + '&group_title=' + group_title + '&form_name=' + form_name + '&field=' + field  +'\'">修改群組名稱或組員名單</button></td><td></td>';
+	html += "</tr>";
+	html += "</table>";
+	
+	document.getElementById("form_table").innerHTML = html;
+} // one_group_result()
+
+var multi_group_result = function() {
+	var html = "";
+	html += '<p>查詢到不只一筆資料，請選擇</p>';
+	html += '<table class="customTable">';
+	for (var group_name in query_result) {
+		html += "<tr>";
+		var query = document.getElementById("query_group").value;
+		html += '</td><td align="center" width="50%">' + query_result[group_name].name + "</td><td align=\"center\" width=\"50%\"><button onclick=\"reload('"+ query +"','" + group_name + "')\">選擇</button></td>";
+		html += "</tr>";
+	}
+	html += "</table>";
+	document.getElementById("form_table").innerHTML = html;
+} // multi_group_result()
+
+	function onKeyPress (event) {
+		if (event.keyCode === 13) { 
+			submit();	
+		}
+	}
+
+</script>
+			
+<section id="three" class="wrapper style2 special">
+	<div class="inner">
+		<header class="major narrow">
+			<h2><div id="form_title"></div></h2>
+			<p>群組變更或修改</p>
+		</header>
+
+		<table class="customTable" >
+			<tr><td style="vertical-align:middle">請輸入欲更改的群組名稱</td>
+				<td style="vertical-align:middle"><input type="text" id="query_group" name="query_name" onkeypress="return onKeyPress(event);"></td>
+				<td style="vertical-align:middle" width="50"><button onclick="submit()">搜尋</button></td><tr>
+			<!-- <tr><td colspan="2"><button onclick="query_account()">搜尋</button><tr> -->
+		</table>
+
+		<div class="" id="form_table">
+
+		</div>
+			  
+	  
+		<ul class="actions">						
+			<!-- <li><a class="button special" href="javascript:submit()">送出</a></li> -->
+			<li><a class="button special" href="/main">回主畫面</a></li>	
+			<li><a class="button special" href="javascript:window.history.back();">回上一頁</a></li>	
+				
+		</ul>
+
+	</div>
+</section>
+

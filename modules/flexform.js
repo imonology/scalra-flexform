@@ -728,6 +728,159 @@ SR.API.add('INIT_FORM', {
 
 // ------------------------------------ flexform2 -----------------------------------------------
 
+// ++++++++++++++++++++++++++++++++++群組用++++++++++++++++++++++++++++++++++
+SR.API.add('QUERY_ALL_LIST', {
+	_login: true,
+	form_name: 'string',
+	field: 'string',
+}, function (args, onDone, extra) {
+	if (extra && extra.session._user.account !== 'admin')
+		return onDone(null, {result:0, desc: '你沒有權限這麼做'});
+	var list = [];
+
+	SR.API.QUERY_FORM({name: args.form_name}, function (err, form) {
+		var have = false;
+		for (var i in form.data.fields)
+			if (form.data.fields[i].id === args.field)
+				have = true;
+		if (!have)
+			return onDone(null, 'no this field');
+		for (record_id in form.data.values) 
+			if (typeof(form.data.values[record_id]) === 'object')
+				list.push(form.data.values[record_id][args.field]);
+		return onDone(null, {result:1, list: list});
+	});
+});
+
+SR.API.add('QUERY_GROUP_MEMBER_LIST', {
+	_login: 	true,
+	group_id:	'string',
+	group_name:	'string'
+}, function (args, onDone, extra) {
+	if ( extra && extra.session._user.account !== 'admin' )
+		return onDone(null, {result:0, desc: '你沒有權限這麼做'});
+	form_name = args.group_id;
+
+	var para = {name: form_name};
+	para.query = {name: args.group_name};
+	// para.show = ['account', 'name', 'address', 'sex', 'tel', 'intro'];
+	
+	SR.API.QUERY_FORM(para, function (err, form) {
+		if (err) {
+			LOG.error('no form can be found');
+			return onDone(err);
+		}
+		var gm_list = form.data.values[Object.keys(form.data.values)[0]].gm_list;
+		
+		onDone(null, {result:1, gm_list: gm_list});
+	});
+});
+
+SR.API.add('createOrModifyGroup', {//新增Group內容
+	_login: true,
+	group_id:	'string',
+	old_group:	'+string',
+	group:		'string',
+	users:		'array'
+}, function (args, onDone, extra) {
+	
+	SR.API.INIT_FORM({
+		name: args.group_id,
+		fields: [		
+			{id: '*name', name: 'Name', type: 'string', desc: 'Your group name', must: true, show: true, option: undefined},
+			{id: 'gm_list', name: 'Group Member List', type: 'string', desc: '', must: false, show: true, option: undefined},
+		]
+	}, function (err, ref) {
+		if (err) {
+			return onDone('init form error');
+		}
+	
+		var para = {
+			name: args.group_id,
+			query:{ name: args.group }
+		};
+		SR.API.QUERY_FORM(para, function (err, result) {
+			var account = extra.session._user.account;
+			var count = 0;
+			for (record_id in result.data.values) count ++;
+
+			if (!args.old_group && count !== 0) {
+				return onDone(null, {result:0, desc:'此group已經被定義過'});
+			} else {
+				if (args.old_group) {
+					if (args.old_group !== args.group && count !== 0)
+						return onDone(null, {result:0, desc:'此group已經被定義過'});
+					SR.API.QUERY_FORM({name: args.group_id,query:{ name: args.old_group }}, function (err, result2) {
+						var old_record_id = Object.keys(result2.data.values)[0];
+						value = {}
+						value.id = result2.data.values[old_record_id].id
+						value.name = args.group;
+						value.account = account;
+						value.gm_list = args.users;
+						SR.API.UPDATE_FIELD({
+							form_name: args.group_id,
+							record_id:	old_record_id,
+							values: value 
+						}, function (err, result) {
+							if (err) {
+								LOG.warn(err);
+							}
+
+							return onDone(null, {result:1, desc: '修改成功' });
+						});
+					});
+				} else {
+					value = {}
+					value.id = UTIL.createToken();
+					value.name = args.group;
+					value.account = account;
+					value.gm_list = args.users;
+					SR.API.UPDATE_FIELD({
+						form_name: args.group_id,
+						values: value 
+					}, function (err, result) {
+						if (err) {
+							LOG.warn(err);
+						}
+
+						return onDone(null, {result:1, desc: '創建成功' });
+					})
+				}
+			}	
+		});
+
+		return onDone();
+	});
+});
+
+// 查詢GROUP
+SR.API.add('QUERY_GROUP_BY_PARTIAL',{
+	group_id:	'string',
+	value: 		'string',
+}, function (args, onDone) {
+	var para;
+	var form_name;
+
+	form_name = args.group_id;
+
+	para = {name: form_name};
+	para.query_partial = {name: args.value};
+	// para.show = ['account', 'name', 'address', 'sex', 'tel', 'intro'];
+	
+	SR.API.QUERY_FORM(para, function (err, form) {
+		if (err) {
+			LOG.error('no form can be found');
+
+			return onDone(err);
+		}
+		
+		LOG.warn('查詢部分符合之群組');
+		LOG.warn(form);
+		onDone(null, form.data.values);
+	});
+});
+
+// ----------------------------------群組用----------------------------------
 
 SR.API.add('CREATE_FORM', {
 	name:		'string',
@@ -1101,11 +1254,16 @@ SR.API.add('UPDATE_FIELD', {
 
 		form = l_form[args.form_id];
 	}
-	
 	LOG.warn('values to update:');
 	LOG.warn(args.values);
 	// var values_map = form.data.values;
 	var values_map = {};
+	if (args.record_id) {
+		if (form.data.values.hasOwnProperty(args.record_id) === false)
+			return onDone('values not found for record id [' + args.record_id + ']');	
+		values_map = form.data.values[args.record_id];
+	}
+		
 	
 	// check if this is new record
 	if (!args.record_id) {
@@ -1155,11 +1313,13 @@ SR.API.add('UPDATE_FIELD', {
 	}
 	// LOG.warn('找BUG 2');
 	// record to form map if form's 'key_field' exists
+	/*
 	if (typeof form.key_field === 'string' && form.key_field !== '') {
 		var keymap = SR.State.get(form.name + 'Map');
 		// keymap[values_map[args.record_id][form.key_field]] = values_map[args.record_id];	
 		keymap[values_map[form.key_field]] = values_map;	
 	}
+	*/
 	// LOG.warn('找BUG 3');
 	//LOG.warn('final data to sync:');
 	//LOG.warn(values_map[args.record_id]);
@@ -1177,6 +1337,34 @@ SR.API.add('UPDATE_FIELD', {
 	});
 });
 
+var multivalues_record_id = [];
+
+SR.API.add('UPDATE_FORM_WITH_MULTIVALUES',{
+	form_array:	'array',
+} , function (args, onDone) {
+	var jq = SR.JobQueue.createQueue();
+	multivalues_record_id = [];
+	for (var i in args.form_array)
+		jq.add(l_add_update_filed( args.form_array[i] ));
+
+	jq.run(function (err) {
+		return onDone(null,{record_ids: multivalues_record_id,desc:'update successed!'});
+	});
+});
+
+var l_add_update_filed = function (para) {
+	return function (onD) {
+		SR.API.UPDATE_FIELD(para, function(err, result){
+			if (err){
+				LOG.warn(err);
+				return onD(err);
+			}
+			multivalues_record_id.push(result.record_id);
+			onD();
+		});
+	}
+}
+
 // helper
 var l_add = function (para) {
 
@@ -1191,18 +1379,21 @@ var l_add_form = function( para, onDone ) {
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
 			return onDone('values not found for record id [' + para.para.record_id + ']');
 		
-		for (key in para.values_map)
-			para.form.data.values[para.para.record_id][key] = para.values_map[key];
-		// para.form.data.values[para.para.record_id].values = para.values_map;
-		para.form.data.values[para.para.record_id].sync(function (err) {
+		for (key in para.values_map){
+			LOG.warn('存的key ' + key);
+			LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
+			l_form_values[para.form.id][para.para.record_id].values[key] = para.values_map[key];
+		}
+
+		l_form_values[para.form.id][para.para.record_id].values.sync(function (err) {
 			if (err) {
 				return onDone('save to DB error: ' + err);
 			}
+			LOG.warn('存進DB')
 			return onDone(null);
 		});
 	} else {
 		LOG.warn('使用new_record_id');
-		LOG.warn('看這裡2');
 		LOG.warn(para.form.data.values);
 		
 		para.form.data.values.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
@@ -1362,11 +1553,19 @@ SR.API.add('INIT_FORM', {
 			form.data.fields = args.fields;
 			form.key_field = key_field;			
 			
+			var temp_values = form.data.values;
+			
+			// 避免修改到lobby: FlexForm內的資料，沒有這處理會新增values
+			form.data.values = null;
+			delete form.data.values;
+			
 			form.sync(function (err) {
 				if (err) {
 					return onDone(err);
 				}
-				
+				// 在記憶體中加回values
+				form.data.values = {};
+				form.data.values = temp_values;
 				// re-build key_field based mapping
 				if (form.key_field && form.key_field !== '') {
 					var values = form.data.values;
@@ -1378,7 +1577,6 @@ SR.API.add('INIT_FORM', {
 				
 				return onDone(null, ref);
 			})
-			
 			// NOTE: return here in needed as sync above won't return immediately
 			return;
 		}

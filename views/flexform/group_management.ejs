@@ -1,0 +1,49 @@
+<% layout('template/common') %>
+<% block('title').append('<title>Main</title>') %>
+
+<script>
+
+var group_id = getParameterByName('group_id');
+var group_title = getParameterByName('group_title');
+var group_member_form = getParameterByName('group_member_form');
+var use_group_member_form_field = getParameterByName('use_group_member_form_field');
+console.log('group_title = ' + group_title);
+
+var onConnect = function () {
+	document.getElementById("group_title").innerHTML = group_title + '管理';
+	document.getElementById("group_create").href = '/test_group_create?type=create&group_id=' + group_id + '&group_title=' + group_title + '&form_name=' + group_member_form + '&field=' + use_group_member_form_field ;
+	document.getElementById("group_list").href = '/list?show_field=[name,gm_list]&form_name=' + group_id;
+	document.getElementById("group_exchange").href = '/test_group_exchange?type=create&group_id=' + group_id + '&group_title=' + group_title + '&form_name=' + group_member_form + '&field=' + use_group_member_form_field ;
+	console.log('最終');
+	console.log(document.getElementById("group_create").href);
+}
+
+</script>
+			
+<section id="three" class="wrapper style2 special">
+	<div class="inner">
+		<header class="major narrow">
+			<h2 id="group_title"></h2>
+			<p>Please select which functions to perform</p>
+		</header>
+		<form name="login" action="" method="GET">
+
+			<ul class="actions">
+				<li><a class="button alt" href="" id="group_create">創立群組</a></li>
+				<li><a class="button alt" href="" id="group_list">群組列表</a></li>
+				<li><a class="button alt" href="/test_group_exchange" id="group_exchange">群組管理</a></li>
+				<!-- <li><a class="button alt" href="/visual_camera_group">指定觀看群組</a></li> -->
+				<li><a class="button special" href="javascript:window.history.back();">回上一頁</a></li>
+				<li><a class="button special" href="/main">回主畫面</a></li>	
+				<!-- <li><a class="button alt" href="javascript:logout('<%= login.account %>')">Logout</a></li> -->
+			</ul>
+
+			<% 	if (login.admin) { %>
+					<ul class="actions">
+					<!-- <li><a class="button alt" href="/manage_groups">Assign Roles</a></li> -->
+					</ul>
+			<%	} %>
+		</form>
+	</div>
+</section>
+
