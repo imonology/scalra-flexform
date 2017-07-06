@@ -138,3 +138,97 @@ function uploadFile(account, onDone) {
 		}
 	});
 } // function uploadFile()
+
+var flexform_table_num = 0;
+var flexform_tables_para = [];
+
+function flexform_show_table(flexform_values, show_lines) {
+	var html = '';
+	var table_para = {};
+	table_para.data_num = flexform_values.data.length;
+	html += '<table id="flexform-table'+flexform_table_num+'"  border="1" class="customTable">';
+	// field
+	html += '<tr>';
+	// for (var i in flexform_values.field) 
+	// 	html += '<th  onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\')" >' + flexform_values.field[i].value + '</th>';
+	for (var i in flexform_values.field) {
+		var content = '';
+		content += '<li  class="drop-down-menu">';
+		content += flexform_values.field[i].value;
+		content += '  <i class="fa fa-caret-square-o-down" aria-hidden="true"></i>';
+		content += '<ul>'
+		content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\', \'BigToSmall\')">由大到小排序</li>'
+		content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\', \'SmallToBig\')">由小到大排序</li>'
+		content += '</ul>'
+		content += '</li>';
+		html += '<th>' + content + '</th>';
+	}
+	html += '</tr>';
+	
+	for (var i in flexform_values.data) {
+		if (show_lines)
+			html += '<tr '+(i>show_lines-1?'style="display: none;"':'')+'>';
+		for (var j in flexform_values.field) 
+			html += '<td>' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+		html += '</tr>';
+	}
+	
+	
+	html += '</table>';
+	if (show_lines) {
+		table_para.show_lines = show_lines
+		html += '<button onclick="flexform_table_show_more(this, \''+flexform_table_num+'\')">Show more '+(flexform_values.data.length - show_lines - 1)+' row</button>';
+	}
+	flexform_table_num++;
+	flexform_tables_para.push(table_para);
+	return html;
+} // function flexform_show_table()
+
+function flexform_table_show_more(btn, table_num) {
+	var f_table = document.getElementById('flexform-table' + table_num);
+	var show_lines = flexform_tables_para[parseInt(table_num)].show_lines;
+	if (btn.innerHTML !== 'Show less') {
+		btn.innerHTML = 'Show less';
+		for ( var i = show_lines+1 ; i < f_table.rows.length ; i++)
+			f_table.rows[i].style.display = '';
+	} else {
+		btn.innerHTML = 'Show more '+( flexform_tables_para[parseInt(table_num)].data_num - flexform_tables_para[parseInt(table_num)].show_lines - 1)+' row';
+		for ( var i = show_lines+1 ; i < f_table.rows.length ; i++)
+			f_table.rows[i].style.display = 'none';
+	}
+	
+} // flexform_table_show_more()
+
+function flexform_sort_table(table_num, cell_num, type) {
+	var f_table = document.getElementById('flexform-table' + table_num);
+	cell_num = parseInt(cell_num);
+	var is_num = true;
+	for (var i = 1 ; i < f_table.rows.length ; i++)
+		if(isNaN(f_table.rows[i].cells[cell_num].innerHTML))
+			is_num = false;
+
+	for (var i = 1 ; i < f_table.rows.length ; i++)
+		for (var j = i+1 ; j < f_table.rows.length ; j++) {
+			if (type === 'SmallToBig') {
+				if (is_num && parseInt(f_table.rows[j].cells[cell_num].innerHTML) < parseInt(f_table.rows[i].cells[cell_num].innerHTML) ) 
+					flexform_change_row(f_table, i, j);
+				else if (!is_num && f_table.rows[j].cells[cell_num].innerHTML < f_table.rows[i].cells[cell_num].innerHTML)
+					flexform_change_row(f_table, i, j);	
+			} else {
+				if (is_num && parseInt(f_table.rows[j].cells[cell_num].innerHTML) > parseInt(f_table.rows[i].cells[cell_num].innerHTML) ) 
+					flexform_change_row(f_table, i, j);
+				else if (!is_num && f_table.rows[j].cells[cell_num].innerHTML > f_table.rows[i].cells[cell_num].innerHTML)
+					flexform_change_row(f_table, i, j);	
+			}
+		}
+			
+	// console.log( document.getElementById('flexform-table' + flexform_table_num).rows[1].cells[0].innerHTML);
+} // flexform_sort_table()
+
+function flexform_change_row(f_table, i, j) {
+	for ( var k = 0 ; k < f_table.rows[j].cells.length ; k++ ) {
+		var temp = f_table.rows[j].cells[k].innerHTML;
+		f_table.rows[j].cells[k].innerHTML = f_table.rows[i].cells[k].innerHTML;
+		f_table.rows[i].cells[k].innerHTML = temp;
+	}
+} // flexform_change_row()
