@@ -739,15 +739,22 @@ SR.API.add('QUERY_ALL_LIST', {
 	var list = [];
 
 	SR.API.QUERY_FORM({name: args.form_name}, function (err, form) {
-		var have = false;
-		for (var i in form.data.fields)
-			if (form.data.fields[i].id === args.field)
-				have = true;
-		if (!have)
-			return onDone(null, 'no this field');
+		if (args.field) {
+			var have = false;
+			for (var i in form.data.fields)
+				if (form.data.fields[i].id === args.field)
+					have = true;
+			if (!have)
+				return onDone(null, 'no this field');
+		}
+		
 		for (record_id in form.data.values) 
-			if (typeof(form.data.values[record_id]) === 'object')
-				list.push(form.data.values[record_id][args.field]);
+			if (typeof(form.data.values[record_id]) === 'object') {
+				var temp = {key_field: form.data.values[record_id][form.key_field]};
+				if (args.field)
+					temp['field'] = form.data.values[record_id][args.field];
+				list.push(temp);
+			}
 		return onDone(null, {result:1, list: list});
 	});
 });
@@ -770,6 +777,9 @@ SR.API.add('QUERY_GROUP_MEMBER_LIST', {
 			LOG.error('no form can be found');
 			return onDone(err);
 		}
+		
+		if (Object.keys(form.data.values).length === 0)
+			return onDone(null, {result:0, desc: 'no this group'});
 		var gm_list = form.data.values[Object.keys(form.data.values)[0]].gm_list;
 		
 		onDone(null, {result:1, gm_list: gm_list});

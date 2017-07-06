@@ -32,8 +32,9 @@ var onConnect = function () {
 	}
 
 	load_group_name_table( );
-
-	SR.API.QUERY_ALL_LIST({form_name: form_name, field: field}, function (err, data) {
+	var para = {form_name: form_name};
+	if (field) para['field'] = field;
+	SR.API.QUERY_ALL_LIST(para, function (err, data) {
 		if (err){
 			console.log(err);
 			return;
@@ -51,6 +52,11 @@ var onConnect = function () {
 				group_id: group_id,
 				group_name: getParameterByName('name'),
 			}, function (err, result) {
+				if (result.result === 0) {
+					alert('找不到 ' + getParameterByName('name') + ' 這個group');
+					history.back();
+				}
+					
 				select_account = result.gm_list;
 				show_group_list();
 			});
@@ -91,7 +97,14 @@ var show_group_list = function() {
 	html += '<table class="customTable">';
 	for (var i in select_account) {
 		html += '<tr>';
-		html += '<td>'+select_account[i]+'</td>';
+		if (field) {
+			for (var j in list)
+				if (list[j].key_field === select_account[i]) {
+					html += '<td>'+ list[j].field + ' (' +select_account[i]+')</td>';
+					break;
+				}	
+		} else
+			html += '<td>'+select_account[i]+'</td>';
 		html += '<td><a class="button alt" href="javascript:del_account(\''+select_account[i]+'\')">刪除</a></td>';
 		html += '</tr>';
 	}
@@ -102,8 +115,12 @@ var show_group_list = function() {
 	html += '<select id="add_account">';
 	html += '<option value="">請選擇欲加入的帳號</option>';
 	for (var i in list) {
-		if (!check_select(list[i])) 
-			html += '<option value="'+list[i]+'">'+list[i]+'</option>';
+		if (!check_select(list[i])) {
+			if(typeof(list[i].field !== 'undefined'))
+				html += '<option value="'+list[i].key_field+'">'+list[i].field + ' (' + list[i].key_field+')</option>';
+			else
+				html += '<option value="'+list[i].key_field+'">'+list[i].key_field+'</option>';
+		}
 	}
 	html += '</select>';
 	html += '</td>';
