@@ -142,6 +142,25 @@ function uploadFile(account, onDone) {
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
+function array_to_flexform_table(arr_data) {
+	var flexform_table = {};
+	flexform_table.field = [];
+	flexform_table.data = [];
+	for (var i in arr_data[0])
+		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i]});
+	
+	for (var i in arr_data) {
+		if (i === '0') continue;
+		var temp_data = {};
+		for (var j in arr_data[i]) 
+			temp_data[flexform_table.field[j].key] = arr_data[i][j];
+		flexform_table.data.push(temp_data);
+	}
+		
+
+	return flexform_table;
+}
+
 function flexform_show_table(flexform_values, show_lines) {
 	var html = '';
 	var table_para = {};
