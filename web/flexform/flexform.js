@@ -156,8 +156,22 @@ function array_to_flexform_table(arr_data) {
 			temp_data[flexform_table.field[j].key] = arr_data[i][j];
 		flexform_table.data.push(temp_data);
 	}
-		
+	return flexform_table;
+}
 
+function flexform_to_flexform_table(form) {
+	var flexform_table = {};
+	flexform_table.field = [];
+	flexform_table.data = [];
+	for (var i in form.data.fields)
+		flexform_table.field.push({key: form.data.fields[i].id, value: form.data.fields[i].name});
+	for (var record_id in form.data.values) {
+		var temp_data = {};
+		for (var i in flexform_table.field) 
+			temp_data[flexform_table.field[i].key] = form.data.values[record_id][flexform_table.field[i].key];
+		temp_data['record_id'] = record_id;
+		flexform_table.data.push(temp_data);
+	}
 	return flexform_table;
 }
 
