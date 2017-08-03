@@ -7,6 +7,11 @@
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>	
 
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
 <script>
 
 // get data first
@@ -182,6 +187,29 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			//var display = (values[fields[i].id] ? 'block' : 'none');
 			html += '<div id="uploaded_photo"><img id="show_image" width="250" src="/web/images/<%=login.account%>.jpg" style="display: none;" onload="has_img(this, \''+entry_id + '-' + fields[i].id +'\')" onerror="no_img(\''+entry_id + '-' + fields[i].id +'\')" ></div>'
 
+		} else if (fields[i].type === 'autocomplete') {
+			var value = values_data.replace(/\"/g, "&quot;");
+			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">';
+			$( function() {
+				var key_id = fields[i].id;
+				SR.API.QUERY_FORM({name: forms[0].name}, function (err, form) {
+					if (err) {
+						console.log(err);	
+					}
+					var ans = [];
+					for (var r_id in form.data.values)
+						ans.push(form.data.values[r_id][key_id]);
+					$( "#" + entry_id + '-' + key_id ).autocomplete({
+					  source: ans
+					});
+				});	
+			});
+		} else if (fields[i].type === 'textarea') {
+			var value = values_data.replace(/\"/g, "&quot;");
+			html += '<textarea rows="8" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '"></textarea>';
+		} else if (fields[i].type === 'lock') {
+			var value = getParameterByName(fields[i].id);
+			html += '<input readonly="readonly" type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">';
 		} else {
 			// for strings			
 			var value = values_data.replace(/\"/g, "&quot;");
@@ -500,7 +528,7 @@ function submit_form(form_id, onDone, parent_record_id) {
 	// submit to server
 	// NOTE: all entries for a given form are submitted at once
 
-	SR.API.UPDATE_FORM({
+	SR.API.UPDATE_FORM({  
 		form_id:		form_id,
 		value_array:	value_array,
 		record_id:		parent_record_id

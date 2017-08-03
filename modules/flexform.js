@@ -1528,6 +1528,20 @@ SR.API.add('UPDATE_FORM', {
 		
 		args.new_record_id = record_id;
 		var new_para = clone(args);
+		
+		
+		LOG.warn('測試default用');
+		LOG.warn(value_array[i]);
+		LOG.warn(form.data.fields);
+		for (var j in form.data.fields) 
+			if (typeof(form.data.fields[j].default)!=='undefined') {
+				LOG.warn(form.data.fields[j].id + '為default');
+				if (!value_array[i][form.data.fields[j].id]) {
+					value_array[i][form.data.fields[j].id] = form.data.fields[j].default;
+					LOG.warn('新增default');
+				}
+			}
+
 		jq.add(l_add({form:form, values_map:value_array[i], para:new_para}));
 		
 		record_ids.push(record_id);
