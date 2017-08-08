@@ -443,7 +443,8 @@ function submit() {
 		//SR.publish('main', { msg: 'new'});
 		
 		alert('填寫成功!');
-		document.location = '/main';		
+		// document.location = '/main';		
+		history.back();
 	}
 	
 	submit_form(form_id, function (err, info) {
