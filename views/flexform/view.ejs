@@ -213,9 +213,12 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			});
 		} else if (fields[i].type === 'textarea') {
 			var value = values_data.replace(/\"/g, "&quot;");
-			html += '<textarea rows="8" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '"></textarea>';
+			html += '<textarea rows="8" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">'+value+'</textarea>';
 		} else if (fields[i].type === 'lock') {
-			var value = getParameterByName(fields[i].id);
+			if (record_id)
+				var value = values_data.replace(/\"/g, "&quot;");
+			else
+				var value = getParameterByName(fields[i].id);
 			html += '<input readonly="readonly" type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">';
 		} else {
 			// for strings			
