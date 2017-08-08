@@ -197,8 +197,15 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 						console.log(err);	
 					}
 					var ans = [];
+					function haveSame(arr, str){
+						for (var i in arr)
+							if (arr[i] === str)
+								return true;
+						return false;
+					}
 					for (var r_id in form.data.values)
-						ans.push(form.data.values[r_id][key_id]);
+						if (!haveSame(ans, form.data.values[r_id][key_id]))
+							ans.push(form.data.values[r_id][key_id]);
 					$( "#" + entry_id + '-' + key_id ).autocomplete({
 					  source: ans
 					});
