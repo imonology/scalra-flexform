@@ -1351,6 +1351,15 @@ SR.API.add('UPDATE_FIELD', {
 		args.new_record_id = new_record_id;
 	}
 	
+	for (var j in form.data.fields) 
+		if (typeof(form.data.fields[j].default)!=='undefined') {
+			// LOG.warn(form.data.fields[j].id + '為default');
+			if (!values_map[form.data.fields[j].id]) {
+				values_map[form.data.fields[j].id] = form.data.fields[j].default;
+				// LOG.warn('新增default');
+			}
+		}
+	
 	l_add_form({form:form, values_map:values_map, para:args}, function(err, result){
 		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
 	});
@@ -1529,16 +1538,15 @@ SR.API.add('UPDATE_FORM', {
 		args.new_record_id = record_id;
 		var new_para = clone(args);
 		
-		
-		LOG.warn('測試default用');
-		LOG.warn(value_array[i]);
-		LOG.warn(form.data.fields);
+		// LOG.warn('測試default用');
+		// LOG.warn(value_array[i]);
+		// LOG.warn(form.data.fields);
 		for (var j in form.data.fields) 
 			if (typeof(form.data.fields[j].default)!=='undefined') {
 				LOG.warn(form.data.fields[j].id + '為default');
 				if (!value_array[i][form.data.fields[j].id]) {
 					value_array[i][form.data.fields[j].id] = form.data.fields[j].default;
-					LOG.warn('新增default');
+					// LOG.warn('新增default');
 				}
 			}
 
