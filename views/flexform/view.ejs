@@ -217,9 +217,16 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 		} else if (fields[i].type === 'lock') {
 			if (record_id)
 				var value = values_data.replace(/\"/g, "&quot;");
-			else
+			else 
 				var value = getParameterByName(fields[i].id);
-			html += '<input readonly="readonly" type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">';
+			var value_list = value.split(',');
+			
+			html += '<select id="' + entry_id + '-' + fields[i].id + '">';
+			for (var j=0; j < value_list.length; j++) {
+				var checked = (value_list[j] === values_data);			
+				html += '<option value="' + value_list[j] + '" ' + (checked === true ? 'selected' : '') + '>' + value_list[j] + '</option>';
+			}
+			html += '</select>';
 		} else {
 			// for strings			
 			var value = values_data.replace(/\"/g, "&quot;");
