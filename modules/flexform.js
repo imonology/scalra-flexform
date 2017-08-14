@@ -1651,13 +1651,17 @@ SR.API.add('INIT_FORM', {
 
 // 上傳照片
 SR.API.add('UPLOAD_IMAGE', {
-	filename:	'string'		// name of the uploaded image file
+	filename:		'string',		// name of the uploaded image file
+	new_filename:	'string'
 }, function (args, onDone, extra) {
 	if (!extra) {
 		LOG.warn('無法在server端呼叫')
 		return onDone('無法在server端呼叫');
 	}
-	var account = extra.session._user.account;
+	if (!args.new_filename)
+		var account = extra.session._user.account;
+	else
+		var account = args.new_filename;
 	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
 	var filename_no_dot = args.filename.split(".");
 	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, account + '.' + filename_no_dot[1] );
@@ -1669,7 +1673,7 @@ SR.API.add('UPLOAD_IMAGE', {
 		if (err) throw err;
 		SR.fs.stat(new_name_path, (err, stats) => {
 			if (err) throw err;
-			console.log('成功rename');
+			console.log('成功rename ' + account);
 		});
 	});
 	

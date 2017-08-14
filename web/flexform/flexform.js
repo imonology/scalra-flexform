@@ -72,7 +72,7 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function uploadFile(account, onDone) {
+function uploadFile(new_file_name, onDone) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	var formData = new FormData($("#frmUploadFile")[0]);
 	var fullPath = document.getElementById('upload_file').value;
@@ -116,7 +116,8 @@ function uploadFile(account, onDone) {
 				console.log(data.upload);
 				
 				SR.API.UPLOAD_IMAGE({
-					filename: filename
+					filename: filename,
+					new_filename: new_file_name
 				}, function (err, result) {
 					if (err) {
 						console.error(err);
@@ -124,7 +125,7 @@ function uploadFile(account, onDone) {
 					}
 					
 					//console.log(result);
-					onDone(null);
+					onDone(null, new_file_name);
 					//window.location.reload();
 				});
 			} else {
