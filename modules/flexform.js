@@ -1648,3 +1648,36 @@ SR.API.add('INIT_FORM', {
 		});
 	});	
 });
+
+// 上傳照片
+SR.API.add('UPLOAD_IMAGE', {
+	filename:	'string'		// name of the uploaded image file
+}, function (args, onDone, extra) {
+	if (!extra) {
+		LOG.warn('無法在server端呼叫')
+		return onDone('無法在server端呼叫');
+	}
+	var account = extra.session._user.account;
+	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
+	var filename_no_dot = args.filename.split(".");
+	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, account + '.' + filename_no_dot[1] );
+	//var pdb_new_path = '/home/imoncloud/users/kevinho627627/GoldenVilleCafe/web/images/' + account + '.' + filename_no_dot[1].toLowerCase();
+	var pdb_new_path = SR.path.join(SR.Settings.FRONTIER_PATH, '..', 'web', 'images', account + '.' + filename_no_dot[1].toLowerCase());
+	
+	LOG.warn(pdb_path);
+	SR.fs.rename(pdb_path, new_name_path, (err) => {
+		if (err) throw err;
+		SR.fs.stat(new_name_path, (err, stats) => {
+			if (err) throw err;
+			console.log('成功rename');
+		});
+	});
+	
+	var source = SR.fs.createReadStream(new_name_path);
+	var dest = SR.fs.createWriteStream(pdb_new_path);
+	source.pipe(dest);
+	source.on('end', function() { /* copied */ });
+	source.on('error', function(err) { /* error */ });
+	
+	onDone(null);
+});
