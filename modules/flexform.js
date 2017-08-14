@@ -1241,6 +1241,15 @@ SR.API.add('DELETE_FIELD', {
 	});
 });
 
+// helpers to check for int or float
+function isInt(n){
+    return Number(n) === n && n % 1 === 0;
+}
+
+function isFloat(n){
+    return Number(n) === n && n % 1 !== 0;
+}
+
 // update values for certain fields (record_id optional)
 SR.API.add('UPDATE_FIELD', {
 	form_id: 	'+string',		// form id
@@ -1302,15 +1311,16 @@ SR.API.add('UPDATE_FIELD', {
 		if (fields[j].type === 'number' && args.values.hasOwnProperty(fields[j].id)) {
 			LOG.warn(fields[j].id + ' try convert to number...');
 			try {
-				var num = parseInt(args.values[fields[j].id]);
+				var num = parseFloat(args.values[fields[j].id]);
+				
+				if (isFloat(num) || isInt(num)) {
+					args.values[fields[j].id] = num;						
+				} else {
+					LOG.warn(num + ' is not a number, ignore it');
+					args.values[fields[j].id] = undefined;					
+				}
 				LOG.warn(num + ' type: ' + typeof num);
 				
-				if (isNaN(num)) {
-					LOG.warn(args.values[fields[j].id] + ' is not a number, ignore it');
-					args.values[fields[j].id] = undefined;
-				} else {
-					args.values[fields[j].id] = num;	
-				}
 			} catch (e) {
 				err_msg.push(e);	
 			}
@@ -1422,7 +1432,7 @@ var l_add_form = function( para, onDone ) {
 		});
 	} else {
 		LOG.warn('使用new_record_id');
-		LOG.warn(para.form.data.values);
+		//LOG.warn(para.form.data.values);
 		
 		para.form.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
 			if (err) {
@@ -1432,7 +1442,7 @@ var l_add_form = function( para, onDone ) {
 			para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
 			para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
 			
-			LOG.warn(para.form.data.values);
+			//LOG.warn(para.form.data.values);
 			return onDone(null);
 
 		});
@@ -1490,8 +1500,8 @@ SR.API.add('UPDATE_FORM', {
 	if (args.values)
 		value_array.push(args.values);
 	
-	LOG.warn('value_array:');
-	LOG.warn(value_array);
+	//LOG.warn('value_array:');
+	//LOG.warn(value_array);
 
 	var keymap = undefined;
 	if (typeof form.key_field === 'string' && form.key_field !== '') {
