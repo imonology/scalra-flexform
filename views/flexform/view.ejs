@@ -77,14 +77,13 @@ var datepicker_setting = {
 	dateFormat: 'yy-mm-dd'
 }
 
-var onPhotoUploaded = function (err, image_id) {
+var onPhotoUploaded = function (err, image_filename) {
 	if (!err) {
 		 //document.getElementById("uploaded_photo").innerHTML = 'Hello World!';
 		 //document.getElementById("uploaded_photo").innerHTML = '<img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: none;" onload=\'this.style="block"\'>';
 		// $("#uploaded_photo").html('<img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: block">');
-		$("#show_image").attr({'src': '/web/images/'+image_id+'.jpg?' + new Date().getTime()});
-		// document.getElementById(domid).value = image_id;
-		console.log('reload done' + image_id);
+		$("#show_image").attr({'src': '/web/images/' + image_filename + '?' + new Date().getTime()});
+		console.log('reload done' + image_filename);
 	}
 }
 

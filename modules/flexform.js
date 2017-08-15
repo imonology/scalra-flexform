@@ -1655,33 +1655,59 @@ SR.API.add('UPLOAD_IMAGE', {
 	new_filename:	'string'
 }, function (args, onDone, extra) {
 	if (!extra) {
-		LOG.warn('無法在server端呼叫')
-		return onDone('無法在server端呼叫');
+		LOG.error('cannot called at server');
+		return onDone('cannot called at server');
 	}
-	if (!args.new_filename)
-		var account = extra.session._user.account;
-	else
-		var account = args.new_filename;
+
+	// find file extension
+	var arr = args.filename.split(".");
+	var file_ext = arr[arr.length-1];
+		
+	var new_file = (args.new_filename ? args.new_filename : extra.session._user.account) + '.' + file_ext.toLowerCase();
+	
+//	if (!args.new_filename)
+//		var account = extra.session._user.account;
+//	else
+//		var account = args.new_filename;
+	
 	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
-	var filename_no_dot = args.filename.split(".");
-	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, account + '.' + filename_no_dot[1] );
-	//var pdb_new_path = '/home/imoncloud/users/kevinho627627/GoldenVilleCafe/web/images/' + account + '.' + filename_no_dot[1].toLowerCase();
-	var pdb_new_path = SR.path.join(SR.Settings.FRONTIER_PATH, '..', 'web', 'images', account + '.' + filename_no_dot[1].toLowerCase());
+	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, new_file);
+	var pdb_new_path = SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images', new_file);
 	
 	LOG.warn(pdb_path);
+	
+	// rename uploaded file name
 	SR.fs.rename(pdb_path, new_name_path, (err) => {
-		if (err) throw err;
+		if (err) {
+			return onDone(err);
+		}
 		SR.fs.stat(new_name_path, (err, stats) => {
-			if (err) throw err;
-			console.log('成功rename ' + account);
+			if (err) {
+				return onDone(err);
+			}
+			LOG.warn('rename success: ' + new_file);
 		});
 	});
 	
+	// copy to downloadable public path
 	var source = SR.fs.createReadStream(new_name_path);
 	var dest = SR.fs.createWriteStream(pdb_new_path);
 	source.pipe(dest);
-	source.on('end', function() { /* copied */ });
-	source.on('error', function(err) { /* error */ });
 	
-	onDone(null);
+	source.on('end', function() { 
+		/* copied */ 
+		onDone(null, new_file);
+	});
+	
+	source.on('error', function(err) { 
+		/* error */ 
+		LOG.error(err);
+		onDone(err);
+	});
+	
 });
+
+SR.Callback.onStart(function () {
+	// make sure /web/images directory exists
+	UTIL.validatePath(SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images'));
+})

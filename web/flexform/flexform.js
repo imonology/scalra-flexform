@@ -72,11 +72,16 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function uploadFile(new_file_name, onDone) {
+function uploadFile(new_file_name, onDone, accepted_extensions) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	var formData = new FormData($("#frmUploadFile")[0]);
 	var fullPath = document.getElementById('upload_file').value;
 	var filename;
+	
+	// set default accepted file extensions
+	if (accepted_extensions instanceof Array === false) {
+		accepted_extensions = ['jpg', 'png', 'gif'];
+	}
 	
 	console.log(formData);
 	
@@ -93,13 +98,14 @@ function uploadFile(new_file_name, onDone) {
 		return;
 	}
 
-	var filename_extension = filename.split(".")[1].toLowerCase()
-	if ( !(filename_extension === 'jpg') ) {
-		alert("請上傳 .jpg 的檔案");
+	var arr = filename.split(".");
+	var filename_extension = arr[arr.length-1].toLowerCase();
+	
+	if (accepted_extensions.indexOf(filename_extension) === (-1)) {
+		alert("allowed files types are: " + accepted_extensions);
 		return;
 	}
 	
-
 	$.ajax({
 		url: upload_url + '/upload',
 		type: 'POST',
@@ -124,8 +130,8 @@ function uploadFile(new_file_name, onDone) {
 						return alert(err);
 					}
 					
-					//console.log(result);
-					onDone(null, new_file_name);
+					console.log(result);
+					onDone(null, result);
 					//window.location.reload();
 				});
 			} else {
