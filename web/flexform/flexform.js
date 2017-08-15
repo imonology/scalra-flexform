@@ -110,8 +110,8 @@ function uploadFile(new_file_name, onDone, accepted_extensions) {
 		url: upload_url + '/upload',
 		type: 'POST',
 		data: formData,
-		async: false,
-		cache: false,
+//		async: false,
+//		cache: false,
 		contentType: false,
 		processData: false,
 		success: function (data) {
