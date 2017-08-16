@@ -272,3 +272,84 @@ function flexform_change_row(f_table, i, j) {
 		f_table.rows[i].cells[k].innerHTML = temp;
 	}
 } // flexform_change_row()
+
+var create_table2 = function(form, hide, write) {
+	var html = '';
+	html += '<table border="1" class="customTable">';
+	var fields = form.data.fields;
+	function c_table(fields, value) {
+		var html = '';
+		for (var i in fields) {
+			if (!fields[i].show) continue;
+			if (hide.indexOf(fields[i].id) !== -1) 
+				continue;
+			html += '<tr>';
+			html += '<td>' + fields[i].name + '</td>';
+			html += '<td>';
+			if (fields[i].type === 'upload') 
+				;
+			else if (fields[i].type === 'textarea') 
+				html += '<textarea rows="3" cols="20" ' + (write?'id="'+fields[i].id+'"':'readonly="readonly"' )+ '>';
+			if (write) {
+				if (fields[i].type === 'upload') {
+					var image_id = '<%=UTIL.createToken()%>';
+					html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">'
+					html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
+					html += '<input type="file" name="upload" multiple="multiple" id="upload_file">';
+					html += '<button class="btn btn-primary" onClick="uploadFile(\''+image_id+'\', onPhotoUploaded)">Upload</button>';
+					html += '<input type="hidden" value="'+image_id+'" id="' + fields[i].id + '">'
+					html += '<div id="uploaded_photo"><img id="show_image" width="250" src="")" ></div>'
+				} else if (fields[i].type === 'date') {
+					html += '<input type="text" value="" id="'+fields[i].id+'">';
+					date_pickers.push(fields[i].id);
+				} else
+					html += (fields[i].type !== 'textarea'?'<input type="text" id="'+fields[i].id+'">':'');
+			} else {
+				if (fields[i].type === 'upload')
+					html += '<div id="uploaded_photo"><img width="250" src="/web/images/'+value[fields[i].id]+'.jpg" )" ></div>';
+				else
+					html += value[fields[i].id];
+			}
+			if (fields[i].type === 'textarea') html += '</textarea>';
+			html += '</td>'
+			html += '</tr>';
+		} 
+			
+		return html;
+	}
+	if (write)
+		html += c_table(fields);
+	else {
+		for (var record_id in form.data.values) {
+			var value = form.data.values[record_id];
+			html += c_table(fields, value);
+		}
+	}
+	html += '</table>'
+	if (write)
+		html += '<button class="btn btn-primary" onClick="upload()">確定送出</button>';
+	return html;
+}
+
+function upload_table2(form_name, fields, onDone) {
+	
+	var values = {};
+	for ( var i in fields) 
+		if (document.getElementById(fields[i].id))
+			values[fields[i].id] = document.getElementById(fields[i].id).value;
+	
+	values.p_record_id = Object.keys(form.data.values)[0];
+	values.account = '<%=login.account%>';
+	values.class_id = class_id;
+	var arg = {
+		form_name: form_name,
+		values: values
+	};
+
+	SR.API.UPDATE_FIELD(arg, function (err, result) {
+		if (err)
+			return onDone(err );
+		return onDone(null);
+	});
+	
+}
