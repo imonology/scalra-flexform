@@ -79,3 +79,31 @@ SR.API.after('UPDATE_FORM', function (args, output, onDone) {
 })
 
 ```
+
+Queries to the form can also be performed: 
+(this example finds a form data matching a given account name, and returns how many accounts match that name)
+
+```js
+
+// returns whether a givn user of certain type
+SR.API.add('CHECK_USER_DATA',{
+	account: 	'string',
+	_login: 	true				// this API requires login to function
+}, function (args, onDone) {
+	
+	var para = {
+		name: 'Member',
+		query: {account: args.account}
+	};
+
+	SR.API.QUERY_FORM(para, function (err, form) {
+		if (err) {
+			return LOG.error('no form can be found');		
+		}
+		
+		var matched_records = form.data.values;
+		return onDone(null, Object.keys(matched_records).length);
+	});	
+});
+
+```
