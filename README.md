@@ -51,6 +51,8 @@ SR.API.after('UPDATE_FORM', function (args, output, onDone) {
 			if (!record_ids)
 				break;
 			
+			// NOTE: form.data contains both sub-fields 'fields' and 'values',
+			// storing the form's format and actual data, respectively
 			var values = form.data.values;
 			
 			// find records just adde
