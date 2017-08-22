@@ -1086,7 +1086,7 @@ SR.API.add('INIT_FORM', {
 // 上傳照片
 SR.API.add('UPLOAD_IMAGE', {
 	filename:		'string',		// name of the uploaded image file
-	new_filename:	'string'
+
 }, function (args, onDone, extra) {
 	if (!extra) {
 		LOG.error('cannot called at server');
@@ -1094,11 +1094,13 @@ SR.API.add('UPLOAD_IMAGE', {
 	}
 
 	// find file extension
-	var arr = args.filename.split(".");
-	var file_ext = arr[arr.length-1];
-		
-	var new_file = (args.new_filename ? args.new_filename : extra.session._user.account) + '.' + file_ext.toLowerCase();
 	
+	// for (var i in )
+	var arr = args.filename.split(".");
+	var file_ext = arr[arr.length-1]; // 副檔名
+		
+	// var new_file = (args.new_filename ? args.new_filename : extra.session._user.account) + '.' + file_ext.toLowerCase();
+	var new_file = UTIL.createToken() + '.' + file_ext.toLowerCase();
 //	if (!args.new_filename)
 //		var account = extra.session._user.account;
 //	else

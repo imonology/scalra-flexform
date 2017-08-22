@@ -77,19 +77,19 @@ var datepicker_setting = {
 	dateFormat: 'yy-mm-dd'
 }
 
-var onPhotoUploaded = function (err, image_filename) {
+var onPhotoUploaded = function (err, image_filename, dom_id) {
 	if (!err) {
 		 //document.getElementById("uploaded_photo").innerHTML = 'Hello World!';
 		 //document.getElementById("uploaded_photo").innerHTML = '<img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: none;" onload=\'this.style="block"\'>';
 		// $("#uploaded_photo").html('<img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: block">');
 		$("#show_image").attr({'src': '/web/images/' + image_filename + '?' + new Date().getTime()});
-		console.log('reload done' + image_filename);
+		document.getElementById(dom_id).value = image_filename;
 	}
 }
 
 var has_img = function(me, id, image_id){
 	me.style="block";
-	document.getElementById(id).value = image_id;
+	// document.getElementById(id).value = image_id;
 }
 var no_img = function(id){
 	document.getElementById(id).value = "";
@@ -177,6 +177,10 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			html += '<input type="text" value="' + values_data + '" id="' + entry_id + '-' + fields[i].id + '">';
 			date_pickers.push(entry_id + '-' + fields[i].id);
 		} else if (fields[i].type === 'upload') {
+			if (fields[i].num)
+				var num = fields[i].num;
+			else
+				var num = 5;
 			var value = values_data.replace(/\"/g, "&quot;");
 			console.log(typeof(value));
 			if (value.length === 0)
@@ -186,7 +190,7 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">'
 			html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 			html += '<input type="file" name="upload" multiple="multiple" id="upload_file">';
-			html += '<button class="btn btn-primary" onClick="uploadFile(\''+image_id+'\', onPhotoUploaded)">Upload</button>';
+			html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\', \''+entry_id + '-' + fields[i].id+'\', onPhotoUploaded)">Upload</button>';
 			html += '<input type="hidden" value="'+image_id+'" id="' + entry_id + '-' + fields[i].id + '">'
 			// if photo exists then display, otherwise make it hidden first			
 			//var display = (values[fields[i].id] ? 'block' : 'none');

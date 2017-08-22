@@ -72,18 +72,23 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function uploadFile(new_file_name, onDone, accepted_extensions) {
+function uploadFile(num, dom_id, onDone, accepted_extensions) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	var formData = new FormData($("#frmUploadFile")[0]);
 	var fullPath = document.getElementById('upload_file').value;
 	var filename;
+	console.log('傳入的 ' + dom_id);
 	
+	var upload_num = $("#upload_file")[0].files.length;
+	if (upload_num > num ){
+		alert('Over the limit number of files. Limit numbers is ' + num + '!');
+		return;
+	}
+
 	// set default accepted file extensions
 	if (accepted_extensions instanceof Array === false) {
 		accepted_extensions = ['jpg', 'png', 'gif'];
 	}
-	
-	console.log(formData);
 	
 	if (fullPath) {
 		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
@@ -115,7 +120,12 @@ function uploadFile(new_file_name, onDone, accepted_extensions) {
 		contentType: false,
 		processData: false,
 		success: function (data) {
-
+			
+			// console.log('數量');
+			// console.log(data.upload.length);
+			var filenames = [];
+			for (var i in data.upload)
+				filenames.push(data.upload[i].name);
 			if (data.message === 'success') {
 				$("#spanMessage").html("Upload success!");
 				console.log('upload success, data:');
@@ -123,15 +133,14 @@ function uploadFile(new_file_name, onDone, accepted_extensions) {
 				
 				SR.API.UPLOAD_IMAGE({
 					filename: filename,
-					new_filename: new_file_name
+
 				}, function (err, result) {
 					if (err) {
 						console.error(err);
 						return alert(err);
 					}
-					
-					console.log(result);
-					onDone(null, result);
+
+					onDone(null, result, dom_id);
 					//window.location.reload();
 				});
 			} else {
