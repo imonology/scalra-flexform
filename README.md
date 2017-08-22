@@ -28,6 +28,22 @@ SR.API.INIT_FORM({
 });
 ```
 
+The supported data types are:
+
+```js
+
+'string'		// plain, regular string
+'number'		// integer and float
+'date'			// a string with date, such as "2017-08-02"
+'object'		// any JSON object
+'account'		// the current user's acount name
+'array'			// any array content (such as ['a', 'b', 'c'])
+'choice'		// can select only one out of many via pull-down menu (good or above)
+'multichoice'	// can select multiples via checkboxes
+'upload'		// uploads any file using npm module 'formidable'
+
+```
+
 Then we can access and modify form data simply using variables in the following way:
 
 ```js
