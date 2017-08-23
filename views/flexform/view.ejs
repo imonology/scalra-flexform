@@ -201,7 +201,7 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 			html += '<input type="file" name="upload" multiple="multiple" id="upload_file">';
 			html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\', \''+entry_id + '-' + fields[i].id+'\', onPhotoUploaded)">Upload</button>';
-			html += '<input type="hidden" value="'+image_id+'" id="' + entry_id + '-' + fields[i].id + '">'
+			html += '<input type="hidden" value="" id="' + entry_id + '-' + fields[i].id + '">'
 			// if photo exists then display, otherwise make it hidden first			
 			//var display = (values[fields[i].id] ? 'block' : 'none');
 			// html += '<div id="uploaded_photo"><img id="show_image" width="250" src="/web/images/'+value+'.jpg" style="display: none;" onload="has_img(this, \''+entry_id + '-' + fields[i].id +'\', \''+image_id+'\')" onerror="no_img(\''+entry_id + '-' + fields[i].id +'\')" ></div>'

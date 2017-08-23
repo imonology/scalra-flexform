@@ -79,6 +79,8 @@ function get_img_num() {
 
 var create_img_dev = function(dom_id, img){
 	var html = '';
+	if (img.length === 0)
+		return html;
 	html += '<div class="imgDiv" id="'+img+'">';
 	html += '<img width="250" src="/web/images/'+img+'" />';
 	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
@@ -97,6 +99,15 @@ var remove_img = function(dom_id, id) {
 
 var add_img = function(dom_id, img) {
 	document.getElementById('show_upload_img').innerHTML += create_img_dev(dom_id , img);
+}
+
+var show_imgs = function(imgs) {
+	var html = '';
+	var imgs = imgs.split(",");
+	for(var i in imgs)
+		html += '<img width="250" src="/web/images/'+imgs[i]+'" />';
+	return html;
+	// show_upload_img
 }
 
 function uploadFile(num, dom_id, onDone, accepted_extensions) {
@@ -329,21 +340,31 @@ var create_table2 = function(form, hide, write) {
 			if (write) {
 				if (fields[i].type === 'upload') {
 					var image_id = '<%=UTIL.createToken()%>';
-					html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">'
+					if (fields[i].num)
+						var num = fields[i].num;
+					else
+						var num = 5;
+					
+					html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">';
 					html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 					html += '<input type="file" name="upload" multiple="multiple" id="upload_file">';
-					html += '<button class="btn btn-primary" onClick="uploadFile(\''+image_id+'\', onPhotoUploaded)">Upload</button>';
-					html += '<input type="hidden" value="'+image_id+'" id="' + fields[i].id + '">'
-					html += '<div id="uploaded_photo"><img id="show_image" width="250" src="")" ></div>'
+					html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
+					html += '<input type="hidden" value="" id="' + fields[i].id + '">';
+					
+					html += '<div id="show_upload_img"></div>';
+					
+					// html += '<div id="uploaded_photo"><img id="show_image" width="250" src="")" ></div>'
 				} else if (fields[i].type === 'date') {
 					html += '<input type="text" value="" id="'+fields[i].id+'">';
 					date_pickers.push(fields[i].id);
 				} else
 					html += (fields[i].type !== 'textarea'?'<input type="text" id="'+fields[i].id+'">':'');
 			} else {
-				if (fields[i].type === 'upload')
-					html += '<div id="uploaded_photo"><img width="250" src="/web/images/'+value[fields[i].id]+'.jpg" )" ></div>';
-				else
+				if (fields[i].type === 'upload') {
+					html += '<div id="uploaded_photo">';
+					html += show_imgs(value[fields[i].id]);
+					html += '</div>';
+				} else
 					html += value[fields[i].id];
 			}
 			if (fields[i].type === 'textarea') html += '</textarea>';
