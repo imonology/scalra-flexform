@@ -320,7 +320,7 @@ function flexform_change_row(f_table, i, j) {
 	}
 } // flexform_change_row()
 
-var create_table2 = function(form, hide, write) {
+var create_table = function(form, hide, write) {
 	var html = '';
 	html += '<table border="1" class="customTable">';
 	var fields = form.data.fields;
