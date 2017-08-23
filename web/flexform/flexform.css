@@ -46,3 +46,17 @@ li.drop-down-menu {
 li.drop-down-menu:hover > ul { 
     display: block;
 }
+
+
+.imgDiv{
+	display : inline-block;
+	position : relative;
+}
+
+.imgDiv i{
+	position : absolute;
+	top : 0px;
+	right : 0px;
+	width : 20px;
+	height : 20px;
+}

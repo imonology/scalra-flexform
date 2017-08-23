@@ -1083,36 +1083,18 @@ SR.API.add('INIT_FORM', {
 	});	
 });
 
-// 上傳照片
-SR.API.add('UPLOAD_IMAGE', {
-	filename:		'string',		// name of the uploaded image file
+// helper
+var l_rename = function (para) {
 
-}, function (args, onDone, extra) {
-	if (!extra) {
-		LOG.error('cannot called at server');
-		return onDone('cannot called at server');
+	return function (onD) {
+		l_do_rename(para, onD);
 	}
+}
 
-	// find file extension
-	
-	// for (var i in )
-	var arr = args.filename.split(".");
-	var file_ext = arr[arr.length-1]; // 副檔名
-		
-	// var new_file = (args.new_filename ? args.new_filename : extra.session._user.account) + '.' + file_ext.toLowerCase();
-	var new_file = UTIL.createToken() + '.' + file_ext.toLowerCase();
-//	if (!args.new_filename)
-//		var account = extra.session._user.account;
-//	else
-//		var account = args.new_filename;
-	
-	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
-	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, new_file);
-	var pdb_new_path = SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images', new_file);
-	
-	LOG.warn(pdb_path);
-	
-	// rename uploaded file name
+var l_do_rename = function( para, onDone ) {
+	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, para.file_name);
+	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, para.new_file);
+	var pdb_new_path = SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images', para.new_file);
 	SR.fs.rename(pdb_path, new_name_path, (err) => {
 		if (err) {
 			return onDone(err);
@@ -1121,25 +1103,100 @@ SR.API.add('UPLOAD_IMAGE', {
 			if (err) {
 				return onDone(err);
 			}
-			LOG.warn('rename success: ' + new_file);
+			LOG.warn('rename success: ' + para.new_file);
+			
+			// copy to downloadable public path
+			var source = SR.fs.createReadStream(new_name_path);
+			var dest = SR.fs.createWriteStream(pdb_new_path);
+			source.pipe(dest);
+
+			source.on('end', function() { 
+				/* copied */ 
+				onDone(null);
+			});
+
+			source.on('error', function(err) { 
+				/* error */ 
+				LOG.error(err);
+				onDone(err);
+			});
+			
 		});
 	});
 	
-	// copy to downloadable public path
-	var source = SR.fs.createReadStream(new_name_path);
-	var dest = SR.fs.createWriteStream(pdb_new_path);
-	source.pipe(dest);
+}
+
+
+// 上傳照片
+SR.API.add('UPLOAD_IMAGE', {
+	filename:		'array',		// name of the uploaded image file
+}, function (args, onDone, extra) {
+	if (!extra) {
+		LOG.error('cannot called at server');
+		return onDone('cannot called at server');
+	}
+
+	// find file extension
 	
-	source.on('end', function() { 
-		/* copied */ 
-		onDone(null, new_file);
+	var jq = SR.JobQueue.createQueue();
+	var new_file_names = [];
+	for (var i in args.filename) {
+		var arr = args.filename[i].split(".");
+		var file_ext = arr[arr.length-1]; // 副檔名
+		var new_file = UTIL.createToken() + '.' + file_ext.toLowerCase();
+		new_file_names.push(new_file);
+		jq.add(l_rename({new_file: new_file, file_name: args.filename[i]}));
+	}
+	
+	jq.run(function (err) {
+		return onDone(null, new_file_names);
 	});
 	
-	source.on('error', function(err) { 
-		/* error */ 
-		LOG.error(err);
-		onDone(err);
-	});
+// 	// for (var i in )
+// 	var arr = args.filename.split(".");
+// 	var file_ext = arr[arr.length-1]; // 副檔名
+		
+// 	// var new_file = (args.new_filename ? args.new_filename : extra.session._user.account) + '.' + file_ext.toLowerCase();
+// 	var new_file = UTIL.createToken() + '.' + file_ext.toLowerCase();
+// //	if (!args.new_filename)
+// //		var account = extra.session._user.account;
+// //	else
+// //		var account = args.new_filename;
+	
+// 	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
+// 	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, new_file);
+// 	var pdb_new_path = SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images', new_file);
+	
+// 	LOG.warn(pdb_path);
+	
+// 	// rename uploaded file name
+// 	SR.fs.rename(pdb_path, new_name_path, (err) => {
+// 		if (err) {
+// 			return onDone(err);
+// 		}
+// 		SR.fs.stat(new_name_path, (err, stats) => {
+// 			if (err) {
+// 				return onDone(err);
+// 			}
+// 			LOG.warn('rename success: ' + new_file);
+// 		});
+// 	});
+	
+// 	// copy to downloadable public path
+// 	var source = SR.fs.createReadStream(new_name_path);
+// 	var dest = SR.fs.createWriteStream(pdb_new_path);
+// 	source.pipe(dest);
+	
+// 	source.on('end', function() { 
+// 		/* copied */ 
+// 		onDone(null, new_file);
+// 	});
+	
+// 	source.on('error', function(err) { 
+// 		/* error */ 
+// 		LOG.error(err);
+// 		onDone(err);
+// 	});
 	
 });
 

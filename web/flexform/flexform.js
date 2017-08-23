@@ -72,15 +72,42 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function get_img_num() {
+	var imgs = document.getElementsByClassName('imgDiv');
+	return imgs.length;
+}
+
+var create_img_dev = function(dom_id, img){
+	var html = '';
+	html += '<div class="imgDiv" id="'+img+'">';
+	html += '<img width="250" src="/web/images/'+img+'" />';
+	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
+	html += '</div>';
+	return html;
+}
+
+var remove_img = function(dom_id, id) {
+	document.getElementById(id).remove();
+	var files = document.getElementById(dom_id).value.split(",");
+	files.splice(files.indexOf(id), 1);
+	document.getElementById(dom_id).value = files;
+	get_img_num();
+}
+
+
+var add_img = function(dom_id, img) {
+	document.getElementById('show_upload_img').innerHTML += create_img_dev(dom_id , img);
+}
+
 function uploadFile(num, dom_id, onDone, accepted_extensions) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	var formData = new FormData($("#frmUploadFile")[0]);
 	var fullPath = document.getElementById('upload_file').value;
 	var filename;
-	console.log('傳入的 ' + dom_id);
-	
+	// console.log('傳入的 ' + dom_id);
+
 	var upload_num = $("#upload_file")[0].files.length;
-	if (upload_num > num ){
+	if (get_img_num() + upload_num > num ){
 		alert('Over the limit number of files. Limit numbers is ' + num + '!');
 		return;
 	}
@@ -132,7 +159,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 				console.log(data.upload);
 				
 				SR.API.UPLOAD_IMAGE({
-					filename: filename,
+					filename: filenames,
 
 				}, function (err, result) {
 					if (err) {
