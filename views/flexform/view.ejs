@@ -46,6 +46,7 @@ var record_id = undefined;
 // allows the creation of date pickers
 var date_pickers = [];
 
+var textarea_id = [];
 /*
 // original date picker setting
 var datepicker_setting = {
@@ -237,6 +238,9 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			});
 		} else if (fields[i].type === 'textarea') {
 			var value = values_data.replace(/\"/g, "&quot;");
+			html += '<input type="file" id="inputTxt-'+textarea_id.length+'">';
+			html += '<button id="txtBtn-'+textarea_id.length+'">上傳文字檔</button>';
+			textarea_id.push(entry_id + '-' + fields[i].id);
 			html += '<textarea rows="8" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">'+value+'</textarea>';
 		} else if (fields[i].type === 'lock') {
 			if (record_id)
@@ -373,6 +377,20 @@ var add_form = function (form_id, no_delete, record_id) {
 			$("#" + date_pickers[i]).datepicker(datepicker_setting);
 		});
 	}
+	
+	for (var i in textarea_id) {
+		console.log(textarea_id[i]);
+		read_txt('inputTxt-' + i, 'txtBtn-' + i , onDoneTxt, textarea_id[i]);
+	}
+	
+}
+
+function onDoneTxt(err, result, dom_id) {
+	if (err) {
+		console.log(err);
+		return;
+	}
+	document.getElementById(dom_id).value = result;
 }
 
 // build whole page from form data

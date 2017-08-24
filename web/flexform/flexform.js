@@ -61,6 +61,7 @@ $('.contactUs').on('click', function(e){
 //$('.contactUs').click();
 });
 
+
 // ref: http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -110,19 +111,38 @@ var show_imgs = function(imgs) {
 	// show_upload_img
 }
 
+function read_txt(file_type_id, button_id, onDone, dom_id) {
+	document.getElementById(button_id).addEventListener("click", function() {
+		var reader = new FileReader();
+		reader.addEventListener('load', function() {
+			if (dom_id)
+				return onDone(null, this.result, dom_id);
+			else
+				return onDone(null, this.result);
+		});
+		console.log(document.querySelector('#' + file_type_id).files[0]);
+		
+		reader.readAsText(document.querySelector('#' + file_type_id).files[0]);
+	});
+}
+
 function uploadFile(num, dom_id, onDone, accepted_extensions) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	var formData = new FormData($("#frmUploadFile")[0]);
 	var fullPath = document.getElementById('upload_file').value;
 	var filename;
 	// console.log('傳入的 ' + dom_id);
-
+	
 	var upload_num = $("#upload_file")[0].files.length;
 	if (get_img_num() + upload_num > num ){
 		alert('Over the limit number of files. Limit numbers is ' + num + '!');
 		return;
 	}
-
+	
+	if (!accepted_extensions)
+		var check = false;
+	else
+		var check = true;
 	// set default accepted file extensions
 	if (accepted_extensions instanceof Array === false) {
 		accepted_extensions = ['jpg', 'png', 'gif'];
@@ -148,7 +168,8 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 		alert("allowed files types are: " + accepted_extensions);
 		return;
 	}
-	
+	console.log(upload_url + '/upload');
+
 	$.ajax({
 		url: upload_url + '/upload',
 		type: 'POST',
@@ -169,18 +190,22 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 				console.log('upload success, data:');
 				console.log(data.upload);
 				
-				SR.API.UPLOAD_IMAGE({
-					filename: filenames,
+				if (check) {
+					return onDone(null);
+				} else {
+					SR.API.UPLOAD_IMAGE({
+						filename: filenames,
 
-				}, function (err, result) {
-					if (err) {
-						console.error(err);
-						return alert(err);
-					}
+					}, function (err, result) {
+						if (err) {
+							console.error(err);
+							return alert(err);
+						}
 
-					onDone(null, result, dom_id);
-					//window.location.reload();
-				});
+						return onDone(null, result, dom_id);
+						//window.location.reload();
+					});
+				}
 			} else {
 				$("#spanMessage").html("Upload failed");
 				onDone('upload failed');
@@ -335,8 +360,17 @@ var create_table = function(form, hide, write) {
 			html += '<td>';
 			if (fields[i].type === 'upload') 
 				;
-			else if (fields[i].type === 'textarea') 
-				html += '<textarea rows="3" cols="20" ' + (write?'id="'+fields[i].id+'"':'readonly="readonly"' )+ '>';
+			else if (fields[i].type === 'textarea') {
+				if (write){
+					html += '<input type="file" id="inputTxt-'+textarea_id.length+'">';
+					html += '<button id="txtBtn-'+textarea_id.length+'">上傳文字檔</button>';
+					textarea_id.push(fields[i].id);
+					html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
+				} else{
+					html += '<textarea rows="3" cols="20" readonly="readonly">';
+				}
+				// html += '<textarea rows="3" cols="20" ' + (write?'id="'+fields[i].id+'"':'readonly="readonly"' )+ '>';
+			}
 			if (write) {
 				if (fields[i].type === 'upload') {
 					var image_id = '<%=UTIL.createToken()%>';
@@ -368,6 +402,9 @@ var create_table = function(form, hide, write) {
 					html += value[fields[i].id];
 			}
 			if (fields[i].type === 'textarea') html += '</textarea>';
+			
+			
+			
 			html += '</td>'
 			html += '</tr>';
 		} 
