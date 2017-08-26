@@ -8,6 +8,8 @@
 	
 */
 var moment = require('moment');
+var isUtf8 = require('is-utf8');
+
 
 var l_name = 'FlexForm';
 
@@ -192,6 +194,12 @@ SR.API.add('GET_FORM', {
 });
 
 // ------------------------------------ flexform2 -----------------------------------------------
+
+SR.API.add('IS_UTF8', {
+	str:		'object',
+}, function (args, onDone) {
+	return onDone(null, isUtf8(args.str));
+});
 
 // ++++++++++++++++++++++++++++++++++群組用++++++++++++++++++++++++++++++++++
 SR.API.add('QUERY_ALL_LIST', {

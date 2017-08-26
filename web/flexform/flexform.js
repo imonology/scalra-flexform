@@ -1,3 +1,5 @@
+
+
 $(function(){
   
 /* Attach login handler */
@@ -203,9 +205,11 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 			else
 				return onDone(null, this.result);
 		});
-		console.log(document.querySelector('#' + file_type_id).files[0]);
+		if (document.getElementById('rf-encoding').value === 'big5')
+			reader.readAsText(document.querySelector('#' + file_type_id).files[0], 'big5');
+		else
+			reader.readAsText(document.querySelector('#' + file_type_id).files[0]);
 		
-		reader.readAsText(document.querySelector('#' + file_type_id).files[0]);
 	});
 }
 
@@ -429,6 +433,8 @@ function flexform_change_row(f_table, i, j) {
 } // flexform_change_row()
 
 var create_table = function(form, hide, write) {
+	console.log('print form');
+	console.log(form);
 	var html = '';
 	html += '<table border="1" class="customTable">';
 	var fields = form.data.fields;
@@ -447,6 +453,11 @@ var create_table = function(form, hide, write) {
 				if (write){
 					html += '<input type="file" id="inputTxt-'+textarea_id.length+'">';
 					html += '<button id="txtBtn-'+textarea_id.length+'">上傳文字檔</button>';
+					html += '<select id="rf-encoding">';
+					html += '<option value="big5">Big-5</option>';
+					html += '<option value="utf8">UTF-8</option>';
+					html += '</select>';
+					html += '<br>';
 					textarea_id.push(fields[i].id);
 					html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
 				} else{
@@ -474,6 +485,30 @@ var create_table = function(form, hide, write) {
 				} else if (fields[i].type === 'date') {
 					html += '<input type="text" value="" id="'+fields[i].id+'">';
 					date_pickers.push(fields[i].id);
+					
+				} else if (fields[i].type === 'autocomplete') {
+					html += '<input type="text" id="' + fields[i].id + '" >';
+					$( function() {
+						var key_id = fields[i].id;
+						SR.API.QUERY_FORM({name: form.name}, function (err, r_form) {
+							if (err) {
+								console.log(err);	
+							}
+							var ans = [];
+							function haveSame(arr, str){
+								for (var i in arr)
+									if (arr[i] === str)
+										return true;
+								return false;
+							}
+							for (var r_id in r_form.data.values)
+								if (!haveSame(ans, r_form.data.values[r_id][key_id]))
+									ans.push(r_form.data.values[r_id][key_id]);
+							$( "#" + key_id ).autocomplete({
+							  source: ans
+							});
+						});	
+					});
 				} else
 					html += (fields[i].type !== 'textarea'?'<input type="text" id="'+fields[i].id+'">':'');
 			} else {
