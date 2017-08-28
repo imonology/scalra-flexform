@@ -196,9 +196,17 @@ SR.API.add('GET_FORM', {
 // ------------------------------------ flexform2 -----------------------------------------------
 
 SR.API.add('IS_UTF8', {
-	str:		'object',
+	filename:		'string',
 }, function (args, onDone) {
-	return onDone(null, isUtf8(args.str));
+	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
+	SR.fs.exists(pdb_path, function (exists) {
+		if(!exists) {
+			return onDone(null);
+		}
+		var data = SR.fs.readFileSync(pdb_path);
+
+		return onDone(null, isUtf8(data));
+	});
 });
 
 // ++++++++++++++++++++++++++++++++++群組用++++++++++++++++++++++++++++++++++

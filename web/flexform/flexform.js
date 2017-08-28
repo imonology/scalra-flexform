@@ -205,23 +205,39 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 			else
 				return onDone(null, this.result);
 		});
-		if (document.getElementById('rf-encoding').value === 'big5')
-			reader.readAsText(document.querySelector('#' + file_type_id).files[0], 'big5');
-		else
-			reader.readAsText(document.querySelector('#' + file_type_id).files[0]);
+		var encode = document.getElementById(dom_id+'-encode').value;
+		// console.log('最後的encode = ' + encode);
+		reader.readAsText(document.querySelector('#' + file_type_id).files[0], encode);
+		// if (document.getElementById('rf-encoding').value === 'big5')
+		// 	reader.readAsText(document.querySelector('#' + file_type_id).files[0], 'big5');
+		// else
+		// 	reader.readAsText(document.querySelector('#' + file_type_id).files[0]);
 		
 	});
 }
 
-function uploadFile(num, dom_id, onDone, accepted_extensions) {
+function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
-	var formData = new FormData($("#frmUploadFile")[0]);
-	var fullPath = document.getElementById('upload_file').value;
+	if (upload_id) {
+		var formData = new FormData();
+		formData.append('toPreserveFileName', "fales");
+		formData.append('firstOption', "file");
+		formData.append('upload', document.getElementById(upload_id).files[0]);
+	} else
+		var formData = new FormData($("#frmUploadFile")[0]);
+	console.log('formData = ');
+	console.log(formData);
 	var filename;
 	// console.log('傳入的 ' + dom_id);
 	
-	var upload_num = $("#upload_file")[0].files.length;
-	if (get_img_num() + upload_num > num ){
+	if (upload_id) {
+		var fullPath = document.getElementById(upload_id).value;
+		var upload_num = $("#"+upload_id)[0].files.length;
+	} else {
+		var fullPath = document.getElementById('upload_file').value;
+		var upload_num = $("#upload_file")[0].files.length;
+	}
+	if ((!accepted_extensions?get_img_num(): 0) + upload_num > num ){
 		alert('Over the limit number of files. Limit numbers is ' + num + '!');
 		return;
 	}
@@ -230,6 +246,11 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 		var check = false;
 	else
 		var check = true;
+	if (accepted_extensions)
+		accepted_extensions = accepted_extensions.split(",");
+	
+	if (accepted_extensions)
+		console.log(typeof(accepted_extensions) + '  ' + accepted_extensions);
 	// set default accepted file extensions
 	if (accepted_extensions instanceof Array === false) {
 		accepted_extensions = ['jpg', 'png', 'gif'];
@@ -244,6 +265,8 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 		console.log(filename);
 	}
 	if (!filename || typeof(filename) !== 'string' || filename.length < 6) {
+		console.log('test invalid');
+		console.log(filename);
 		alert("invalid filename");
 		return;
 	}
@@ -255,6 +278,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 		alert("allowed files types are: " + accepted_extensions);
 		return;
 	}
+	
 	console.log(upload_url + '/upload');
 
 	$.ajax({
@@ -274,11 +298,45 @@ function uploadFile(num, dom_id, onDone, accepted_extensions) {
 				filenames.push(data.upload[i].name);
 			if (data.message === 'success') {
 				$("#spanMessage").html("Upload success!");
-				console.log('upload success, data:');
-				console.log(data.upload);
+				// console.log('upload success, data:');
+				// console.log(data.upload);
 				
 				if (check) {
-					return onDone(null);
+					SR.API.IS_UTF8({filename: filename}, function (err2, result) {
+						if (err2) {
+							console.log(err2)
+							return;
+						}
+						if (typeof(result)==='undefined'){
+							console.log('文件不存在');
+							return;
+						}
+						// console.log(result);
+						if(result)
+							document.getElementById(dom_id+'-encode').value = 'utf-8';
+						else
+							document.getElementById(dom_id+'-encode').value = 'big5';
+						
+						var reader = new FileReader();
+						reader.addEventListener('load', function() {
+							document.getElementById(dom_id).value = this.result;
+							if (dom_id)
+								return onDone(null, this.result, dom_id);
+							else
+								return onDone(null, this.result);
+						});
+						if (result)
+							var encode = 'utf-8';
+						else
+							var encode = 'big5';
+						
+						console.log('encode = ' + encode);
+						
+						reader.readAsText(document.querySelector('#inputTxt-' + dom_id).files[0], encode);
+						
+						
+						return onDone(null, filename);
+					});
 				} else {
 					SR.API.UPLOAD_IMAGE({
 						filename: filenames,
@@ -451,12 +509,16 @@ var create_table = function(form, hide, write) {
 				;
 			else if (fields[i].type === 'textarea') {
 				if (write){
-					html += '<input type="file" id="inputTxt-'+textarea_id.length+'">';
-					html += '<button id="txtBtn-'+textarea_id.length+'">上傳文字檔</button>';
-					html += '<select id="rf-encoding">';
-					html += '<option value="big5">Big-5</option>';
-					html += '<option value="utf8">UTF-8</option>';
-					html += '</select>';
+					html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
+					html += '<input type="hidden" id="'+fields[i].id+'-encode" value="">';
+					html += '<input type="file" id="inputTxt-'+fields[i].id+'">';
+					html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+fields[i].id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+fields[i].id+'\')">上傳文字檔</button>';
+					html += '</form>';
+					// html += '<select id="rf-encoding">';
+					// html += '<option value="big5">Big-5</option>';
+					// html += '<option value="utf8">UTF-8</option>';
+					// html += '</select>';
+					
 					html += '<br>';
 					textarea_id.push(fields[i].id);
 					html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
@@ -480,7 +542,7 @@ var create_table = function(form, hide, write) {
 					html += '<input type="hidden" value="" id="' + fields[i].id + '">';
 					
 					html += '<div id="show_upload_img"></div>';
-					
+					html += '</form>';
 					// html += '<div id="uploaded_photo"><img id="show_image" width="250" src="")" ></div>'
 				} else if (fields[i].type === 'date') {
 					html += '<input type="text" value="" id="'+fields[i].id+'">';
