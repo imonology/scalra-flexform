@@ -197,6 +197,7 @@ function CSVToArray( strData, strDelimiter ){
 }
 
 function read_txt(file_type_id, button_id, onDone, dom_id) {
+	console.log('file_type_id = ' + file_type_id) ;
 	document.getElementById(button_id).addEventListener("click", function() {
 		var reader = new FileReader();
 		reader.addEventListener('load', function() {
@@ -229,7 +230,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	console.log(formData);
 	var filename;
 	// console.log('傳入的 ' + dom_id);
-	
+	console.log('upload_id = ' + upload_id);
 	if (upload_id) {
 		var fullPath = document.getElementById(upload_id).value;
 		var upload_num = $("#"+upload_id)[0].files.length;
@@ -255,7 +256,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	if (accepted_extensions instanceof Array === false) {
 		accepted_extensions = ['jpg', 'png', 'gif'];
 	}
-	
+	console.log('fullPath = ' + fullPath);
 	if (fullPath) {
 		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
 		filename = fullPath.substring(startIndex);
@@ -264,6 +265,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		}
 		console.log(filename);
 	}
+	console.log('filename = ' + filename);
 	if (!filename || typeof(filename) !== 'string' || filename.length < 6) {
 		console.log('test invalid');
 		console.log(filename);

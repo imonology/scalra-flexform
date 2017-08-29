@@ -238,8 +238,11 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			});
 		} else if (fields[i].type === 'textarea') {
 			var value = values_data.replace(/\"/g, "&quot;");
-			html += '<input type="file" id="inputTxt-'+textarea_id.length+'">';
-			html += '<button id="txtBtn-'+textarea_id.length+'">上傳文字檔</button>';
+			html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
+			html += '<input type="hidden" id="'+entry_id + '-' + fields[i].id+'-encode" value="">';
+			html += '<input type="file" id="inputTxt-'+ entry_id + '-' +fields[i].id+'">';
+			html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+ entry_id + '-' + fields[i].id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-' + entry_id + '-' +fields[i].id+'\')">上傳文字檔</button>';
+			html += '</form>';
 			textarea_id.push(entry_id + '-' + fields[i].id);
 			html += '<textarea rows="8" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">'+value+'</textarea>';
 		} else if (fields[i].type === 'lock') {
@@ -282,6 +285,11 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 	
 	html += '</table>';
 	return html;
+}
+
+var onTxtUploaded = function(err){
+	if(!err)
+		console.log('upload success');
 }
 
 // remove a given form based on its form_id and entry_id
@@ -378,10 +386,10 @@ var add_form = function (form_id, no_delete, record_id) {
 		});
 	}
 	
-	for (var i in textarea_id) {
-		console.log(textarea_id[i]);
-		read_txt('inputTxt-' + i, 'txtBtn-' + i , onDoneTxt, textarea_id[i]);
-	}
+	// for (var i in textarea_id) {
+	// 	console.log(textarea_id[i]);
+	// 	read_txt('inputTxt-' + i, 'txtBtn-' + i , onDoneTxt, textarea_id[i]);
+	// }
 	
 }
 
