@@ -811,14 +811,24 @@ SR.API.add('UPDATE_FIELD', {
 		args.new_record_id = new_record_id;
 	}
 	
-	for (var j in form.data.fields) 
+	for (var j in form.data.fields) {
 		if (typeof(form.data.fields[j].default)!=='undefined') {
 			// LOG.warn(form.data.fields[j].id + '為default');
 			if (!values_map[form.data.fields[j].id]) {
 				values_map[form.data.fields[j].id] = form.data.fields[j].default;
 				// LOG.warn('新增default');
 			}
+
 		}
+		if (!args.record_id && !values_map[form.data.fields[j].id]) {
+			var today=new Date();
+			if (form.data.fields[j].type === 'date' )
+				values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+			else if (form.data.fields[j].type === 'datetime' )
+				values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+		}
+	}
+	
 	
 	l_add_form({form:form, values_map:values_map, para:args}, function(err, result){
 		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
@@ -1001,7 +1011,7 @@ SR.API.add('UPDATE_FORM', {
 		// LOG.warn('測試default用');
 		// LOG.warn(value_array[i]);
 		// LOG.warn(form.data.fields);
-		for (var j in form.data.fields) 
+		for (var j in form.data.fields) {
 			if (typeof(form.data.fields[j].default)!=='undefined') {
 				LOG.warn(form.data.fields[j].id + '為default');
 				if (!value_array[i][form.data.fields[j].id]) {
@@ -1009,6 +1019,14 @@ SR.API.add('UPDATE_FORM', {
 					// LOG.warn('新增default');
 				}
 			}
+			if (!value_array[i][form.data.fields[j].id]) {
+				var today=new Date();
+				if (form.data.fields[j].type === 'date' )
+					value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+				else if (form.data.fields[j].type === 'datetime' )
+					value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+			}
+		}
 
 		jq.add(l_add({form:form, values_map:value_array[i], para:new_para}));
 		
