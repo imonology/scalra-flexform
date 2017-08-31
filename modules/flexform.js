@@ -978,10 +978,12 @@ SR.API.add('UPDATE_FORM', {
 		LOG.warn('record_id = ------------');
 		LOG.warn(record_id);
 		// check for existing record_id
+		var have_record_id = false;
 		if (value_array[i]['_record_id']) {
 			record_id = value_array[i]['_record_id'];
 			delete value_array[i]['_record_id'];
 			LOG.warn('updateing existing record [' + record_id + ']');
+			have_record_id = true;
 		}
 		
 		// if (!values[record_id]) {
@@ -1005,8 +1007,12 @@ SR.API.add('UPDATE_FORM', {
 			LOG.warn(value_array[i]);
 		} 
 		
-		args.new_record_id = record_id;
 		var new_para = clone(args);
+		if (have_record_id)
+			new_para.record_id = record_id;
+		else
+			new_para.new_record_id = record_id;
+		
 		
 		// LOG.warn('測試default用');
 		// LOG.warn(value_array[i]);
@@ -1028,6 +1034,11 @@ SR.API.add('UPDATE_FORM', {
 			}
 		}
 
+		// 將修改的內容寫到記憶體內
+		if (have_record_id)
+			for (var key in value_array[i])
+				form.data.values[record_id][key] = value_array[i][key];
+		
 		jq.add(l_add({form:form, values_map:value_array[i], para:new_para}));
 		
 		record_ids.push(record_id);
