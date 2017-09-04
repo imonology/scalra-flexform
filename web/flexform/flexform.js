@@ -368,18 +368,56 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
-function array_to_flexform_table(arr_data) {
+function array_to_flexform_table(arr_data, required_fields) {
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
-	for (var i in arr_data[0])
-		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i]});
+	
+	// first row is field names, record it
+	// NOTE: index is also recorded
+	for (var i in arr_data[0]) {
+		if (!arr_data[0][i] || arr_data[0][i] === '') {
+			continue;
+		}
+		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i], index: i});
+	}
+	
+	// total number of valid fields
+	var total_field_size = flexform_table.field.length;
 	
 	for (var i in arr_data) {
-		if (i === '0') continue;
+		// skip field names
+		if (i === 0) 
+			continue;
+		
 		var temp_data = {};
-		for (var j in arr_data[i]) 
-			temp_data[flexform_table.field[j].key] = arr_data[i][j];
+		var empty_fields = 0;
+		// we only copy valid fields
+		for (var j in flexform_table.field) {
+			var key = flexform_table.field[j].key;
+			var index = flexform_table.field[j].index;
+
+			temp_data[key] = arr_data[i][index];
+			if (!temp_data[key] || temp_data[key] === '')
+				empty_fields++;
+		}
+		
+		// check if all required fields exist
+		var missing_required = false;
+		if (typeof required_fields === 'object') {
+			for (var j in required_fields) {
+				if (!temp_data[required_fields[j]] || temp_data[required_fields[j]] === '') {
+					missing_required = true;
+					break;
+				}
+			}
+		}
+		
+		// skip entirely empty rows, or if 'ensure_valid' is specified and there's missing data
+		if (empty_fields === total_field_size || missing_required === true) {
+			continue;
+		}
+		
 		flexform_table.data.push(temp_data);
 	}
 	return flexform_table;
