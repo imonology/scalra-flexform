@@ -221,7 +221,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	if (upload_id) {
 		var formData = new FormData();
-		formData.append('toPreserveFileName', "fales");
+		formData.append('toPreserveFileName', "false");
 		formData.append('firstOption', "file");
 		formData.append('upload', document.getElementById(upload_id).files[0]);
 	} else
@@ -385,10 +385,10 @@ function array_to_flexform_table(arr_data, required_fields) {
 	// total number of valid fields
 	var total_field_size = flexform_table.field.length;
 	
-	for (var i in arr_data) {
-		// skip field names
-		if (i === 0) 
-			continue;
+	console.log('arr_data:');
+	console.log(arr_data);
+	
+	for (var i=1; i < arr_data.length; i++) {
 		
 		var temp_data = {};
 		var empty_fields = 0;
@@ -667,3 +667,260 @@ function upload_table2(form_name, fields, onDone) {
 	});
 	
 }
+
+//
+// Excel Upload
+//
+
+// parameters for excel upload
+/* sample:
+	do_upload_excel({
+		id: 				0, 
+		hint: 				'上傳 Excel 匯入資料，需有 "VOC"、"VOC分類-1"、"VOC分類-2"、"VOC分類-3" 等欄位',
+		required_fields: 	['VOC', 'VOC分類-1'],
+		import_fields:		['VOC', 'VOC分類-1', 'VOC分類-2', 'VOC分類-3']
+	});
+*/
+var l_excel_upload_para = {};
+
+// imported data
+var l_xlsx_data;
+
+function do_upload_excel(para) {
+	document.getElementById('upload_excel_area').innerHTML = get_upload_excel(para);
+}
+
+function get_upload_excel(para) {
+	
+	if (typeof para === 'object')
+		l_excel_upload_para = para;
+	else 
+		l_excel_upload_para.id = para;
+	
+	console.log('para');
+	console.log(l_excel_upload_para);
+	
+	var id = l_excel_upload_para.id;
+	var hint = l_excel_upload_para.hint;
+	
+	var html = '';	
+	if (typeof hint === 'string')
+		html += '<p>' + hint + '</p>';
+	html += '<input type="file" id="uploader" onchange="upload_excel(\'' + id + '\')">';
+	// html += '<select id="rf-encoding-excel">';
+	// html += '<option value="big5">Big-5</option>';
+	// html += '<option value="utf8">UTF-8</option>';
+	// html += '</select>';
+	html += '<div id="show_table"> </div>';
+	return html;
+}
+
+function upload_excel(upload_id) {
+	console.log('call upload_excel');
+	
+	var f = document.getElementById('uploader');
+	console.log(f.files[0]);
+	if (f.files && f.files[0]) {
+		var file = f.files[0];
+		var fileType = file['type'];
+		
+		var arr = file['name'].split('.');
+		var fileExt = arr[arr.length-1].toLowerCase();
+			
+		// csv
+		// application/vnd.ms-excel
+		console.log('fileType: ' + fileType);
+		console.log('fileExt: ' + fileExt);
+		
+		//var csvType = ["application/vnd.ms-excel"];
+		//var validTypes = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"];
+		var validExtensions = ['csv', 'xls', 'xlsx'];
+		
+		if ($.inArray(fileExt, validExtensions) < 0) {
+			alert('unsupported file type: ' + fileExt);
+			return;
+		}
+				
+		var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
+		var formData= new FormData();
+		formData.append('toPreserveFileName', "false");
+		formData.append('firstOption', "file");
+		formData.append('upload', file);
+
+		$.ajax({
+			url: upload_url + '/upload',
+			type: 'POST',
+			data: formData,
+			async: false,
+			cache: false,
+			contentType: false,
+			processData: false,
+			success: function (data) {
+				console.log('upload success!');
+				console.log(data);
+				var filename = data.upload[0].name;
+
+				console.log('filename: ' + filename + ' fileType: ' + fileType + ' fileExt: ' + fileExt);
+
+				// perform file conversion first
+				SR.API.IS_UTF8({
+					filename:		filename,
+				}, function (err, is_utf8) {
+					if (err) {
+						return console.error(err);
+					}
+					console.log('isUTF8: ' + is_utf8);
+					
+					var reader = new FileReader();
+					
+					reader.addEventListener('load', function () {
+						
+						// after conversion
+						//if (fileType !== 'application/vnd.ms-excel'){
+						if (fileExt === 'csv') {
+							// for CSV text
+							var data = CSVToArray(this.result);
+							if (data[data.length-1] == "")
+								data.splice(data.length-1, 1);
+							return excel_done([{data: data}], upload_id, f);
+						} else {
+							// for excel files
+							SR.API.READ_XLSX_DATA({
+								filename:		filename,
+							}, function (err, data) {
+								if (err) {
+									return console.error(err);							
+								}
+
+								console.log(data);
+								return excel_done(data, upload_id, f);
+							});
+						};						
+					});
+
+					console.log('to read:');
+					console.dir(f.files[0]);
+
+					if (!is_utf8)
+						reader.readAsText(f.files[0], 'big5');
+					else
+						reader.readAsText(f.files[0]);
+				});
+			},
+			error: function (jqXHR) {
+				console.log(jqXHR);
+			}
+		});
+	}
+}
+
+function excel_done(data, id, f, warn_empty, key_field){
+	// 只取限制的欄位
+	var limit = l_excel_upload_para.import_fields;
+	var arr_data = data[0].data;
+	
+	console.log(arr_data);
+	console.log('how many rows starts: ' + arr_data.length);
+	
+	// 偵測是否有符合
+	for (var i=0; i < arr_data.length; i++){
+		var match_num = 0;
+		for (var j in limit)
+			if (has_str(arr_data[i], limit[j])) 
+				match_num++;
+		
+		console.log('match: ' + match_num + ' limit.length: ' + limit.length);
+		if (match_num === limit.length) {
+			console.log('total match found!')
+			console.log(arr_data[i]);
+			break;
+		}
+	}
+	
+	console.log('which row found: ' + i); 
+	// check if did not find field row
+	if (i === arr_data.length) {
+		var err_message = 'field row cannot be found! ' + limit;
+		console.error(err_message);
+		alert(err_message);
+		return;
+	}
+
+	// remove irrelevant top rows
+	arr_data = arr_data.slice(i);
+	//console.log(arr_data);
+	
+	// remove empty bottom rows
+	for (var i=0; i < arr_data.length - 1; i++) {
+		if (!arr_data[i]) {
+			arr_data = arr_data.slice(0, i);
+			break;
+		}
+	}
+	//for (var i = arr_data.length - 1; i >= 0 ; i--)
+	//	if (!arr_data[i])
+	//		arr_data = arr_data.slice(parseInt(i)+1);
+	
+	// convert to html	
+	l_xlsx_data = array_to_flexform_table(arr_data, l_excel_upload_para.required_fields);
+	
+	for (var i = l_xlsx_data.field.length - 1 ; i >= 0 ; i -- ) {
+
+		var have = false;
+		for (var j in limit)
+			if (l_xlsx_data.field[i].value === limit[j])
+				have = true;
+		if (!have) 
+			delete l_xlsx_data.field[i];
+	}
+
+	document.getElementById('show_table').innerHTML = flexform_show_table(l_xlsx_data);
+	
+	// check for data correctness
+	var err_message = '';
+	
+	// check for empty fields and warn
+	for (var i in l_xlsx_data.field) {
+		for (var j in l_xlsx_data.data) {
+			if (!l_xlsx_data.data[j][l_xlsx_data.field[i].key] && warn_empty === true) {
+				err_message += 'Record #' + (parseInt(j)+1) + ' has empty field [' + l_xlsx_data.field[i].key + ']\n';
+			}			
+		}		
+	} 
+
+	// check for redundent keys
+	if (typeof key_field === 'string') {
+		for (var j in l_xlsx_data.data) {
+			for (var i in l_xlsx_data.data) {
+				if (j === i) 
+					continue;
+
+				if (l_xlsx_data.data[i][key_field] === l_xlsx_data.data[j][key_field]) {
+					err_message += '[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1) + '\n';
+					break;
+				}
+			}
+		}		
+	}
+		
+	f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
+	
+	if (err_message !== '')
+		alert(err_message);
+	else {
+		document.getElementById('show_table').innerHTML += '<input type="button" value="Confirm Import" onclick="submit_excel_import(\''+ id +'\')">';
+	}
+}
+
+function submit_excel_import(id) {
+	if (typeof l_excel_upload_para.onConfirm === 'function') {
+		l_excel_upload_para.onConfirm(l_xlsx_data, id);
+	} else {
+		console.error('no onConfirm callback provided when excel import is confirmed!');
+	}
+}
+
+function has_str(arr, str){
+	return (arr.indexOf(str) > (-1));
+}
+
