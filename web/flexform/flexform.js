@@ -85,10 +85,17 @@ var create_img_dev = function(dom_id, img){
 	if (img.length === 0)
 		return html;
 	html += '<div class="imgDiv" id="'+img+'">';
-	html += '<img width="250" src="/web/images/'+img+'" />';
+	html += '<img width="250" src="/web/images/'+img+'"  onclick="open_new_tab(\'/web/images/'+img+'\')" />';
 	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
 	html += '</div>';
 	return html;
+}
+
+var open_new_tab = function(url){
+	window.open(
+	  url,
+	  '_blank' // <- This is what makes it open in a new window.
+	);
 }
 
 var remove_img = function(dom_id, id) {
