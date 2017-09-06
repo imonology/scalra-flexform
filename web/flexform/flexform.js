@@ -380,7 +380,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
-function array_to_flexform_table(arr_data, required_fields) {
+function array_to_flexform_table(arr_data, para) {
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
@@ -400,6 +400,8 @@ function array_to_flexform_table(arr_data, required_fields) {
 	console.log('arr_data:');
 	console.log(arr_data);
 	
+	var invalidContent = para.invalidContent || [];
+	
 	for (var i=1; i < arr_data.length; i++) {
 		
 		var temp_data = {};
@@ -416,9 +418,10 @@ function array_to_flexform_table(arr_data, required_fields) {
 		
 		// check if all required fields exist
 		var missing_required = false;
-		if (typeof required_fields === 'object') {
-			for (var j in required_fields) {
-				if (!temp_data[required_fields[j]] || temp_data[required_fields[j]] === '') {
+		if (typeof para.required_fields === 'object') {
+			for (var j in para.required_fields) {
+				var content = temp_data[para.required_fields[j]];
+				if (!content || content === '' || has_str(invalidContent, content)) {
 					missing_required = true;
 					break;
 				}
@@ -837,11 +840,13 @@ function excel_done(data, id, f, warn_empty, key_field){
 	// 偵測是否有符合
 	for (var i=0; i < arr_data.length; i++){
 		var match_num = 0;
+		console.log('src: ' + arr_data[i] + ' fields: ' + limit);
+		
 		for (var j in limit)
 			if (has_str(arr_data[i], limit[j])) 
 				match_num++;
 		
-		console.log('match: ' + match_num + ' limit.length: ' + limit.length);
+		//console.log('match: ' + match_num + ' limit.length: ' + limit.length);
 		if (match_num === limit.length) {
 			console.log('total match found!')
 			console.log(arr_data[i]);
@@ -874,7 +879,7 @@ function excel_done(data, id, f, warn_empty, key_field){
 	//		arr_data = arr_data.slice(parseInt(i)+1);
 	
 	// convert to html	
-	l_xlsx_data = array_to_flexform_table(arr_data, l_excel_upload_para.required_fields);
+	l_xlsx_data = array_to_flexform_table(arr_data, l_excel_upload_para);
 	
 	for (var i = l_xlsx_data.field.length - 1 ; i >= 0 ; i -- ) {
 
