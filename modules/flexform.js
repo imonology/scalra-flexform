@@ -827,6 +827,21 @@ SR.API.add('UPDATE_FIELD', {
 			else if (form.data.fields[j].type === 'datetime' )
 				values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
 		}
+		
+		if (form.data.fields[j].type === 'email') {
+			// LOG.warn('印出email');
+			// LOG.warn(values_map[form.data.fields[j].id])
+			// LOG.warn(values_map.account);
+			// _ACCOUNT_SETDATA
+			SR.API._ACCOUNT_SETDATA({
+				account:		values_map.account,
+				data:			{email: values_map[form.data.fields[j].id]}
+			}, function (err) {
+				LOG.warn('set 成功');
+			});
+		}
+		
+		
 	}
 	
 	
@@ -1031,6 +1046,18 @@ SR.API.add('UPDATE_FORM', {
 					value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
 				else if (form.data.fields[j].type === 'datetime' )
 					value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+			}
+			if (form.data.fields[j].type === 'email') {
+				// LOG.warn('印出email');
+				// LOG.warn(value_array[i][form.data.fields[j].id])
+				// LOG.warn(value_array[i].account);
+				// _ACCOUNT_SETDATA
+				SR.API._ACCOUNT_SETDATA({
+					account:		value_array[i].account,
+					data:			{email: value_array[i][form.data.fields[j].id]}
+				}, function (err) {
+					LOG.warn('set 成功');
+				});
 			}
 		}
 

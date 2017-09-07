@@ -397,10 +397,15 @@ function array_to_flexform_table(arr_data, para) {
 	// total number of valid fields
 	var total_field_size = flexform_table.field.length;
 	
-	console.log('arr_data:');
-	console.log(arr_data);
+	// console.log('arr_data:');
+	// console.log(arr_data);
 	
-	var invalidContent = para.invalidContent || [];
+	if (!para)
+		var invalidContent = [];
+	else
+		var invalidContent = para.invalidContent || [];
+	
+	
 	
 	for (var i=1; i < arr_data.length; i++) {
 		
@@ -418,7 +423,7 @@ function array_to_flexform_table(arr_data, para) {
 		
 		// check if all required fields exist
 		var missing_required = false;
-		if (typeof para.required_fields === 'object') {
+		if (para && typeof para.required_fields === 'object') {
 			for (var j in para.required_fields) {
 				var content = temp_data[para.required_fields[j]];
 				if (!content || content === '' || has_str(invalidContent, content)) {
@@ -435,6 +440,7 @@ function array_to_flexform_table(arr_data, para) {
 		
 		flexform_table.data.push(temp_data);
 	}
+
 	return flexform_table;
 }
 
