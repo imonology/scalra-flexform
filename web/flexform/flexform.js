@@ -838,20 +838,17 @@ function upload_excel(upload_id) {
 	//formData.append('upload', document.getElementById('uploader').files);
 	*/
 	
-	var processFile = function (filename) {
+	var processFile = function (file_name) {
 
-		// perform file conversion first
-		SR.API.IS_UTF8({
-			filename:		filename,
-		}, function (err, is_utf8) {
+		var onEncoding = function (err, is_utf8) {
 			if (err) {
 				return console.error(err);
 			}
-			console.log('isUTF8: ' + is_utf8);
-			
-			var ext = fileInfo[filename].ext;
+			console.log('filename: ' + file_name + ' isUTF8: ' + is_utf8);
+
+			var ext = fileInfo[file_name].ext;
 			var reader = new FileReader();
-			
+
 			reader.addEventListener('load', function () {
 
 				// after conversion
@@ -864,7 +861,7 @@ function upload_excel(upload_id) {
 				} else {
 					// for excel files
 					SR.API.READ_XLSX_DATA({
-						filename:		filename,
+						filename:		file_name,
 					}, function (err, data) {
 						if (err) {
 							return console.error(err);							
@@ -879,17 +876,17 @@ function upload_excel(upload_id) {
 			// find which file to read
 			var file = undefined;
 			for (var i=0; i < f.files.length; i++) {
-				if (f.files[i].name === filename) {
+				if (f.files[i].name === file_name) {
 					file = f.files[i];
 					break;
 				}
 			}
-			
+
 			if (!file) {
 				alert('cannot find file!');
 				return;
 			}
-			
+
 			console.log('to read:');
 			console.dir(file);
 
@@ -897,7 +894,12 @@ function upload_excel(upload_id) {
 				reader.readAsText(file, 'big5');
 			else
 				reader.readAsText(file);
-		});			
+		}
+		
+		// perform file conversion first
+		SR.API.IS_UTF8({
+			filename:		file_name,
+		}, onEncoding);			
 	}
 
 	$.ajax({
