@@ -230,19 +230,24 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 }
 
 function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
+	
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	if (upload_id) {
 		var formData = new FormData();
 		formData.append('toPreserveFileName', "false");
 		formData.append('firstOption', "file");
 		formData.append('upload', document.getElementById(upload_id).files[0]);
-	} else
-		var formData = new FormData($("#frmUploadFile")[0]);
+	} else {
+		var formData = new FormData($("#frmUploadFile")[0]);		
+	}
+	
 	console.log('formData = ');
 	console.log(formData);
+	
 	var filename;
 	// console.log('傳入的 ' + dom_id);
 	console.log('upload_id = ' + upload_id);
+
 	if (upload_id) {
 		var fullPath = document.getElementById(upload_id).value;
 		var upload_num = $("#"+upload_id)[0].files.length;
@@ -250,6 +255,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		var fullPath = document.getElementById('upload_file').value;
 		var upload_num = $("#upload_file")[0].files.length;
 	}
+	
 	if ((!accepted_extensions?get_img_num(): 0) + upload_num > num ){
 		alert('Over the limit number of files. Limit numbers is ' + num + '!');
 		return;
@@ -269,6 +275,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		accepted_extensions = ['jpg', 'png', 'gif'];
 	}
 	console.log('fullPath = ' + fullPath);
+	
 	if (fullPath) {
 		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
 		filename = fullPath.substring(startIndex);
@@ -278,6 +285,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		console.log(filename);
 	}
 	console.log('filename = ' + filename);
+	
 	if (!filename || typeof(filename) !== 'string' || filename.length < 6) {
 		console.log('test invalid');
 		console.log(filename);
@@ -551,100 +559,121 @@ function flexform_change_row(f_table, i, j) {
 	}
 } // flexform_change_row()
 
-var create_table = function(form, hide, write) {
+// create a table with upload form
+// 'form': form field & data to be displayed
+// 
+var create_table = function (form, hide, write) {
 	console.log('print form');
 	console.log(form);
+	
 	var html = '';
 	html += '<table border="1" class="customTable">';
 	var fields = form.data.fields;
+	
 	function c_table(fields, value) {
 		var html = '';
 		for (var i in fields) {
-			if (!fields[i].show) continue;
-			if (hide.indexOf(fields[i].id) !== -1) 
-				continue;
+			
+			// check if the field is hidden or specified as 'hide'
+			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
+				continue;				
+			}
+			
+			// begin a row of data
 			html += '<tr>';
+			
+			// display field name
 			html += '<td>' + fields[i].name + '</td>';
+			
+			// show field content
 			html += '<td>';
-			if (fields[i].type === 'upload') 
-				;
-			else if (fields[i].type === 'textarea') {
-				if (write){
-					html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
-					html += '<input type="hidden" id="'+fields[i].id+'-encode" value="">';
-					html += '<input type="file" id="inputTxt-'+fields[i].id+'">';
-					html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+fields[i].id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+fields[i].id+'\')">上傳文字檔</button>';
-					html += '</form>';
-					// html += '<select id="rf-encoding">';
-					// html += '<option value="big5">Big-5</option>';
-					// html += '<option value="utf8">UTF-8</option>';
-					// html += '</select>';
-					
-					html += '<br>';
-					textarea_id.push(fields[i].id);
-					html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
-				} else{
-					html += '<textarea rows="3" cols="20" readonly="readonly">';
-				}
-				// html += '<textarea rows="3" cols="20" ' + (write?'id="'+fields[i].id+'"':'readonly="readonly"' )+ '>';
-			}
-			if (write) {
-				if (fields[i].type === 'upload') {
-					var image_id = '<%=UTIL.createToken()%>';
-					if (fields[i].num)
-						var num = fields[i].num;
-					else
-						var num = 5;
-					
-					html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">';
-					html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
-					html += '<input type="file" name="upload" multiple="multiple" id="upload_file">';
-					html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
-					html += '<input type="hidden" value="" id="' + fields[i].id + '">';
-					
-					html += '<div id="show_upload_img"></div>';
-					html += '</form>';
-					// html += '<div id="uploaded_photo"><img id="show_image" width="250" src="")" ></div>'
-				} else if (fields[i].type === 'date') {
-					html += '<input type="text" value="" id="'+fields[i].id+'">';
-					date_pickers.push(fields[i].id);
-					
-				} else if (fields[i].type === 'autocomplete') {
-					html += '<input type="text" id="' + fields[i].id + '" >';
-					$( function() {
-						var key_id = fields[i].id;
-						SR.API.QUERY_FORM({name: form.name}, function (err, r_form) {
-							if (err) {
-								console.log(err);	
-							}
-							var ans = [];
-							function haveSame(arr, str){
-								for (var i in arr)
-									if (arr[i] === str)
-										return true;
-								return false;
-							}
-							for (var r_id in r_form.data.values)
-								if (!haveSame(ans, r_form.data.values[r_id][key_id]))
-									ans.push(r_form.data.values[r_id][key_id]);
-							$( "#" + key_id ).autocomplete({
-							  source: ans
-							});
-						});	
-					});
-				} else
-					html += (fields[i].type !== 'textarea'?'<input type="text" id="'+fields[i].id+'">':'');
-			} else {
-				if (fields[i].type === 'upload') {
-					html += '<div id="uploaded_photo">';
-					html += show_imgs(value[fields[i].id]);
-					html += '</div>';
-				} else
-					html += value[fields[i].id];
-			}
-			if (fields[i].type === 'textarea') html += '</textarea>';
 			
-			
+			switch (fields[i].type) {
+				// FIXME: should make 'upload' not just for pics but files in general
+				case 'upload':
+					if (write) {
+						var image_id = '<%= UTIL.createToken() %>';
+						
+						// set upload item limit
+						var num = (fields[i].num ? fields[i].num : 5);
+
+						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">';
+						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
+						html += '<input type="file" name="upload" id="upload_file" multiple="multiple">';
+						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
+						html += '<input type="hidden" value="" id="' + fields[i].id + '">';
+
+						html += '<div id="show_upload_img"></div>';
+						html += '</form>';				
+					} else {
+						html += '<div id="uploaded_photo">';
+						html += show_imgs(value[fields[i].id]);
+						html += '</div>';						
+					}
+					break;
+
+				case 'textarea':
+					if (write) {
+						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
+						html += '<input type="hidden" id="'+fields[i].id+'-encode" value="">';
+						html += '<input type="file" id="inputTxt-'+fields[i].id+'">';
+						html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+fields[i].id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+fields[i].id+'\')">上傳文字檔</button>';
+						html += '</form>';					
+						html += '<br>';
+						textarea_id.push(fields[i].id);
+						html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
+					} else {
+						html += '<textarea rows="3" cols="20" readonly="readonly">';
+					}
+					html += '</textarea>';					
+					break;
+					
+				case 'date':
+					if (write) {
+						html += '<input type="text" value="" id="'+fields[i].id+'">';
+						date_pickers.push(fields[i].id);						
+					} else {
+						html += value[fields[i].id];
+					}
+					break;
+					
+				case 'autocomplete': 
+					if (write) {
+						html += '<input type="text" id="' + fields[i].id + '" >';
+						$( function() {
+							var key_id = fields[i].id;
+							SR.API.QUERY_FORM({name: form.name}, function (err, r_form) {
+								if (err) {
+									console.log(err);	
+								}
+								var ans = [];
+								function haveSame(arr, str) {
+									for (var i in arr)
+										if (arr[i] === str)
+											return true;
+									return false;
+								}
+								for (var r_id in r_form.data.values)
+									if (!haveSame(ans, r_form.data.values[r_id][key_id]))
+										ans.push(r_form.data.values[r_id][key_id]);
+								$( "#" + key_id ).autocomplete({
+									source: ans
+								});
+							});	
+						});							
+					} else {
+						html += value[fields[i].id];
+					}				
+					break;
+					
+				default:
+					if (write) {
+						html += '<input type="text" id="' + fields[i].id +'">';					
+					} else {
+						html += value[fields[i].id];
+					}
+					break;
+			}
 			
 			html += '</td>'
 			html += '</tr>';
@@ -652,17 +681,22 @@ var create_table = function(form, hide, write) {
 			
 		return html;
 	}
-	if (write)
-		html += c_table(fields);
+	
+	if (write) {
+		html += c_table(fields);		
+	}
 	else {
+		// show all valid records in the form.data.values
 		for (var record_id in form.data.values) {
 			var value = form.data.values[record_id];
 			html += c_table(fields, value);
 		}
 	}
 	html += '</table>'
+	
 	if (write)
 		html += '<button class="btn btn-primary" onClick="upload()">確定送出</button>';
+	
 	return html;
 }
 
@@ -727,7 +761,7 @@ function get_upload_excel(para) {
 	var html = '';	
 	if (typeof hint === 'string')
 		html += '<p>' + hint + '</p>';
-	html += '<input type="file" id="uploader" onchange="upload_excel(\'' + id + '\')">';
+	html += '<input type="file" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
 	// html += '<select id="rf-encoding-excel">';
 	// html += '<option value="big5">Big-5</option>';
 	// html += '<option value="utf8">UTF-8</option>';
@@ -740,99 +774,138 @@ function upload_excel(upload_id) {
 	console.log('call upload_excel');
 	
 	var f = document.getElementById('uploader');
-	console.log(f.files[0]);
-	if (f.files && f.files[0]) {
-		var file = f.files[0];
-		var fileType = file['type'];
-		
-		var arr = file['name'].split('.');
-		var fileExt = arr[arr.length-1].toLowerCase();
-			
-		// csv
-		// application/vnd.ms-excel
-		console.log('fileType: ' + fileType);
-		console.log('fileExt: ' + fileExt);
-		
-		//var csvType = ["application/vnd.ms-excel"];
-		//var validTypes = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"];
-		var validExtensions = ['csv', 'xls', 'xlsx'];
-		
-		if ($.inArray(fileExt, validExtensions) < 0) {
-			alert('unsupported file type: ' + fileExt);
+	if (!f.files) {
+		alert('no valid files!');
+		return;
+	}
+
+	console.log(f.files);
+
+	// check if file extensions are valid
+	var filelist = f.files;
+	var fileInfo = {};
+	var validExtensions = ['csv', 'xls', 'xlsx'];
+
+	for (var i=0; i < filelist.length; i++) {
+
+		var file = f.files[i];
+		var filename = file['name'];
+		var type = file['type'];
+		var arr = filename.split('.');
+		var ext = arr[arr.length-1].toLowerCase();
+		console.log('file: ' + filename + ' type: ' + type + ' ext: ' + ext);
+
+		if ($.inArray(ext, validExtensions) < 0) {
+			alert('unsupported file extension: ' + ext);
 			return;
 		}
-				
-		var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
-		var formData= new FormData();
-		formData.append('toPreserveFileName', "false");
-		formData.append('firstOption', "file");
-		formData.append('upload', file);
-
-		$.ajax({
-			url: upload_url + '/upload',
-			type: 'POST',
-			data: formData,
-			async: false,
-			cache: false,
-			contentType: false,
-			processData: false,
-			success: function (data) {
-				console.log('upload success!');
-				console.log(data);
-				var filename = data.upload[0].name;
-
-				console.log('filename: ' + filename + ' fileType: ' + fileType + ' fileExt: ' + fileExt);
-
-				// perform file conversion first
-				SR.API.IS_UTF8({
-					filename:		filename,
-				}, function (err, is_utf8) {
-					if (err) {
-						return console.error(err);
-					}
-					console.log('isUTF8: ' + is_utf8);
-					
-					var reader = new FileReader();
-					
-					reader.addEventListener('load', function () {
-						
-						// after conversion
-						//if (fileType !== 'application/vnd.ms-excel'){
-						if (fileExt === 'csv') {
-							// for CSV text
-							var data = CSVToArray(this.result);
-							if (data[data.length-1] == "")
-								data.splice(data.length-1, 1);
-							return excel_done([{data: data}], upload_id, f);
-						} else {
-							// for excel files
-							SR.API.READ_XLSX_DATA({
-								filename:		filename,
-							}, function (err, data) {
-								if (err) {
-									return console.error(err);							
-								}
-
-								console.log(data);
-								return excel_done(data, upload_id, f);
-							});
-						};						
-					});
-
-					console.log('to read:');
-					console.dir(f.files[0]);
-
-					if (!is_utf8)
-						reader.readAsText(f.files[0], 'big5');
-					else
-						reader.readAsText(f.files[0]);
-				});
-			},
-			error: function (jqXHR) {
-				console.log(jqXHR);
-			}
-		});
+		
+		// store for later
+		fileInfo[filename] = {
+			type:	type,
+			ext: 	ext 
+		}
 	}
+
+	// prepare for upload
+	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
+	//var formData = new FormData();
+	//formData.append('toPreserveFileName', "true");
+	//formData.append('firstOption', "file");
+	//formData.append('upload', f.files);
+	
+	var formData = new FormData();
+	formData.append('toPreserveFileName', "true");
+	formData.append('firstOption', "file");
+	formData.append('upload', document.getElementById('uploader').files[0]);
+	// NOTE: this will fail
+	//formData.append('upload', document.getElementById('uploader').files);
+
+	var processFile = function (filename) {
+
+		// perform file conversion first
+		SR.API.IS_UTF8({
+			filename:		filename,
+		}, function (err, is_utf8) {
+			if (err) {
+				return console.error(err);
+			}
+			console.log('isUTF8: ' + is_utf8);
+			
+			var ext = fileInfo[filename].ext;
+			var reader = new FileReader();
+			
+			reader.addEventListener('load', function () {
+
+				// after conversion
+				if (ext === 'csv') {
+					// for CSV text
+					var data = CSVToArray(this.result);
+					if (data[data.length-1] == "")
+						data.splice(data.length-1, 1);
+					return excel_done([{data: data}], upload_id, f);
+				} else {
+					// for excel files
+					SR.API.READ_XLSX_DATA({
+						filename:		filename,
+					}, function (err, data) {
+						if (err) {
+							return console.error(err);							
+						}
+
+						console.log(data);
+						return excel_done(data, upload_id, f);
+					});
+				};
+			});
+
+			// find which file to read
+			var file = undefined;
+			for (var i=0; i < f.files.length; i++) {
+				if (f.files[i].name === filename) {
+					file = f.files[i];
+					break;
+				}
+			}
+			
+			if (!file) {
+				alert('cannot find file!');
+				return;
+			}
+			
+			console.log('to read:');
+			console.dir(file);
+
+			if (!is_utf8)
+				reader.readAsText(file, 'big5');
+			else
+				reader.readAsText(file);
+		});			
+	}
+
+	$.ajax({
+		url: upload_url + '/upload',
+		type: 'POST',
+		data: formData,
+		//async: false,
+		//cache: false,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+			console.log('upload ' + data.upload.length + ' file(s) success!');
+			console.log(data);
+
+			// loop through all uploaded file and process
+			for (var i=0; i < data.upload.length; i++) {
+				var filename = data.upload[i].name;
+				console.log('filename: ' + filename);
+				processFile(filename);
+			}
+		},
+		error: function (jqXHR) {
+			console.error(jqXHR);
+		}
+	});
 }
 
 function excel_done(data, id, f, warn_empty, key_field){
@@ -897,7 +970,8 @@ function excel_done(data, id, f, warn_empty, key_field){
 			delete l_xlsx_data.field[i];
 	}
 
-	document.getElementById('show_table').innerHTML = flexform_show_table(l_xlsx_data);
+	// NOTE: this has the effect of adding more & more with each call of excel_done
+	document.getElementById('show_table').innerHTML += flexform_show_table(l_xlsx_data);
 	
 	// check for data correctness
 	var err_message = '';
