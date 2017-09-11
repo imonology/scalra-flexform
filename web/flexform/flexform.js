@@ -624,6 +624,7 @@ var create_table = function (form, hide, write) {
 						html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
 					} else {
 						html += '<textarea rows="3" cols="20" readonly="readonly">';
+						html += value[fields[i].id];
 					}
 					html += '</textarea>';					
 					break;
@@ -761,7 +762,17 @@ function get_upload_excel(para) {
 	var html = '';	
 	if (typeof hint === 'string')
 		html += '<p>' + hint + '</p>';
-	html += '<input type="file" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
+	
+	html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' id="frmUploadFile">';
+	html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
+	html += '<input type="file" name="upload" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
+	//html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
+	//html += '<input type="hidden" value="" id="' + fields[i].id + '">';
+	//html += '<div id="show_upload_img"></div>';
+	html += '</form>';				
+
+	// original one-liner
+	//html += '<input type="file" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
 	// html += '<select id="rf-encoding-excel">';
 	// html += '<option value="big5">Big-5</option>';
 	// html += '<option value="utf8">UTF-8</option>';
@@ -814,13 +825,19 @@ function upload_excel(upload_id) {
 	//formData.append('firstOption', "file");
 	//formData.append('upload', f.files);
 	
+	// for multiple files
+	var formData = new FormData($("#frmUploadFile")[0]);	
+	
+	/* 
+	// access only one file
 	var formData = new FormData();
 	formData.append('toPreserveFileName', "true");
 	formData.append('firstOption', "file");
 	formData.append('upload', document.getElementById('uploader').files[0]);
 	// NOTE: this will fail
 	//formData.append('upload', document.getElementById('uploader').files);
-
+	*/
+	
 	var processFile = function (filename) {
 
 		// perform file conversion first
