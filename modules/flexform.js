@@ -194,18 +194,32 @@ SR.API.add('GET_FORM', {
 });
 
 // ------------------------------------ flexform2 -----------------------------------------------
-
+// also returns the data read with optional flag
 SR.API.add('IS_UTF8', {
 	filename:		'string',
+	return_data:	'+boolean'		// whether to return the read data
 }, function (args, onDone) {
-	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
-	SR.fs.exists(pdb_path, function (exists) {
-		if(!exists) {
-			return onDone(null);
+	
+	var filepath = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
+	SR.fs.exists(filepath, function (exists) {
+		
+		if (!exists) {
+			return onDone('file not exist!');
 		}
-		var data = SR.fs.readFileSync(pdb_path);
-
-		return onDone(null, isUtf8(data));
+		
+		var data = SR.fs.readFileSync(filepath);
+		var utf8 = isUtf8(data);
+		
+		if (args.return_data === true) {
+			// see if we need to re-read for utf8 content
+			if (utf8) {
+				data = SR.fs.readFileSync(filepath, {encoding: 'utf8'});
+			}
+		} else {
+			data = undefined;
+		}
+		
+		return onDone(null, utf8, data);
 	});
 });
 
@@ -1271,6 +1285,247 @@ SR.API.add('UPLOAD_IMAGE', {
 // 	});
 	
 });
+
+//
+//	excel / csv processing
+//
+
+function CSVToArray( strData, strDelimiter ){
+	// Check to see if the delimiter is defined. If not,
+	// then default to comma.
+	strDelimiter = (strDelimiter || ",");
+
+	// Create a regular expression to parse the CSV values.
+	var objPattern = new RegExp(
+		(
+			// Delimiters.
+			"(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+
+			// Quoted fields.
+			"(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+
+			// Standard fields.
+			"([^\"\\" + strDelimiter + "\\r\\n]*))"
+		),
+		"gi"
+		);
+
+
+	// Create an array to hold our data. Give the array
+	// a default empty first row.
+	var arrData = [[]];
+
+	// Create an array to hold our individual pattern
+	// matching groups.
+	var arrMatches = null;
+
+
+	// Keep looping over the regular expression matches
+	// until we can no longer find a match.
+	while (arrMatches = objPattern.exec( strData )){
+
+		// Get the delimiter that was found.
+		var strMatchedDelimiter = arrMatches[ 1 ];
+
+		// Check to see if the given delimiter has a length
+		// (is not the start of string) and if it matches
+		// field delimiter. If id does not, then we know
+		// that this delimiter is a row delimiter.
+		if (
+			strMatchedDelimiter.length &&
+			strMatchedDelimiter !== strDelimiter
+			){
+
+			// Since we have reached a new row of data,
+			// add an empty row to our data array.
+			arrData.push( [] );
+
+		}
+
+		var strMatchedValue;
+
+		// Now that we have our delimiter out of the way,
+		// let's check to see which kind of value we
+		// captured (quoted or unquoted).
+		if (arrMatches[ 2 ]){
+
+			// We found a quoted value. When we capture
+			// this value, unescape any double quotes.
+			strMatchedValue = arrMatches[ 2 ].replace(
+				new RegExp( "\"\"", "g" ),
+				"\""
+				);
+
+		} else {
+
+			// We found a non-quoted value.
+			strMatchedValue = arrMatches[ 3 ];
+
+		}
+
+
+		// Now that we have our value string, let's add
+		// it to the data array.
+		arrData[ arrData.length - 1 ].push( strMatchedValue );
+	}
+
+	// Return the parsed data.
+	return( arrData );
+}
+
+function has_str(arr, str) {
+	return (arr.indexOf(str) > (-1));
+}
+
+function excel_done(arr_data, warn_empty, key_field) {
+
+	var import_fields = l_excel_upload_para.import_fields;
+	
+	console.log(arr_data);
+	console.log('how many rows starts: ' + arr_data.length);
+	
+	// 偵測是否有符合
+	for (var i=0; i < arr_data.length; i++){
+		var match_num = 0;
+		console.log('src: ' + arr_data[i] + ' fields: ' + import_fields);
+		
+		for (var j in import_fields)
+			if (has_str(arr_data[i], import_fields[j])) 
+				match_num++;
+		
+		if (match_num === import_fields.length) {
+			console.log('total match found!')
+			console.log(arr_data[i]);
+			break;
+		}
+	}
+	
+	console.log('which row found: ' + i); 
+	// check if did not find field row
+	if (i === arr_data.length) {
+		var err_message = 'field row cannot be found! ' + import_fields;
+		console.error(err_message);
+		alert(err_message);
+		return;
+	}
+
+	// remove irrelevant top rows
+	arr_data = arr_data.slice(i);
+	//console.log(arr_data);
+	
+	// remove empty bottom rows
+	for (var i=0; i < arr_data.length - 1; i++) {
+		if (!arr_data[i]) {
+			arr_data = arr_data.slice(0, i);
+			break;
+		}
+	}
+
+	// convert to flexform format	
+	l_xlsx_data = array_to_flexform_table(arr_data, l_excel_upload_para);
+	
+	// remove unused fields
+	for (var i = l_xlsx_data.field.length - 1; i >= 0 ; i -- ) {
+
+		var have = false;
+		for (var j in import_fields)
+			if (l_xlsx_data.field[i].value === import_fields[j])
+				have = true;
+		if (!have) 
+			delete l_xlsx_data.field[i];
+	}
+
+	// check for data correctness
+	var err_message = '';
+	
+	// check for empty fields and warn
+	for (var i in l_xlsx_data.field) {
+		for (var j in l_xlsx_data.data) {
+			if (!l_xlsx_data.data[j][l_xlsx_data.field[i].key] && warn_empty === true) {
+				err_message += 'Record #' + (parseInt(j)+1) + ' has empty field [' + l_xlsx_data.field[i].key + ']\n';
+			}			
+		}		
+	} 
+
+	// check for redundent keys
+	if (typeof key_field === 'string') {
+		for (var j in l_xlsx_data.data) {
+			for (var i in l_xlsx_data.data) {
+				if (j === i) 
+					continue;
+
+				if (l_xlsx_data.data[i][key_field] === l_xlsx_data.data[j][key_field]) {
+					err_message += '[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1) + '\n';
+					break;
+				}
+			}
+		}		
+	}
+}
+
+
+SR.API.add('PROCESS_UPLOADED_EXCEL', {
+	list:	'array'		// list of uploaded file names
+}, function (args, onDone) {
+		
+	// process a single file	
+	var processFile = function (file_name, onDone) {
+		
+		// perform file conversion first
+		SR.API.IS_UTF8({
+			filename:		file_name,
+			return_data:	true
+		}, function (err, is_utf8, data) {
+					   
+			if (err) {
+				return onDone(err); 
+			}
+
+			var ext = SR.path.extname(file_name).substring(1);
+			LOG.warn('filename: ' + file_name + ' isUTF8: ' + is_utf8 + ' ext: ' + ext, l_name);
+
+			// NOTE: data returned here should be read with proper encoding
+			if (ext === 'csv') {
+				// for CSV text
+				var array = CSVToArray(data);
+				
+				// what does this do?
+				if (array[array.length-1] == "")
+					array.splice(array.length-1, 1);
+				
+				onDone(null, array); 
+			} else {
+				// for excel files
+				SR.API.READ_XLSX_DATA({
+					//filename:		file_name,
+					data:			data
+				}, function (err, parsed) {
+					if (err) {
+						return onDone(err); 
+					}
+					LOG.warn(parsed);
+					onDone(null, parsed[0].data);
+				});
+			};
+		});			
+	}
+	
+	for (var i=0; i < args.list.length; i++) {
+		var filename = args.list[i];
+		processFile(filename, function (err, array) {
+			
+			if (err) {
+				return LOG.error(err, l_name);
+			}
+			
+			// process to extract field name and data
+			
+			
+		});	
+	}
+})
+
+
 
 SR.Callback.onStart(function () {
 	// make sure /web/images directory exists

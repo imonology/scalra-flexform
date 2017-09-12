@@ -125,89 +125,6 @@ var show_imgs = function(imgs) {
 	// show_upload_img
 }
 
-function CSVToArray( strData, strDelimiter ){
-	// Check to see if the delimiter is defined. If not,
-	// then default to comma.
-	strDelimiter = (strDelimiter || ",");
-
-	// Create a regular expression to parse the CSV values.
-	var objPattern = new RegExp(
-		(
-			// Delimiters.
-			"(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-
-			// Quoted fields.
-			"(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-
-			// Standard fields.
-			"([^\"\\" + strDelimiter + "\\r\\n]*))"
-		),
-		"gi"
-		);
-
-
-	// Create an array to hold our data. Give the array
-	// a default empty first row.
-	var arrData = [[]];
-
-	// Create an array to hold our individual pattern
-	// matching groups.
-	var arrMatches = null;
-
-
-	// Keep looping over the regular expression matches
-	// until we can no longer find a match.
-	while (arrMatches = objPattern.exec( strData )){
-
-		// Get the delimiter that was found.
-		var strMatchedDelimiter = arrMatches[ 1 ];
-
-		// Check to see if the given delimiter has a length
-		// (is not the start of string) and if it matches
-		// field delimiter. If id does not, then we know
-		// that this delimiter is a row delimiter.
-		if (
-			strMatchedDelimiter.length &&
-			strMatchedDelimiter !== strDelimiter
-			){
-
-			// Since we have reached a new row of data,
-			// add an empty row to our data array.
-			arrData.push( [] );
-
-		}
-
-		var strMatchedValue;
-
-		// Now that we have our delimiter out of the way,
-		// let's check to see which kind of value we
-		// captured (quoted or unquoted).
-		if (arrMatches[ 2 ]){
-
-			// We found a quoted value. When we capture
-			// this value, unescape any double quotes.
-			strMatchedValue = arrMatches[ 2 ].replace(
-				new RegExp( "\"\"", "g" ),
-				"\""
-				);
-
-		} else {
-
-			// We found a non-quoted value.
-			strMatchedValue = arrMatches[ 3 ];
-
-		}
-
-
-		// Now that we have our value string, let's add
-		// it to the data array.
-		arrData[ arrData.length - 1 ].push( strMatchedValue );
-	}
-
-	// Return the parsed data.
-	return( arrData );
-}
-
 function read_txt(file_type_id, button_id, onDone, dom_id) {
 	console.log('file_type_id = ' + file_type_id) ;
 	document.getElementById(button_id).addEventListener("click", function() {
@@ -257,7 +174,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	}
 	
 	if ((!accepted_extensions?get_img_num(): 0) + upload_num > num ){
-		alert('Over the limit number of files. Limit numbers is ' + num + '!');
+		alert('Over file upload limit: ' + num + '!');
 		return;
 	}
 	
@@ -842,80 +759,6 @@ function upload_excel(upload_id) {
 	// for multiple files
 	var formData = new FormData($("#frmUploadFile")[0]);	
 	
-	/* 
-	// access only one file
-	var formData = new FormData();
-	formData.append('toPreserveFileName', "true");
-	formData.append('firstOption', "file");
-	formData.append('upload', document.getElementById('uploader').files[0]);
-	// NOTE: this will fail
-	//formData.append('upload', document.getElementById('uploader').files);
-	*/
-	
-	var processFile = function (file_name) {
-
-		var onEncoding = function (err, is_utf8) {
-			if (err) {
-				return console.error(err);
-			}
-			console.log('filename: ' + file_name + ' isUTF8: ' + is_utf8);
-
-			var ext = fileInfo[file_name].ext;
-			var reader = new FileReader();
-
-			reader.addEventListener('load', function () {
-
-				// after conversion
-				if (ext === 'csv') {
-					// for CSV text
-					var data = CSVToArray(this.result);
-					if (data[data.length-1] == "")
-						data.splice(data.length-1, 1);
-					return excel_done(data, upload_id, f);
-				} else {
-					// for excel files
-					SR.API.READ_XLSX_DATA({
-						filename:		file_name,
-					}, function (err, data) {
-						if (err) {
-							return console.error(err);							
-						}
-
-						console.log(data);
-						return excel_done(data[0].data, upload_id, f);
-					});
-				};
-			});
-
-			// find which file to read
-			var file = undefined;
-			for (var i=0; i < f.files.length; i++) {
-				if (f.files[i].name === file_name) {
-					file = f.files[i];
-					break;
-				}
-			}
-
-			if (!file) {
-				alert('cannot find file!');
-				return;
-			}
-
-			console.log('to read:');
-			console.dir(file);
-
-			if (!is_utf8)
-				reader.readAsText(file, 'big5');
-			else
-				reader.readAsText(file);
-		}
-		
-		// perform file conversion first
-		SR.API.IS_UTF8({
-			filename:		file_name,
-		}, onEncoding);			
-	}
-
 	$.ajax({
 		url: upload_url + '/upload',
 		type: 'POST',
@@ -928,12 +771,16 @@ function upload_excel(upload_id) {
 			console.log('upload ' + data.upload.length + ' file(s) success!');
 			console.log(data);
 
-			// loop through all uploaded file and process
+			// get filenames of uploaded files
+			var list = [];
 			for (var i=0; i < data.upload.length; i++) {
-				var filename = data.upload[i].name;
-				console.log('filename: ' + filename);
-				processFile(filename);
+				list.push(data.upload[i].name);
 			}
+				
+			SR.API.PROCESS_UPLOADED_EXCEL({list: list}, function (err, result) {
+				// perform local display
+				showExcel(result.data, result.errmsg, upload_id, f);
+			});			
 		},
 		error: function (jqXHR) {
 			console.error(jqXHR);
@@ -941,99 +788,11 @@ function upload_excel(upload_id) {
 	});
 }
 
-function excel_done(arr_data, id, f, warn_empty, key_field){
-	// 只取限制的欄位
-	var limit = l_excel_upload_para.import_fields;
-	//var arr_data = data[0].data;
+function showExcel(xlsx_data, err_message, id, f) {
+	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx_data);
 	
-	console.log(arr_data);
-	console.log('how many rows starts: ' + arr_data.length);
-	
-	// 偵測是否有符合
-	for (var i=0; i < arr_data.length; i++){
-		var match_num = 0;
-		console.log('src: ' + arr_data[i] + ' fields: ' + limit);
-		
-		for (var j in limit)
-			if (has_str(arr_data[i], limit[j])) 
-				match_num++;
-		
-		//console.log('match: ' + match_num + ' limit.length: ' + limit.length);
-		if (match_num === limit.length) {
-			console.log('total match found!')
-			console.log(arr_data[i]);
-			break;
-		}
-	}
-	
-	console.log('which row found: ' + i); 
-	// check if did not find field row
-	if (i === arr_data.length) {
-		var err_message = 'field row cannot be found! ' + limit;
-		console.error(err_message);
-		alert(err_message);
-		return;
-	}
-
-	// remove irrelevant top rows
-	arr_data = arr_data.slice(i);
-	//console.log(arr_data);
-	
-	// remove empty bottom rows
-	for (var i=0; i < arr_data.length - 1; i++) {
-		if (!arr_data[i]) {
-			arr_data = arr_data.slice(0, i);
-			break;
-		}
-	}
-	//for (var i = arr_data.length - 1; i >= 0 ; i--)
-	//	if (!arr_data[i])
-	//		arr_data = arr_data.slice(parseInt(i)+1);
-	
-	// convert to html	
-	l_xlsx_data = array_to_flexform_table(arr_data, l_excel_upload_para);
-	
-	for (var i = l_xlsx_data.field.length - 1 ; i >= 0 ; i -- ) {
-
-		var have = false;
-		for (var j in limit)
-			if (l_xlsx_data.field[i].value === limit[j])
-				have = true;
-		if (!have) 
-			delete l_xlsx_data.field[i];
-	}
-
-	// NOTE: this has the effect of adding more & more with each call
-	document.getElementById('show_table').innerHTML = flexform_show_table(l_xlsx_data);
-	
-	// check for data correctness
-	var err_message = '';
-	
-	// check for empty fields and warn
-	for (var i in l_xlsx_data.field) {
-		for (var j in l_xlsx_data.data) {
-			if (!l_xlsx_data.data[j][l_xlsx_data.field[i].key] && warn_empty === true) {
-				err_message += 'Record #' + (parseInt(j)+1) + ' has empty field [' + l_xlsx_data.field[i].key + ']\n';
-			}			
-		}		
-	} 
-
-	// check for redundent keys
-	if (typeof key_field === 'string') {
-		for (var j in l_xlsx_data.data) {
-			for (var i in l_xlsx_data.data) {
-				if (j === i) 
-					continue;
-
-				if (l_xlsx_data.data[i][key_field] === l_xlsx_data.data[j][key_field]) {
-					err_message += '[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1) + '\n';
-					break;
-				}
-			}
-		}		
-	}
-		
-	f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
+	// TOFIX: what does this do?
+	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
 	
 	if (err_message !== '')
 		alert(err_message);

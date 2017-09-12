@@ -138,11 +138,19 @@ SR.API.add('READ_XLSX', {
 
 
 SR.API.add('READ_XLSX_DATA', {
-	filename:		'string',
+	filename:		'+string',
+	data:			'+string'
 }, function (args, onDone) {
-	var filepath = SR.path.resolve(SR.Settings.UPLOAD_PATH, args.filename);
 	
-	var parsed = xlsx.parse(filepath);
+	var parsed = undefined;
+	
+	if (args.filename) {
+		var filepath = SR.path.resolve(SR.Settings.UPLOAD_PATH, args.filename);
+		parsed = xlsx.parse(filepath);	
+	} else if (args.data) {
+		parsed = xlsx.parse(args.data);
+	}
+	
 	return onDone(null, parsed);
 });
 
