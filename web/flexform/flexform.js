@@ -119,7 +119,7 @@ var show_imgs = function(imgs) {
 	for(var i in imgs) {
 		if (imgs[i].length === 0)
 			continue;
-		html += '<img width="250" src="/web/images/'+imgs[i]+'" />';
+		html += '<img width="250" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" />';
 	}
 	return html;
 	// show_upload_img
@@ -493,7 +493,7 @@ function flexform_change_row(f_table, i, j) {
 // create a table with upload form
 // 'form': form field & data to be displayed
 // 
-var create_table = function (form, hide, write) {
+var create_table = function (form, hide, write, td_style) {
 	console.log('print form');
 	console.log(form);
 	
@@ -517,7 +517,7 @@ var create_table = function (form, hide, write) {
 			html += '<td>' + fields[i].name + '</td>';
 			
 			// show field content
-			html += '<td>';
+			html += '<td style="'+td_style+'">';
 			
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
