@@ -468,6 +468,20 @@ function flexform_to_flexform_table(form) {
 	return flexform_table;
 }
 
+function flexform_table_add_field(insert_num, flexform_table, field, datas) { // flexform_table_add_field(0, flex_form, {key:'new_f', value: '新的欄位'}, ['a','b'])
+	// insert_num: 插入的位置
+	// flexform_table: 需插入的flexform_table
+	// field: 插入的欄位，須包含key和value
+	// datas: 寫入原先已有的data，需和現在data數量相同的array
+	if (datas.length !== flexform_table.data.length)
+		return flexform_table;
+	flexform_table.field.splice(insert_num, 0, field);
+	for (var i in datas)
+		flexform_table.data[i][field.key] = datas[i];
+	return flexform_table;
+}
+
+
 function flexform_show_table(flexform_values, show_lines) {
 	var html = '';
 	var table_para = {};
