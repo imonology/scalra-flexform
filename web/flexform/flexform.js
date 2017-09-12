@@ -871,7 +871,7 @@ function upload_excel(upload_id) {
 					var data = CSVToArray(this.result);
 					if (data[data.length-1] == "")
 						data.splice(data.length-1, 1);
-					return excel_done([{data: data}], upload_id, f);
+					return excel_done(data, upload_id, f);
 				} else {
 					// for excel files
 					SR.API.READ_XLSX_DATA({
@@ -882,7 +882,7 @@ function upload_excel(upload_id) {
 						}
 
 						console.log(data);
-						return excel_done(data, upload_id, f);
+						return excel_done(data[0].data, upload_id, f);
 					});
 				};
 			});
@@ -941,10 +941,10 @@ function upload_excel(upload_id) {
 	});
 }
 
-function excel_done(data, id, f, warn_empty, key_field){
+function excel_done(arr_data, id, f, warn_empty, key_field){
 	// 只取限制的欄位
 	var limit = l_excel_upload_para.import_fields;
-	var arr_data = data[0].data;
+	//var arr_data = data[0].data;
 	
 	console.log(arr_data);
 	console.log('how many rows starts: ' + arr_data.length);
@@ -1003,8 +1003,8 @@ function excel_done(data, id, f, warn_empty, key_field){
 			delete l_xlsx_data.field[i];
 	}
 
-	// NOTE: this has the effect of adding more & more with each call of excel_done
-	document.getElementById('show_table').innerHTML += flexform_show_table(l_xlsx_data);
+	// NOTE: this has the effect of adding more & more with each call
+	document.getElementById('show_table').innerHTML = flexform_show_table(l_xlsx_data);
 	
 	// check for data correctness
 	var err_message = '';
