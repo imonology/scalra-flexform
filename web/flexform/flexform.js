@@ -714,6 +714,11 @@ function upload_excel(upload_id) {
 			}
 				
 			SR.API.PROCESS_UPLOADED_EXCEL({list: list, para: l_excel_upload_para}, function (err, result) {
+				if (err) {
+					return alert(err);
+				}
+				console.log(result);
+				
 				// perform local display
 				showExcel(result.data, result.errlist, upload_id, f);
 			});			
@@ -724,11 +729,15 @@ function upload_excel(upload_id) {
 	});
 }
 
+
 function showExcel(xlsx_data, errlist, id, f) {
 	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx_data);
 	
 	// TOFIX: what does this do?
 	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
+
+	// keep refernece to be uploaded later
+	l_xlsx_data = xlsx_data;
 	
 	if (errlist.length > 0)
 		alert(errlist);
