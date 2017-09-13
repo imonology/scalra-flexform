@@ -85,7 +85,7 @@ var create_img_dev = function(dom_id, img){
 	if (img.length === 0)
 		return html;
 	html += '<div class="imgDiv" id="'+img+'">';
-	html += '<img width="250" height="250" src="/web/images/'+img+'"  onclick="open_new_tab(\'/web/images/'+img+'\')" />';
+	html += '<img class="fix-img" src="/web/images/'+img+'"  onclick="open_new_tab(\'/web/images/'+img+'\')" />';
 	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
 	html += '</div>';
 	return html;
@@ -119,7 +119,7 @@ var show_imgs = function(imgs) {
 	for(var i in imgs) {
 		if (imgs[i].length === 0)
 			continue;
-		html += '<img width="250" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" />';
+		html += '<img class="fix-img" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" />';
 	}
 	return html;
 	// show_upload_img

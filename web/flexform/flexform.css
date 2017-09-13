@@ -68,4 +68,7 @@ li.drop-down-menu:hover > ul {
 	border-radius: 99em;
 }
 
-
+.fix-img {
+	max-width: 300px;
+	max-height: 300px;
+}

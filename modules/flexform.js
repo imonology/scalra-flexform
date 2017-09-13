@@ -415,8 +415,7 @@ SR.API.add('CREATE_FORM', {
 		}
 		LOG.warn('CREATE_FORM [' + args.name + '] success');
 		
-		LOG.warn('create新DB');
-
+		LOG.warn('create new DB');
 
 		var form_name = 'FlexForm:' + args.name;
 		var form_models = {};

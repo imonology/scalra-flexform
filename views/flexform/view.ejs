@@ -258,6 +258,8 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 				html += '<option value="' + value_list[j] + '" ' + (checked === true ? 'selected' : '') + '>' + value_list[j] + '</option>';
 			}
 			html += '</select>';
+		} else if (fields[i].type === 'password') {
+			html += '<button class="btn btn-primary" onClick="javascript:location.href=\'/modify_password\'">點擊修改密碼</button>';
 		} else {
 			// for strings			
 			var value = values_data.replace(/\"/g, "&quot;");
