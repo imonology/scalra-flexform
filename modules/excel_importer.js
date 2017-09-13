@@ -150,8 +150,10 @@ SR.API.add('READ_XLSX_DATA', {
 	} else if (args.data) {
 		parsed = xlsx.parse(args.data);
 	}
-	
-	return onDone(null, parsed);
+	if (!parsed)
+		return onDone('cannot parse!')
+	else
+		return onDone(null, parsed);
 });
 
 

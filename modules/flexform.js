@@ -1377,41 +1377,100 @@ function has_str(arr, str) {
 	return (arr.indexOf(str) > (-1));
 }
 
-function excel_done(arr_data, warn_empty, key_field) {
+function array_to_flexform_table(arr_data, para) {
+	
+	var flexform_table = {};
+	flexform_table.field = [];
+	flexform_table.data = [];
+	
+	// first row is field names, record it
+	// NOTE: index is also recorded
+	for (var i in arr_data[0]) {
+		if (!arr_data[0][i] || arr_data[0][i] === '') {
+			continue;
+		}
+		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i], index: i});
+	}
+	
+	// total number of valid fields
+	var total_field_size = flexform_table.field.length;
+	
+	// console.log('arr_data:');
+	// console.log(arr_data);
+	
+	if (!para)
+		var invalidContent = [];
+	else
+		var invalidContent = para.invalidContent || [];
+		
+	for (var i=1; i < arr_data.length; i++) {
+		
+		var temp_data = {};
+		var empty_fields = 0;
+		// we only copy valid fields
+		for (var j in flexform_table.field) {
+			var key = flexform_table.field[j].key;
+			var index = flexform_table.field[j].index;
 
-	var import_fields = l_excel_upload_para.import_fields;
+			temp_data[key] = arr_data[i][index];
+			if (!temp_data[key] || temp_data[key] === '')
+				empty_fields++;
+		}
+		
+		// check if all required fields exist
+		var missing_required = false;
+		if (para && typeof para.required_fields === 'object') {
+			for (var j in para.required_fields) {
+				var content = temp_data[para.required_fields[j]];
+				if (!content || content === '' || has_str(invalidContent, content)) {
+					missing_required = true;
+					break;
+				}
+			}
+		}
+		
+		// skip entirely empty rows, or if 'ensure_valid' is specified and there's missing data
+		if (empty_fields === total_field_size || missing_required === true) {
+			continue;
+		}
+		
+		flexform_table.data.push(temp_data);
+	}
+
+	return flexform_table;
+}
+
+function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 	
-	console.log(arr_data);
-	console.log('how many rows starts: ' + arr_data.length);
+	var import_fields = para.import_fields;
 	
-	// 偵測是否有符合
+	LOG.warn('how many rows starts: ' + arr_data.length, l_name);
+	
+	var field_index = {};
+	
+	// find field row
 	for (var i=0; i < arr_data.length; i++){
-		var match_num = 0;
-		console.log('src: ' + arr_data[i] + ' fields: ' + import_fields);
 		
 		for (var j in import_fields)
-			if (has_str(arr_data[i], import_fields[j])) 
-				match_num++;
+			if (has_str(arr_data[i], import_fields[j])) {
+				field_index[import_fields[j]] = i;				
+			}
 		
-		if (match_num === import_fields.length) {
-			console.log('total match found!')
-			console.log(arr_data[i]);
+		// check if we've found all fields
+		if (Object.keys(field_index).length === import_fields.length) {
+			LOG.warn('field row found at: ' + i, l_name);
+			LOG.warn(arr_data[i], l_name);
 			break;
 		}
 	}
 	
-	console.log('which row found: ' + i); 
 	// check if did not find field row
 	if (i === arr_data.length) {
-		var err_message = 'field row cannot be found! ' + import_fields;
-		console.error(err_message);
-		alert(err_message);
-		return;
+		return onDone('field row cannot be found! ' + import_fields);
 	}
 
 	// remove irrelevant top rows
 	arr_data = arr_data.slice(i);
-	//console.log(arr_data);
 	
 	// remove empty bottom rows
 	for (var i=0; i < arr_data.length - 1; i++) {
@@ -1422,54 +1481,79 @@ function excel_done(arr_data, warn_empty, key_field) {
 	}
 
 	// convert to flexform format	
-	l_xlsx_data = array_to_flexform_table(arr_data, l_excel_upload_para);
+	var xlsx_data = array_to_flexform_table(arr_data, para);
 	
 	// remove unused fields
-	for (var i = l_xlsx_data.field.length - 1; i >= 0 ; i -- ) {
+	/*
+	for (var i = xlsx_data.field.length - 1; i >= 0 ; i -- ) {
 
 		var have = false;
 		for (var j in import_fields)
-			if (l_xlsx_data.field[i].value === import_fields[j])
+			if (xlsx_data.field[i].value === import_fields[j])
 				have = true;
 		if (!have) 
-			delete l_xlsx_data.field[i];
+			delete xlsx_data.field[i];
+	}
+	*/
+	
+	// keep only needed fields
+	var selected = {
+		field: [],
+		data: []
+	};
+	
+	for (var i=0; i < import_fields.length; i++) {
+		selected.field.push({key: import_fields[i]});
+	}
+	for (var i=0; i < xlsx_data.data.length; i++) {
+		var row = {};
+		for (var j=0; j < import_fields.length; j++) {
+			var field_name = import_fields[j];
+			row[field_name] = xlsx_data.data[i][field_name];
+		}
+		selected.data.push(row);
 	}
 
 	// check for data correctness
-	var err_message = '';
+	var errlist = [];
 	
 	// check for empty fields and warn
-	for (var i in l_xlsx_data.field) {
-		for (var j in l_xlsx_data.data) {
-			if (!l_xlsx_data.data[j][l_xlsx_data.field[i].key] && warn_empty === true) {
-				err_message += 'Record #' + (parseInt(j)+1) + ' has empty field [' + l_xlsx_data.field[i].key + ']\n';
+	for (var i in selected.field) {
+		for (var j in selected.data) {
+			if (!selected.data[j][selected.field[i].key] && warn_empty === true) {
+				errlist.push('Record #' + (parseInt(j)+1) + ' has empty field [' + selected.field[i].key + ']');
 			}			
 		}		
 	} 
 
 	// check for redundent keys
 	if (typeof key_field === 'string') {
-		for (var j in l_xlsx_data.data) {
-			for (var i in l_xlsx_data.data) {
+		for (var j in selected.data) {
+			for (var i in selected.data) {
 				if (j === i) 
 					continue;
 
-				if (l_xlsx_data.data[i][key_field] === l_xlsx_data.data[j][key_field]) {
-					err_message += '[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1) + '\n';
+				if (selected.data[i][key_field] === selected.data[j][key_field]) {
+					errlist.push('[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1));
 					break;
 				}
 			}
-		}		
+		}
 	}
+	
+	// return extracted results
+	selected.errlist = errlist;
+	onDone(null, selected);
 }
 
 
 SR.API.add('PROCESS_UPLOADED_EXCEL', {
-	list:	'array'		// list of uploaded file names
+	list:	'array',		// list of uploaded file names
+	para:	'object'
 }, function (args, onDone) {
 		
 	// process a single file	
-	var processFile = function (file_name, onDone) {
+	var processFile = function (file_name, onD) {
 		
 		// perform file conversion first
 		SR.API.IS_UTF8({
@@ -1478,7 +1562,7 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 		}, function (err, is_utf8, data) {
 					   
 			if (err) {
-				return onDone(err); 
+				return onD(err); 
 			}
 
 			var ext = SR.path.extname(file_name).substring(1);
@@ -1493,22 +1577,29 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 				if (array[array.length-1] == "")
 					array.splice(array.length-1, 1);
 				
-				onDone(null, array); 
+				onD(null, array); 
 			} else {
 				// for excel files
 				SR.API.READ_XLSX_DATA({
-					//filename:		file_name,
-					data:			data
+					filename:		file_name,
+					//data:			data
 				}, function (err, parsed) {
 					if (err) {
-						return onDone(err); 
+						return onD(err); 
 					}
 					LOG.warn(parsed);
-					onDone(null, parsed[0].data);
+					onD(null, parsed[0].data);
 				});
 			};
 		});			
 	}
+	
+	var processed_count = 0;
+	var errlist = [];
+	var combined_xlsx = {
+		field: [],
+		data:  []
+	};
 	
 	for (var i=0; i < args.list.length; i++) {
 		var filename = args.list[i];
@@ -1519,8 +1610,29 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 			}
 			
 			// process to extract field name and data
-			
-			
+			extract_excel_fields(array, args.para, function (err, result) {
+				processed_count++;
+				
+				if (err) {
+					LOG.error(err, l_name);
+					errlist.push(err);
+				} else {
+					// combine into a single array
+					if (combined_xlsx.field.length === 0) {
+						combined_xlsx.field = result.field;
+					} else {
+						// TODO: check extracted field consistency
+					}
+
+					combined_xlsx.data = combined_xlsx.data.concat(result.data);
+					errlist = errlist.concat(result.errlist);					
+				}
+				
+				// check done
+				if (processed_count === args.list.length) {
+					onDone(null, {data: combined_xlsx, errlist: errlist})
+				}
+			});
 		});	
 	}
 })

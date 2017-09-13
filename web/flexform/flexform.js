@@ -305,70 +305,6 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
-function array_to_flexform_table(arr_data, para) {
-	var flexform_table = {};
-	flexform_table.field = [];
-	flexform_table.data = [];
-	
-	// first row is field names, record it
-	// NOTE: index is also recorded
-	for (var i in arr_data[0]) {
-		if (!arr_data[0][i] || arr_data[0][i] === '') {
-			continue;
-		}
-		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i], index: i});
-	}
-	
-	// total number of valid fields
-	var total_field_size = flexform_table.field.length;
-	
-	// console.log('arr_data:');
-	// console.log(arr_data);
-	
-	if (!para)
-		var invalidContent = [];
-	else
-		var invalidContent = para.invalidContent || [];
-	
-	
-	
-	for (var i=1; i < arr_data.length; i++) {
-		
-		var temp_data = {};
-		var empty_fields = 0;
-		// we only copy valid fields
-		for (var j in flexform_table.field) {
-			var key = flexform_table.field[j].key;
-			var index = flexform_table.field[j].index;
-
-			temp_data[key] = arr_data[i][index];
-			if (!temp_data[key] || temp_data[key] === '')
-				empty_fields++;
-		}
-		
-		// check if all required fields exist
-		var missing_required = false;
-		if (para && typeof para.required_fields === 'object') {
-			for (var j in para.required_fields) {
-				var content = temp_data[para.required_fields[j]];
-				if (!content || content === '' || has_str(invalidContent, content)) {
-					missing_required = true;
-					break;
-				}
-			}
-		}
-		
-		// skip entirely empty rows, or if 'ensure_valid' is specified and there's missing data
-		if (empty_fields === total_field_size || missing_required === true) {
-			continue;
-		}
-		
-		flexform_table.data.push(temp_data);
-	}
-
-	return flexform_table;
-}
-
 function flexform_to_flexform_table(form) {
 	var flexform_table = {};
 	flexform_table.field = [];
@@ -411,7 +347,7 @@ function flexform_show_table(flexform_values, show_lines) {
 	for (var i in flexform_values.field) {
 		var content = '';
 		content += '<li  class="drop-down-menu">';
-		content += flexform_values.field[i].value;
+		content += flexform_values.field[i].key;
 		content += '  <i class="fa fa-caret-square-o-down" aria-hidden="true"></i>';
 		content += '<ul>'
 		content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\', \'BigToSmall\')">由大到小排序</li>'
@@ -777,9 +713,9 @@ function upload_excel(upload_id) {
 				list.push(data.upload[i].name);
 			}
 				
-			SR.API.PROCESS_UPLOADED_EXCEL({list: list}, function (err, result) {
+			SR.API.PROCESS_UPLOADED_EXCEL({list: list, para: l_excel_upload_para}, function (err, result) {
 				// perform local display
-				showExcel(result.data, result.errmsg, upload_id, f);
+				showExcel(result.data, result.errlist, upload_id, f);
 			});			
 		},
 		error: function (jqXHR) {
@@ -788,14 +724,14 @@ function upload_excel(upload_id) {
 	});
 }
 
-function showExcel(xlsx_data, err_message, id, f) {
+function showExcel(xlsx_data, errlist, id, f) {
 	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx_data);
 	
 	// TOFIX: what does this do?
 	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
 	
-	if (err_message !== '')
-		alert(err_message);
+	if (errlist.length > 0)
+		alert(errlist);
 	else {
 		document.getElementById('show_table').innerHTML += '<input type="button" value="Confirm Import" onclick="submit_excel_import(\''+ id +'\')">';
 	}
