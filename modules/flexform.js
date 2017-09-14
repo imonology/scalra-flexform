@@ -1376,12 +1376,17 @@ function has_str(arr, str) {
 	return (arr.indexOf(str) > (-1));
 }
 
-function array_to_flexform_table(arr_data, para) {
+SR.API.add('Array_To_Flexform_Table', {
+	arr_data:		'array',
+	para:			'+object'
+}, function (args, onDone) {
+	var arr_data = args.arr_data;
+	var para = args.para;
 	
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
-	
+
 	// first row is field names, record it
 	// NOTE: index is also recorded
 	for (var i in arr_data[0]) {
@@ -1390,20 +1395,20 @@ function array_to_flexform_table(arr_data, para) {
 		}
 		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i], index: i});
 	}
-	
+
 	// total number of valid fields
 	var total_field_size = flexform_table.field.length;
-	
+
 	// console.log('arr_data:');
 	// console.log(arr_data);
-	
+
 	if (!para)
 		var invalidContent = [];
 	else
 		var invalidContent = para.invalidContent || [];
-		
+
 	for (var i=1; i < arr_data.length; i++) {
-		
+
 		var temp_data = {};
 		var empty_fields = 0;
 		// we only copy valid fields
@@ -1415,7 +1420,7 @@ function array_to_flexform_table(arr_data, para) {
 			if (!temp_data[key] || temp_data[key] === '')
 				empty_fields++;
 		}
-		
+
 		// check if all required fields exist
 		var missing_required = false;
 		if (para && typeof para.required_fields === 'object') {
@@ -1427,12 +1432,75 @@ function array_to_flexform_table(arr_data, para) {
 				}
 			}
 		}
-		
+
 		// skip entirely empty rows, or if 'ensure_valid' is specified and there's missing data
 		if (empty_fields === total_field_size || missing_required === true) {
 			continue;
 		}
-		
+
+		flexform_table.data.push(temp_data);
+	}
+
+	return onDone(null, flexform_table);
+	
+});
+
+function array_to_flexform_table(arr_data, para) {
+	var flexform_table = {};
+	flexform_table.field = [];
+	flexform_table.data = [];
+
+	// first row is field names, record it
+	// NOTE: index is also recorded
+	for (var i in arr_data[0]) {
+		if (!arr_data[0][i] || arr_data[0][i] === '') {
+			continue;
+		}
+		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i], index: i});
+	}
+
+	// total number of valid fields
+	var total_field_size = flexform_table.field.length;
+
+	// console.log('arr_data:');
+	// console.log(arr_data);
+
+	if (!para)
+		var invalidContent = [];
+	else
+		var invalidContent = para.invalidContent || [];
+
+	for (var i=1; i < arr_data.length; i++) {
+
+		var temp_data = {};
+		var empty_fields = 0;
+		// we only copy valid fields
+		for (var j in flexform_table.field) {
+			var key = flexform_table.field[j].key;
+			var index = flexform_table.field[j].index;
+
+			temp_data[key] = arr_data[i][index];
+			if (!temp_data[key] || temp_data[key] === '')
+				empty_fields++;
+		}
+
+		// check if all required fields exist
+		var missing_required = false;
+		if (para && typeof para.required_fields === 'object') {
+			for (var j in para.required_fields) {
+				var content = temp_data[para.required_fields[j]];
+				if (!content || content === '' || has_str(invalidContent, content)) {
+					missing_required = true;
+					break;
+				}
+			}
+		}
+
+		// skip entirely empty rows, or if 'ensure_valid' is specified and there's missing data
+		if (empty_fields === total_field_size || missing_required === true) {
+			continue;
+		}
+
 		flexform_table.data.push(temp_data);
 	}
 
@@ -1480,69 +1548,73 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 	}
 
 	// convert to flexform format	
-	var xlsx_data = array_to_flexform_table(arr_data, para);
+	SR.API.Array_To_Flexform_Table({
+		arr_data:		arr_data,
+		para:			para
+	}, function (err, xlsx_data) {
 	
-	// remove unused fields
-	/*
-	for (var i = xlsx_data.field.length - 1; i >= 0 ; i -- ) {
+		// remove unused fields
+		/*
+		for (var i = xlsx_data.field.length - 1; i >= 0 ; i -- ) {
 
-		var have = false;
-		for (var j in import_fields)
-			if (xlsx_data.field[i].value === import_fields[j])
-				have = true;
-		if (!have) 
-			delete xlsx_data.field[i];
-	}
-	*/
-	
-	// keep only needed fields
-	var selected = {
-		field: [],
-		data: []
-	};
-	
-	for (var i=0; i < import_fields.length; i++) {
-		selected.field.push({key: import_fields[i]});
-	}
-	for (var i=0; i < xlsx_data.data.length; i++) {
-		var row = {};
-		for (var j=0; j < import_fields.length; j++) {
-			var field_name = import_fields[j];
-			row[field_name] = xlsx_data.data[i][field_name];
+			var have = false;
+			for (var j in import_fields)
+				if (xlsx_data.field[i].value === import_fields[j])
+					have = true;
+			if (!have) 
+				delete xlsx_data.field[i];
 		}
-		selected.data.push(row);
-	}
+		*/
 
-	// check for data correctness
-	var errlist = [];
-	
-	// check for empty fields and warn
-	for (var i in selected.field) {
-		for (var j in selected.data) {
-			if (!selected.data[j][selected.field[i].key] && warn_empty === true) {
-				errlist.push('Record #' + (parseInt(j)+1) + ' has empty field [' + selected.field[i].key + ']');
-			}			
-		}		
-	} 
+		// keep only needed fields
+		var selected = {
+			field: [],
+			data: []
+		};
 
-	// check for redundent keys
-	if (typeof key_field === 'string') {
-		for (var j in selected.data) {
-			for (var i in selected.data) {
-				if (j === i) 
-					continue;
+		for (var i=0; i < import_fields.length; i++) {
+			selected.field.push({key: import_fields[i]});
+		}
+		for (var i=0; i < xlsx_data.data.length; i++) {
+			var row = {};
+			for (var j=0; j < import_fields.length; j++) {
+				var field_name = import_fields[j];
+				row[field_name] = xlsx_data.data[i][field_name];
+			}
+			selected.data.push(row);
+		}
 
-				if (selected.data[i][key_field] === selected.data[j][key_field]) {
-					errlist.push('[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1));
-					break;
+		// check for data correctness
+		var errlist = [];
+
+		// check for empty fields and warn
+		for (var i in selected.field) {
+			for (var j in selected.data) {
+				if (!selected.data[j][selected.field[i].key] && warn_empty === true) {
+					errlist.push('Record #' + (parseInt(j)+1) + ' has empty field [' + selected.field[i].key + ']');
+				}			
+			}		
+		} 
+
+		// check for redundent keys
+		if (typeof key_field === 'string') {
+			for (var j in selected.data) {
+				for (var i in selected.data) {
+					if (j === i) 
+						continue;
+
+					if (selected.data[i][key_field] === selected.data[j][key_field]) {
+						errlist.push('[key redundent] ' + key_field + ' record #' + (parseInt(j)+1) + ' and #' + (parseInt(i)+1));
+						break;
+					}
 				}
 			}
 		}
-	}
-	
-	// return extracted results
-	selected.errlist = errlist;
-	onDone(null, selected);
+
+		// return extracted results
+		selected.errlist = errlist;
+		onDone(null, selected);
+	});
 }
 
 

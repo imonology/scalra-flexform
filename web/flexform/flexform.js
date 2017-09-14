@@ -116,13 +116,58 @@ var show_imgs = function(imgs) {
 	var imgs = imgs.split(",");
 	console.log('show imgs');
 	console.log(imgs);
+
 	for(var i in imgs) {
 		if (imgs[i].length === 0)
 			continue;
-		html += '<img class="fix-img" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" />';
+		html += '<div class="thumbnail-item">';
+		html += '<a href="#"><img class="fix-img" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" /></a>';
+		html += '<div class="tooltip">';
+		html += '<img class="big-fix-img" src="/web/images/'+imgs[i]+'" alt=""/>';
+		html += '<span class="overlay"></span>';
+		html += '</div>';
+		html += '</div>';
 	}
 	return html;
 	// show_upload_img
+}
+
+var do_tooltip = function() {
+	console.log('執行do_tooltip');
+    $(document).ready(function () {   
+           
+        // Get all the thumbnail   
+        $('div.thumbnail-item').mouseenter(function(e) {   
+   
+            // Calculate the position of the image tooltip   
+            x = e.pageX - $(this).offset().left;   
+            y = e.pageY - $(this).offset().top;   
+   
+            // Set the z-index of the current item,    
+            // make sure it's greater than the rest of thumbnail items   
+            // Set the position and display the image tooltip   
+            $(this).css('z-index','15')  
+            .children("div.tooltip")  
+            .css({'top': y + 10,'left': x + 20,'display':'block'});  
+              
+        }).mousemove(function(e) {  
+              
+            // Calculate the position of the image tooltip            
+            x = e.pageX - $(this).offset().left;  
+            y = e.pageY - $(this).offset().top;  
+              
+            // This line causes the tooltip will follow the mouse pointer  
+            $(this).children("div.tooltip").css({'top': y + 10,'left': x + 20});  
+              
+        }).mouseleave(function() {  
+              
+            // Reset the z-index and hide the image tooltip   
+            $(this).css('z-index','1')   
+            .children("div.tooltip")   
+            .animate({"opacity": "hide"}, "fast");   
+        });   
+   
+    }); 
 }
 
 function read_txt(file_type_id, button_id, onDone, dom_id) {
@@ -145,6 +190,8 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 		
 	});
 }
+
+
 
 function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	
@@ -321,6 +368,68 @@ function flexform_to_flexform_table(form) {
 	return flexform_table;
 }
 
+function array_to_flexform_table(arr_data, para) {
+	var flexform_table = {};
+	flexform_table.field = [];
+	flexform_table.data = [];
+
+	// first row is field names, record it
+	// NOTE: index is also recorded
+	for (var i in arr_data[0]) {
+		if (!arr_data[0][i] || arr_data[0][i] === '') {
+			continue;
+		}
+		flexform_table.field.push({key: arr_data[0][i], value: arr_data[0][i], index: i});
+	}
+
+	// total number of valid fields
+	var total_field_size = flexform_table.field.length;
+
+	// console.log('arr_data:');
+	// console.log(arr_data);
+
+	if (!para)
+		var invalidContent = [];
+	else
+		var invalidContent = para.invalidContent || [];
+
+	for (var i=1; i < arr_data.length; i++) {
+
+		var temp_data = {};
+		var empty_fields = 0;
+		// we only copy valid fields
+		for (var j in flexform_table.field) {
+			var key = flexform_table.field[j].key;
+			var index = flexform_table.field[j].index;
+
+			temp_data[key] = arr_data[i][index];
+			if (!temp_data[key] || temp_data[key] === '')
+				empty_fields++;
+		}
+
+		// check if all required fields exist
+		var missing_required = false;
+		if (para && typeof para.required_fields === 'object') {
+			for (var j in para.required_fields) {
+				var content = temp_data[para.required_fields[j]];
+				if (!content || content === '' || has_str(invalidContent, content)) {
+					missing_required = true;
+					break;
+				}
+			}
+		}
+
+		// skip entirely empty rows, or if 'ensure_valid' is specified and there's missing data
+		if (empty_fields === total_field_size || missing_required === true) {
+			continue;
+		}
+
+		flexform_table.data.push(temp_data);
+	}
+
+	return flexform_table;
+}
+
 function flexform_table_add_field(insert_num, flexform_table, field, datas) { // flexform_table_add_field(0, flex_form, {key:'new_f', value: '新的欄位'}, ['a','b'])
 	// insert_num: 插入的位置
 	// flexform_table: 需插入的flexform_table
@@ -347,7 +456,10 @@ function flexform_show_table(flexform_values, show_lines) {
 	for (var i in flexform_values.field) {
 		var content = '';
 		content += '<li  class="drop-down-menu">';
-		content += flexform_values.field[i].key;
+		if (flexform_values.field[i].value)
+			content += flexform_values.field[i].value;
+		else
+			content += flexform_values.field[i].key;
 		content += '  <i class="fa fa-caret-square-o-down" aria-hidden="true"></i>';
 		content += '<ul>'
 		content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\', \'BigToSmall\')">由大到小排序</li>'
@@ -450,10 +562,10 @@ var create_table = function (form, hide, write, td_style) {
 			html += '<tr>';
 			
 			// display field name
-			html += '<td>' + fields[i].name + '</td>';
+			html += '<td style="'+td_style[0]+'">' + fields[i].name + '</td>';
 			
 			// show field content
-			html += '<td style="'+td_style+'">';
+			html += '<td style="'+td_style[1]+'">';
 			
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general

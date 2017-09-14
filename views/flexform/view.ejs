@@ -85,11 +85,11 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 		 //document.getElementById("uploaded_photo").innerHTML = 'Hello World!';
 		 //document.getElementById("uploaded_photo").innerHTML = '<img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: none;" onload=\'this.style="block"\'>';
 		// $("#uploaded_photo").html('<img id="show_image" width="300" src="/web/images/<%=login.account%>.jpg" style="display: block">');
-		
+		var files = document.getElementById(dom_id).value.split(",");
 		
 		// console.log(image_filenames);
 		// $("#show_image").attr({'src': '/web/images/' + image_filenames[0] + '?' + new Date().getTime()});
-		document.getElementById(dom_id).value = image_filenames;
+		document.getElementById(dom_id).value = image_filenames.concat(files);
 		for (var i in image_filenames)
 			add_img(dom_id , image_filenames[i]);
 	}

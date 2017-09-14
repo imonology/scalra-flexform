@@ -72,3 +72,46 @@ li.drop-down-menu:hover > ul {
 	max-width: 300px;
 	max-height: 300px;
 }
+
+.big-fix-img {
+	max-width: 800px;
+	max-height: 800px;
+}
+
+
+.thumbnail-item {    
+    /* position relative so that we can use position absolute for the tooltip */   
+    position: relative;    
+    float: left;     
+    margin: 0px 5px;    
+}   
+   
+.thumbnail-item a {    
+    display: block;    
+}   
+   
+.thumbnail-item img.thumbnail {   
+    border:3px solid #ccc;     
+}   
+
+.tooltip {    
+    /* by default, hide it */   
+    display: none;    
+    /* allow us to move the tooltip */   
+    position: absolute;    
+    /* align the image properly */   
+    padding: 8px 0 0 8px;    
+}   
+
+.tooltip span.overlay {    
+	/* the png image, need ie6 hack though */   
+	background: url(images/overlay.png) no-repeat;    
+	/* put this overlay on the top of the tooltip image */   
+	position: absolute;    
+	top: 0px;    
+	left: 0px;    
+	display: block;    
+	width: 350px;    
+	height: 200px;   
+}   
+
