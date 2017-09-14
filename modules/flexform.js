@@ -1658,7 +1658,7 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 					if (err) {
 						return onD(err); 
 					}
-					LOG.warn(parsed);
+					//LOG.warn(parsed);
 					onD(null, parsed[0].data);
 				});
 			};
