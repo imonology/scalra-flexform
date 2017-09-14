@@ -562,10 +562,11 @@ var create_table = function (form, hide, write, td_style) {
 			html += '<tr>';
 			
 			// display field name
-			html += '<td style="'+td_style[0]+'">' + fields[i].name + '</td>';
+			
+			html += '<td style="'+(td_style?td_style[0]:'')+'">' + fields[i].name + '</td>';
 			
 			// show field content
-			html += '<td style="'+td_style[1]+'">';
+			html += '<td style="'+(td_style?td_style[1]:'')+'">';
 			
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
