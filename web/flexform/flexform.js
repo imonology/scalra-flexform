@@ -443,6 +443,28 @@ function flexform_table_add_field(insert_num, flexform_table, field, datas) { //
 	return flexform_table;
 }
 
+function switch_sort_up_down(table_num, cell_num, obj) {
+	var f_table = document.getElementById('flexform-table' + table_num);
+	// console.log(f_table.rows[0].cells);
+	for (var i = 0 ; i < f_table.rows[0].cells.length ; i++) {
+		// f_table.rows[0].cells[i].children[0].value = -1;
+		if (f_table.rows[0].cells[i].children[0] !== obj)
+			f_table.rows[0].cells[i].children[0].value = -1;
+		f_table.rows[0].cells[i].children[0].children[0].className = '';
+	}
+	
+	if (obj.value === -1)
+		obj.value = 0
+	if (obj.value ===1) {
+		obj.value = 0;
+		obj.children[0].className = 'fa fa-caret-square-o-up';
+		flexform_sort_table(table_num, cell_num, 'SmallToBig');
+	} else {
+		obj.value = 1;
+		obj.children[0].className = 'fa fa-caret-square-o-down';
+		flexform_sort_table(table_num, cell_num, 'BigToSmall');
+	}
+}
 
 function flexform_show_table(flexform_values, show_lines) {
 	var html = '';
@@ -453,20 +475,25 @@ function flexform_show_table(flexform_values, show_lines) {
 	html += '<tr>';
 	// for (var i in flexform_values.field) 
 	// 	html += '<th  onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\')" >' + flexform_values.field[i].value + '</th>';
+	var count = 0;
+	var width = 1.0 / flexform_values.field.length * 100;
+	console.log('寬度');
+	console.log(width);
 	for (var i in flexform_values.field) {
 		var content = '';
-		content += '<li  class="drop-down-menu">';
+		content += '<li  class="drop-down-menu" onClick="javascript:switch_sort_up_down(\''+flexform_table_num+'\',\''+count+'\', this)" value="-1">';
 		if (flexform_values.field[i].value)
 			content += flexform_values.field[i].value;
 		else
 			content += flexform_values.field[i].key;
-		content += '  <i class="fa fa-caret-square-o-down" aria-hidden="true"></i>';
-		content += '<ul>'
-		content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\', \'BigToSmall\')">由大到小排序</li>'
-		content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\', \'SmallToBig\')">由小到大排序</li>'
-		content += '</ul>'
+		content += '  <i class="" aria-hidden="true"></i>';
+		// content += '<ul>'
+		// content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+count+'\', \'BigToSmall\')">由大到小排序</li>'
+		// content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+count+'\', \'SmallToBig\')">由小到大排序</li>'
+		// content += '</ul>'
 		content += '</li>';
-		html += '<th>' + content + '</th>';
+		html += '<th width="'+width+'%">' + content + '</th>';
+		count ++;
 	}
 	html += '</tr>';
 	
@@ -508,6 +535,10 @@ function flexform_sort_table(table_num, cell_num, type) {
 	var f_table = document.getElementById('flexform-table' + table_num);
 	cell_num = parseInt(cell_num);
 	var is_num = true;
+	// console.log('cell_num');
+	// console.log(cell_num);
+	// console.log('show f_table');
+	// console.log(f_table.rows[1].cells);
 	for (var i = 1 ; i < f_table.rows.length ; i++)
 		if(isNaN(f_table.rows[i].cells[cell_num].innerHTML))
 			is_num = false;
