@@ -677,7 +677,34 @@ var create_table = function (form, hide, write, td_style) {
 						html += value[fields[i].id];
 					}				
 					break;
-					
+				case 'choice':
+					if (write) {
+						var options = fields[i].option.split(',');
+
+						html += '<select id="'+ fields[i].id + '">';
+						for (var j=0; j < options.length; j++) {
+
+							html += '<option value="' + options[j] + '" >' + options[j] + '</option>';
+						}
+						html += '</select>';
+					} else {
+						html += value[fields[i].id];
+					}
+					break;
+				case 'lock':
+					if (write) {
+						var value = getParameterByName(fields[i].id);
+						var value_list = value.split(',');
+
+						html += '<select id="' + fields[i].id + '">';
+						for (var j=0; j < value_list.length; j++) {	
+							html += '<option value="' + value_list[j] + '" >' + value_list[j] + '</option>';
+						}
+						html += '</select>';
+					} else {
+						html += value[fields[i].id];
+					}
+					break;
 				default:
 					if (write) {
 						html += '<input type="text" id="' + fields[i].id +'">';					
