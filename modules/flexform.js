@@ -1655,7 +1655,7 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 				if (array[array.length-1] == "")
 					array.splice(array.length-1, 1);
 				
-				onD(null, array); 
+				onD(null, array);
 			} else {
 				// for excel files
 				SR.API.READ_XLSX_DATA({
@@ -1675,21 +1675,32 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 	var processed_count = 0;
 	var errlist = [];
 	var combined_xlsx = {
-		field: [],
-		data:  []
+		field: [],				// fields to extract					(eg. ['VOC', 'VOC-1', 'VOC-2'])
+		data:  []				// data rows of the extracted fields	(eg. ['some comment', 'type1', 'type2'])
 	};
+
+	var checkDone = function () {
+		// check done
+		if (processed_count === args.list.length) {
+			onDone(null, {data: combined_xlsx, errlist: errlist})
+		}		
+	}
 	
 	for (var i=0; i < args.list.length; i++) {
+			
 		var filename = args.list[i];
 		processFile(filename, function (err, array) {
-			
+
+			processed_count++;
+		
 			if (err) {
-				return LOG.error(err, l_name);
+				LOG.error(err, l_name);
+				checkDone();
+				return;
 			}
 			
 			// process to extract field name and data
 			extract_excel_fields(array, args.para, function (err, result) {
-				processed_count++;
 				
 				if (err) {
 					LOG.error(err, l_name);
@@ -1706,10 +1717,7 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 					errlist = errlist.concat(result.errlist);					
 				}
 				
-				// check done
-				if (processed_count === args.list.length) {
-					onDone(null, {data: combined_xlsx, errlist: errlist})
-				}
+				checkDone();
 			});
 		});	
 	}
