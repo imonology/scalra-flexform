@@ -91,6 +91,18 @@ var create_img_dev = function(dom_id, img){
 	return html;
 }
 
+var create_record_dev = function(dom_id, record){
+	var html = '';
+	if (record.length === 0)
+		return html;
+	html += '<div class="recordDiv" id="'+record+'">';
+	html += '<audio src="/web/images/'+record+'" controls="controls"></audio>';
+	
+
+	html += '</div>';
+	return html;
+}
+
 var open_new_tab = function(url){
 	window.open(
 	  url,
@@ -110,6 +122,11 @@ var remove_img = function(dom_id, id) {
 var add_img = function(dom_id, img) {
 	document.getElementById('show_upload_img').innerHTML += create_img_dev(dom_id , img);
 }
+
+var add_record = function(dom_id, record) {
+	document.getElementById('show_upload_record').innerHTML += create_record_dev(dom_id , record);
+}
+
 
 var show_imgs = function(imgs) {
 	var html = '';
@@ -194,16 +211,21 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 
 
 function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
-	
-	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
-	if (upload_id) {
+	var type = '';
+	if (!accepted_extensions) {
+		type = 'img';
+		var formData = new FormData($("#frmUploadFile")[0]);	
+	} else if (accepted_extensions.indexOf('txt') !== -1) {
+		type = 'txt';
 		var formData = new FormData();
 		formData.append('toPreserveFileName', "false");
 		formData.append('firstOption', "file");
 		formData.append('upload', document.getElementById(upload_id).files[0]);
-	} else {
-		var formData = new FormData($("#frmUploadFile")[0]);		
+	} else if (accepted_extensions.indexOf('wma') !== -1) {
+		type = 'record';
+		var formData = new FormData($("#frmUploadRecord")[0]);	
 	}
+	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
 	
 	console.log('formData = ');
 	console.log(formData);
@@ -225,10 +247,12 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		return;
 	}
 	
-	if (!accepted_extensions)
-		var check = false;
-	else
-		var check = true;
+	// if (!accepted_extensions)
+	// 	var check = false;
+	// else if (accepted_extensions[0] === 'wma')
+	// 	var check = false;
+	// else
+	// 	var check = true;
 	if (accepted_extensions)
 		accepted_extensions = accepted_extensions.split(",");
 	
@@ -287,7 +311,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 				// console.log('upload success, data:');
 				// console.log(data.upload);
 				
-				if (check) {
+				if (type === 'txt') {
 					SR.API.IS_UTF8({filename: filename}, function (err2, result) {
 						if (err2) {
 							console.log(err2)
@@ -323,8 +347,25 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 						
 						return onDone(null, filename);
 					});
-				} else {
-					SR.API.UPLOAD_IMAGE({
+				} else if (type === 'img') {
+					// console.log('準備上傳的檔案');
+					// console.log(filenames);
+					SR.API.UPLOAD_IMAGE({ // 目前只做修改名稱
+						filename: filenames,
+
+					}, function (err, result) {
+						if (err) {
+							console.error(err);
+							return alert(err);
+						}
+
+						return onDone(null, result, dom_id);
+						//window.location.reload();
+					});
+				} else if (type === 'record') {
+					// console.log('準備上傳的檔案');
+					// console.log(filenames);
+					SR.API.UPLOAD_IMAGE({ // 目前只做修改名稱
 						filename: filenames,
 
 					}, function (err, result) {
@@ -601,6 +642,23 @@ var create_table = function (form, hide, write, td_style) {
 			
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
+				case 'record':
+					if (write) {
+						// var record_id = '<%= UTIL.createToken() %>';
+						// set upload item limit
+						var num = (fields[i].num ? fields[i].num : 5);
+						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadRecord">';
+						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
+						html += '<input type="file" name="upload" id="inputRecord-'+fields[i].id+'" multiple="multiple">';
+						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord-'+fields[i].id+'\' )">Upload</button>';
+						html += '<input type="hidden" value="" id="' + fields[i].id + '">';
+
+						html += '<div id="show_upload_record"></div>';
+						html += '</form>';
+					} else {
+
+					}
+					break;
 				case 'upload':
 					if (write) {
 						var image_id = '<%= UTIL.createToken() %>';
