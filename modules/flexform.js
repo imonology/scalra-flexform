@@ -1127,7 +1127,19 @@ SR.API.add('INIT_FORM', {
 			LOG.warn('existing form [' + args.name + '] found, loading it...', l_name);
 			
 			// update field info
-			form.data.fields = args.fields;
+			// form.data.fields = args.fields;
+			// do not update lock_para
+			for (var i in args.fields) {
+				if (args.fields[i].lock_para) {
+					for (var key in args.fields[i]) 
+						if (args.fields[i].lock_para.indexOf(key) === -1) 
+							form.data.fields[i][key] = args.fields[i][key];
+				} else
+					form.data.fields[i] = args.fields[i];
+			}
+			
+			
+			
 			form.key_field = key_field;			
 			
 			var temp_values = form.data.values;

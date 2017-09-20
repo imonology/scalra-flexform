@@ -80,6 +80,11 @@ function get_img_num() {
 	return imgs.length;
 }
 
+function get_record_num() {
+	var records = document.getElementsByClassName('recordDiv');
+	return records.length;
+}
+
 var create_img_dev = function(dom_id, img){
 	var html = '';
 	if (img.length === 0)
@@ -91,14 +96,16 @@ var create_img_dev = function(dom_id, img){
 	return html;
 }
 
-var create_record_dev = function(dom_id, record){
+var create_record_dev = function(dom_id, record, original_name){
 	var html = '';
 	if (record.length === 0)
 		return html;
 	html += '<div class="recordDiv" id="'+record+'">';
+	html += '<table><tr><td colspan="2">' + original_name + '</td></tr><tr><td>'
 	html += '<audio src="/web/images/'+record+'" controls="controls"></audio>';
-	
-
+	html += '</td>';
+	html += '<td><button onclick="remove_img( \''+dom_id+'\' ,\''+record+'\')">刪除</button></td>';
+	html += '</tr></table>';
 	html += '</div>';
 	return html;
 }
@@ -123,8 +130,8 @@ var add_img = function(dom_id, img) {
 	document.getElementById('show_upload_img').innerHTML += create_img_dev(dom_id , img);
 }
 
-var add_record = function(dom_id, record) {
-	document.getElementById('show_upload_record').innerHTML += create_record_dev(dom_id , record);
+var add_record = function(dom_id, record, original_name) {
+	document.getElementById('show_upload_record').innerHTML += create_record_dev(dom_id , record, original_name);
 }
 
 
@@ -143,6 +150,26 @@ var show_imgs = function(imgs) {
 		html += '<img class="big-fix-img" src="/web/images/'+imgs[i]+'" alt=""/>';
 		html += '<span class="overlay"></span>';
 		html += '</div>';
+		html += '</div>';
+	}
+	return html;
+	// show_upload_img
+}
+
+var show_record = function(records) {
+	var html = '';
+	console.log(records);
+	var records = records.split(",");
+	console.log('show records');
+	console.log(records);
+
+	for(var i in records) {
+		if (records[i].length === 0)
+			continue;
+		html += '<div >';
+
+		html += '<audio src="/web/images/'+records[i]+'" controls="controls"></audio>';
+
 		html += '</div>';
 	}
 	return html;
@@ -209,6 +236,46 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 }
 
 
+var onPhotoUploaded = function (err, image_filenames, dom_id) {
+	if (!err) {
+		var files = document.getElementById(dom_id).value.split(",");
+		document.getElementById(dom_id).value = image_filenames.concat(files);
+		for (var i in image_filenames)
+			add_img(dom_id , image_filenames[i]);
+	}
+}
+
+var onRecordUploaded = function(err, record_filenames, dom_id, original_filenames) {
+	if (!err) {
+		console.log('已上傳錄音檔');
+		var files = document.getElementById(dom_id).value.split(",");
+		document.getElementById(dom_id).value = record_filenames.concat(files);
+		console.log(record_filenames);
+		for (var i in record_filenames)
+			add_record(dom_id , record_filenames[i], original_filenames[i]);
+	}
+}
+
+var onTxtUploaded  = function(err, fname){
+	if (!err){
+
+// 		SR.API.IS_UTF8({filename: fname}, function (err2, result) {
+// 			if (err2) {
+// 				console.log(err2)
+// 				return;
+// 			}
+// 			if (typeof(result)==='undefined'){
+// 				console.log('文件不存在');
+// 				return;
+// 			}
+// 			console.log(result);
+// 			console.log(fname + ' 上傳成功');
+// 			console.log('success');
+// 		});
+	}
+}
+
+
 
 function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 	var type = '';
@@ -221,7 +288,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		formData.append('toPreserveFileName', "false");
 		formData.append('firstOption', "file");
 		formData.append('upload', document.getElementById(upload_id).files[0]);
-	} else if (accepted_extensions.indexOf('wma') !== -1) {
+	} else if (accepted_extensions.indexOf('mp3') !== -1) {
 		type = 'record';
 		var formData = new FormData($("#frmUploadRecord")[0]);	
 	}
@@ -242,7 +309,13 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 		var upload_num = $("#upload_file")[0].files.length;
 	}
 	
-	if ((!accepted_extensions?get_img_num(): 0) + upload_num > num ){
+	if (type === 'img')
+		var plus_num = get_img_num();
+	else if (type === 'record')
+		var plus_num = get_record_num();
+	else 
+		var plus_num = 0;
+	if (plus_num + upload_num > num ){
 		alert('Over file upload limit: ' + num + '!');
 		return;
 	}
@@ -310,9 +383,9 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 				$("#spanMessage").html("Upload success!");
 				// console.log('upload success, data:');
 				// console.log(data.upload);
-				
+				console.log(filenames);
 				if (type === 'txt') {
-					SR.API.IS_UTF8({filename: filename}, function (err2, result) {
+					SR.API.IS_UTF8({filename: filenames[0]}, function (err2, result) {
 						if (err2) {
 							console.log(err2)
 							return;
@@ -374,7 +447,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 							return alert(err);
 						}
 
-						return onDone(null, result, dom_id);
+						return onDone(null, result, dom_id, filenames);
 						//window.location.reload();
 					});
 				}
@@ -656,7 +729,9 @@ var create_table = function (form, hide, write, td_style) {
 						html += '<div id="show_upload_record"></div>';
 						html += '</form>';
 					} else {
-
+						html += '<div id="uploaded_record">';
+						html += show_record(value[fields[i].id]);
+						html += '</div>';	
 					}
 					break;
 				case 'upload':
