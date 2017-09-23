@@ -1738,6 +1738,7 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 SR.API.add('QUERY_AUTOCOMPLETE', {
 	form_name:		'string',
 	key_id:			'string',
+	value_id:		'+string',
 	field_id:		'string',
 	multiple:		'boolean'
 }, function (args, onDone) {
@@ -1745,8 +1746,10 @@ SR.API.add('QUERY_AUTOCOMPLETE', {
 		if (err) {
 			return onDone(err);
 		}
-		
-		return onDone(null, {form: r_form, key_id:args.key_id, field_id: args.field_id, multiple: args.multiple});
+		var result = {form: r_form, key_id:args.key_id, field_id: args.field_id, multiple: args.multiple};
+		if (args.value_id)
+			result['value_id'] = args.value_id;
+		return onDone(null, result);
 	});
 });
 

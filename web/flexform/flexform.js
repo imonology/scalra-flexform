@@ -793,6 +793,7 @@ var create_table = function (form, hide, write, td_style) {
 							if (fields[i].autocomplete_setting) {
 								var form_name = fields[i].autocomplete_setting.form_name;
 								var key_id = fields[i].autocomplete_setting.key_id;
+								var value_id = fields[i].autocomplete_setting.value_id;
 								var multiple = fields[i].autocomplete_setting.multiple;
 							} else {
 								var form_name = form.name;
@@ -802,7 +803,7 @@ var create_table = function (form, hide, write, td_style) {
 							// console.log('用的form_name');
 							// console.log(form_name);
 							// console.log(key_id);
-							SR.API.QUERY_AUTOCOMPLETE({form_name: form_name, key_id: key_id, field_id: fields[i].id, multiple: multiple}, function (err, result) {
+							SR.API.QUERY_AUTOCOMPLETE({form_name: form_name, key_id: key_id, value_id: value_id,  field_id: fields[i].id, multiple: multiple}, function (err, result) {
 								if (err) {
 									console.log(err);	
 								}
@@ -818,9 +819,11 @@ var create_table = function (form, hide, write, td_style) {
 											return true;
 									return false;
 								}
+								console.log('顯示');
+								console.log(result);
 								for (var r_id in r_form.data.values)
 									if (!haveSame(ans, r_form.data.values[r_id][result.key_id]))
-										ans.push(r_form.data.values[r_id][result.key_id]);
+										ans.push(r_form.data.values[r_id][result.key_id] + (result.value_id?'('+r_form.data.values[r_id][result.value_id]+')': ''  ) );
 								
 								if (result.multiple) {
 									function split( val ) {
