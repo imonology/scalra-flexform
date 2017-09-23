@@ -1735,6 +1735,20 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 	}
 })
 
+SR.API.add('QUERY_AUTOCOMPLETE', {
+	form_name:		'string',
+	key_id:			'string',
+	field_id:		'string',
+	multiple:		'boolean'
+}, function (args, onDone) {
+	SR.API.QUERY_FORM({name: args.form_name}, function (err, r_form) {
+		if (err) {
+			return onDone(err);
+		}
+		
+		return onDone(null, {form: r_form, key_id:args.key_id, field_id: args.field_id, multiple: args.multiple});
+	});
+});
 
 
 SR.Callback.onStart(function () {

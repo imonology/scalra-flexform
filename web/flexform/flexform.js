@@ -158,10 +158,13 @@ var show_imgs = function(imgs) {
 
 var show_record = function(records) {
 	var html = '';
-	console.log(records);
+	// console.log('records = ');
+	// console.log(records);
+	if (!records)
+		return '';
 	var records = records.split(",");
-	console.log('show records');
-	console.log(records);
+	// console.log('show records');
+	// console.log(records);
 
 	for(var i in records) {
 		if (records[i].length === 0)
@@ -786,12 +789,29 @@ var create_table = function (form, hide, write, td_style) {
 					if (write) {
 						html += '<input type="text" id="' + fields[i].id + '" >';
 						$( function() {
-							var key_id = fields[i].id;
-							SR.API.QUERY_FORM({name: form.name}, function (err, r_form) {
+							
+							if (fields[i].autocomplete_setting) {
+								var form_name = fields[i].autocomplete_setting.form_name;
+								var key_id = fields[i].autocomplete_setting.key_id;
+								var multiple = fields[i].autocomplete_setting.multiple;
+							} else {
+								var form_name = form.name;
+								var key_id = fields[i].id;
+								var multiple = false;
+							}
+							// console.log('用的form_name');
+							// console.log(form_name);
+							// console.log(key_id);
+							SR.API.QUERY_AUTOCOMPLETE({form_name: form_name, key_id: key_id, field_id: fields[i].id, multiple: multiple}, function (err, result) {
 								if (err) {
 									console.log(err);	
 								}
 								var ans = [];
+								// console.log('找到的r_form');
+								// console.log(r_form);
+								console.log('multiple型別');
+								console.log(typeof(result.multiple));
+								var r_form = result.form;
 								function haveSame(arr, str) {
 									for (var i in arr)
 										if (arr[i] === str)
@@ -799,11 +819,47 @@ var create_table = function (form, hide, write, td_style) {
 									return false;
 								}
 								for (var r_id in r_form.data.values)
-									if (!haveSame(ans, r_form.data.values[r_id][key_id]))
-										ans.push(r_form.data.values[r_id][key_id]);
-								$( "#" + key_id ).autocomplete({
-									source: ans
-								});
+									if (!haveSame(ans, r_form.data.values[r_id][result.key_id]))
+										ans.push(r_form.data.values[r_id][result.key_id]);
+								
+								if (result.multiple) {
+									function split( val ) {
+										return val.split( /,\s*/ );
+									}
+									function extractLast( term ) {
+										return split( term ).pop();
+									}
+									
+									$( "#" + result.field_id ).autocomplete({
+										source: function( request, response ) {
+										  // delegate back to autocomplete, but extract the last term
+										  response( $.ui.autocomplete.filter(
+											ans, extractLast( request.term ) ) );
+										},
+										select: function( event, ui ) {
+											var terms = split( this.value );
+											// remove the current input
+											terms.pop();
+											// add the selected item
+											terms.push( ui.item.value );
+											// add placeholder to get the comma-and-space at the end
+											terms.push( "" );
+											this.value = terms.join( ", " );
+											return false;
+										},
+										lookup: function (query, done) {
+											// ajax call one
+											// ajax call two
+											// combine results
+											// var results = { suggestions: [ ... ] }
+											done(results);
+										}
+									});
+								} else {
+									$( "#" + result.field_id ).autocomplete({
+										source: ans
+									});
+								}
 							});	
 						});							
 					} else {
