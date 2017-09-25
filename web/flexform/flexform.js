@@ -1102,8 +1102,9 @@ function showExcel(xlsx_data, errlist, id, f) {
 	// keep refernece to be uploaded later
 	l_xlsx_data = xlsx_data;
 	
-	if (errlist.length > 0)
-		alert(errlist);
+	if (errlist.length > 0) {
+		alert(errlist);		
+	}
 	else {
 		document.getElementById('show_table').innerHTML += '<input type="button" value="Continue Upload" onclick="submit_excel_import(\''+ id +'\')">';
 	}
