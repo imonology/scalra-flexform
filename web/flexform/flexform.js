@@ -1084,7 +1084,7 @@ function upload_excel(upload_id) {
 				
 				// perform local display
 				showExcel(result.data, result.errlist, upload_id, f);
-			});			
+			});
 		},
 		error: function (jqXHR) {
 			console.error(jqXHR);
@@ -1105,7 +1105,7 @@ function showExcel(xlsx_data, errlist, id, f) {
 	if (errlist.length > 0)
 		alert(errlist);
 	else {
-		document.getElementById('show_table').innerHTML += '<input type="button" value="Confirm Import" onclick="submit_excel_import(\''+ id +'\')">';
+		document.getElementById('show_table').innerHTML += '<input type="button" value="Continue Upload" onclick="submit_excel_import(\''+ id +'\')">';
 	}
 }
 
