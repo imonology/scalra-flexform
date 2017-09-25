@@ -970,7 +970,7 @@ function upload_table2(form_name, fields, onDone) {
 var l_excel_upload_para = {};
 
 // imported data
-var l_xlsx_data;
+var l_xlsx;
 
 function do_upload_excel(para) {
 	document.getElementById('upload_excel_area').innerHTML = get_upload_excel(para);
@@ -1081,9 +1081,10 @@ function upload_excel(upload_id) {
 					return alert(err);
 				}
 				console.log(result);
+				result.filelist = list;
 				
 				// perform local display
-				showExcel(result.data, result.errlist, upload_id, f);
+				showExcel(result, upload_id, f);
 			});
 		},
 		error: function (jqXHR) {
@@ -1093,17 +1094,18 @@ function upload_excel(upload_id) {
 }
 
 
-function showExcel(xlsx_data, errlist, id, f) {
-	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx_data);
+function showExcel(xlsx, id, f) {
+	
+	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx.data);
 	
 	// TOFIX: what does this do?
 	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
 
 	// keep refernece to be uploaded later
-	l_xlsx_data = xlsx_data;
+	l_xlsx = xlsx;
 	
-	if (errlist.length > 0) {
-		alert(errlist);		
+	if (xlsx.errlist.length > 0) {
+		alert(xlsx.errlist);		
 	}
 	else {
 		document.getElementById('show_table').innerHTML += '<input type="button" value="Continue Upload" onclick="submit_excel_import(\''+ id +'\')">';
@@ -1112,7 +1114,7 @@ function showExcel(xlsx_data, errlist, id, f) {
 
 function submit_excel_import(id) {
 	if (typeof l_excel_upload_para.onConfirm === 'function') {
-		l_excel_upload_para.onConfirm(l_xlsx_data, id);
+		l_excel_upload_para.onConfirm(l_xlsx.data, id, l_xlsx.filelist);
 	} else {
 		console.error('no onConfirm callback provided when excel import is confirmed!');
 	}
