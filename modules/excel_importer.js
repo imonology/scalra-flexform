@@ -137,6 +137,7 @@ SR.API.add('READ_XLSX', {
 });
 
 
+// read an excel file from upload directory into a parsed array
 SR.API.add('READ_XLSX_DATA', {
 	filename:		'+string',
 	data:			'+string'
@@ -167,6 +168,7 @@ SR.API.add('READ_XLSX_DATA', {
  '上課身分': 'class_info.type'}
 */
 
+// read an excel file into flexform
 SR.API.add('IMPORT_EXCEL', {
 	filename:	'string',		// name of the uploaded excel file
 	format:		'object',		// format from field name to object field mapping
