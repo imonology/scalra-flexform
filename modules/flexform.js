@@ -1754,6 +1754,7 @@ SR.API.add('QUERY_AUTOCOMPLETE', {
 });
 
 
+
 SR.Callback.onStart(function () {
 	// make sure /web/images directory exists
 	UTIL.validatePath(SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images'));

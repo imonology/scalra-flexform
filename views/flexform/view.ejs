@@ -170,7 +170,11 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 				html += '<label for="' + id + '">' + options[j] + '</label>';
 			}
 		} else if (fields[i].type === 'choice') {
-			var options = fields[i].option.split(',');
+			if (typeof(fields[i].option) !== 'undefined')
+				var options = fields[i].option.split(',');
+			else
+				var options = flexform_function(fields[i].setting.option);
+
 			
 			// radio-button version (currently not working)			
 			//for (var j=0; j < options.length; j++) {
