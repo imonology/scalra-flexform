@@ -593,8 +593,8 @@ function flexform_show_table(flexform_values, show_lines) {
 	// 	html += '<th  onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\')" >' + flexform_values.field[i].value + '</th>';
 	var count = 0;
 	var width = 1.0 / flexform_values.field.length * 100;
-	console.log('寬度');
-	console.log(width);
+	// console.log('寬度');
+	// console.log(width);
 	for (var i in flexform_values.field) {
 		var content = '';
 		content += '<li  class="drop-down-menu" onClick="javascript:switch_sort_up_down(\''+flexform_table_num+'\',\''+count+'\', this)" value="-1">';

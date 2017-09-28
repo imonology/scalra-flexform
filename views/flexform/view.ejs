@@ -170,7 +170,9 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 				html += '<label for="' + id + '">' + options[j] + '</label>';
 			}
 		} else if (fields[i].type === 'choice') {
-			if (typeof(fields[i].option) !== 'undefined')
+			if (typeof(fields[i].option) === 'object')
+				var options = fields[i].option;
+			else if (typeof(fields[i].option) !== 'undefined')
 				var options = fields[i].option.split(',');
 			else
 				var options = flexform_function(fields[i].setting.option);
@@ -462,28 +464,36 @@ var onConnect = function () {
 			if (err) {
 				return console.error(err);	
 			}
-			
-			// NOTE: we also build mapping from form_id to exising values (if any)
-			form_data[data.id] = {
-				name: data.name, 
-				fields: data.fields, 
-				hide: forms[info[data.name].index].hide || [],
-				multi: info[data.name].multi, 
-				entries: [],
-				values: forms[info[data.name].index].values};
-			
-			// also store form_id to 'forms' (for submit purpose)
-			forms[info[data.name].index].id = data.id;
-			
-		 	//console.log('form_data:');
-			//console.log(form_data);
-									
-			// check for done
-			if (Object.keys(form_data).length === forms.length) {
-				
-				// cache form_id to 'forms' structure as well
-				generate_page();
-			}
+			// console.log('data = ');
+			// console.log(data);
+			// TRANSLATE_FORM_FIELDS
+			SR.API.TRANSLATE_FORM_FIELDS({field_data: data}, function (err, data) {
+				if (err) {
+					return console.error(err);	
+				}	
+				// console.log('結束');
+				// NOTE: we also build mapping from form_id to exising values (if any)
+				form_data[data.id] = {
+					name: data.name, 
+					fields: data.fields, 
+					hide: forms[info[data.name].index].hide || [],
+					multi: info[data.name].multi, 
+					entries: [],
+					values: forms[info[data.name].index].values};
+
+				// also store form_id to 'forms' (for submit purpose)
+				forms[info[data.name].index].id = data.id;
+
+				//console.log('form_data:');
+				//console.log(form_data);
+
+				// check for done
+				if (Object.keys(form_data).length === forms.length) {
+
+					// cache form_id to 'forms' structure as well
+					generate_page();
+				}
+			});
 		});
 	}
 };

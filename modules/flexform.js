@@ -173,6 +173,37 @@ SR.API.add('GET_FORM_FIELDS', {
 	onDone(null, {id: form.id, name: form.name, fields: form.data.fields});	
 });	
 
+SR.API.add('TRANSLATE_FORM_FIELDS', {
+	field_data:		'object'
+}, function (args, onDone) {
+	var data = args.field_data;
+	// 先算出有幾個需要改
+	var count = 0;
+	for (var i in data.fields) {
+		var field = data.fields[i];
+		if (data.fields[i].setting) 
+			count ++;
+	}
+	if (count === 0)
+		return onDone(null, data);
+	// 修改資料
+	var done_count = 0;
+	for (var i in data.fields) {
+		if (data.fields[i].setting) {
+			var setting = data.fields[i].setting;
+			SR.API.FLEX_FORM_SETTING_FUNCTION({setting: setting, field:data.fields[i]}, function (err, result_field) {
+				data.fields[i] = result_field;
+				done_count++;
+				LOG.warn(count);
+				LOG.warn(done_count);
+				if (done_count === count)
+					onDone(null, data);	
+			});
+
+		}
+	}
+});	
+
 // get only the fields and values of a queried form
 SR.API.add('GET_FORM', {
 	id:		'+string',			// form id
