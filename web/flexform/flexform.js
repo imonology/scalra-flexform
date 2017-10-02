@@ -941,9 +941,28 @@ var create_table = function (form, hide, write, td_style) {
 	html += '</table>'
 	
 	if (write)
-		html += '<button class="btn btn-primary" onClick="upload()">確定送出</button>';
+		html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\')">確定送出</button>';
 	
 	return html;
+}
+
+function check_upload(form_name) {
+	SR.API.GET_FORM_FIELDS({name: form_name}, function (err, result_field) {
+		if (err)
+			return onDone(err);
+		
+		for (var i in result_field.fields)
+			if (result_field.fields[i].num) {
+				var upload_id = document.getElementById(result_field.fields[i].id).value.split(",");
+				var use_num = upload_id.length -1;
+				if (use_num > result_field.fields[i].num) {
+					alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
+					return ;
+				}
+			}
+		upload();
+	});
+	
 }
 
 function upload_table2(form_name, fields, onDone) {

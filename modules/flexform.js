@@ -581,8 +581,7 @@ SR.API.add('QUERY_FORM', {
 		
 		// ignore rows where the fields do not match
 		if (args.query || args.select_time) {
-			var nonmatch_count = 0;
-			var match_count = 0;
+			
 			
 			for (var key in args.select_time) {
 				if (fields[key] && fields[key].type === 'date') {
@@ -597,9 +596,12 @@ SR.API.add('QUERY_FORM', {
 					}
 				}
 			}
-						
+			
+			
+			var nonmatch_count = 0;
+			var match_count = 0;
 			for (var key in args.query) {
-				
+				var compare = args.query[key];
 				// skip invalid query keys (that are not field names)
 				if (fields.hasOwnProperty(key) === false) {
 					LOG.warn('key [' + key + '] does not exist in fields records');
@@ -609,7 +611,7 @@ SR.API.add('QUERY_FORM', {
 				// partial match for 'date' type
 				if (fields[key].type === 'date') {
 					LOG.warn('key: ' + key);
-					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.query[key]); 
+					LOG.warn('compare record: ' + record[key] + ' with query: ' + compare); 
 					
 					if (args.start_date && args.end_date) {
 						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );
@@ -618,7 +620,7 @@ SR.API.add('QUERY_FORM', {
 							break;
 						}
 					}
-					else if (record[key].startsWith(args.query[key]) === false) {
+					else if (record[key].startsWith(compare) === false) {
 						matched = false;
 						break;
 					}
@@ -626,10 +628,10 @@ SR.API.add('QUERY_FORM', {
 					LOG.warn('match: ' + matched);
 				}
 				// exact match check for other data types
-				else if (typeof args.query[key] === 'string' && args.query[key].charAt(0) === '-') {
+				else if (typeof compare === 'string' && compare.charAt(0) === '-') {
 					nonmatch_count++;
 					
-					var query_value = args.query[key].substring(1);
+					var query_value = compare.substring(1);
 					//LOG.warn('query_value:' + query_value);
 					
 					if (record[key] === query_value) {
@@ -637,10 +639,25 @@ SR.API.add('QUERY_FORM', {
 					}
 				}
 				else {
-					LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + args.query[key]);
-					if (record[key] !== args.query[key]) {
-						matched = false;
-						break;
+					if (typeof(compare) === 'object') {
+						LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);
+						var have_matched = false;
+						for (var temp in compare)
+							if (record[key] === compare[temp]) {
+								have_matched = true;
+								break;
+							}
+						if (!have_matched) {
+							matched = false;
+							break;
+						}
+							
+					} else {
+						LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);
+						if (record[key] !== compare) {
+							matched = false;
+							break;
+						}
 					}
 				}
 			}
