@@ -279,7 +279,23 @@ var onTxtUploaded  = function(err, fname){
 
 
 
-function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
+function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id, form_name, field_id) {
+	// form_name, field_id用來查詢上傳數量限制
+	// SR.API.CHECK_UPLOAD_LIMIT_NUM({form_name: form_name, field_id: field_id}, function (err, result) {
+	if (form_name) {
+		SR.API.CHECK_UPLOAD_LIMIT_NUM({form_name: form_name, field_id: field_id}, function (err, result) {
+			if (err) {
+				console.log(err);
+				return ;
+			}
+			doUploadFile(result, dom_id, onDone, accepted_extensions, upload_id);
+		});
+	} else 
+		doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id);
+
+} // function uploadFile()
+
+function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	var type = '';
 	if (!accepted_extensions) {
 		type = 'img';
@@ -463,7 +479,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id) {
 			$("#spanMessage").html("failure to connect to server");
 		}
 	});
-} // function uploadFile()
+}
 
 var flexform_table_num = 0;
 var flexform_tables_para = [];
@@ -725,7 +741,7 @@ var create_table = function (form, hide, write, td_style) {
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadRecord">';
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 						html += '<input type="file" name="upload" id="inputRecord-'+fields[i].id+'" multiple="multiple">';
-						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord-'+fields[i].id+'\' )">Upload</button>';
+						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord-'+fields[i].id+'\', \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
 						html += '<input type="hidden" value="" id="' + fields[i].id + '">';
 
 						html += '<div id="show_upload_record"></div>';
@@ -746,7 +762,7 @@ var create_table = function (form, hide, write, td_style) {
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">';
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 						html += '<input type="file" name="upload" id="upload_file" multiple="multiple">';
-						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
+						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded, undefined, undefined, \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
 						html += '<input type="hidden" value="" id="' + fields[i].id + '">';
 
 						html += '<div id="show_upload_img"></div>';

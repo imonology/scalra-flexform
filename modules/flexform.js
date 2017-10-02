@@ -173,6 +173,22 @@ SR.API.add('GET_FORM_FIELDS', {
 	onDone(null, {id: form.id, name: form.name, fields: form.data.fields});	
 });	
 
+SR.API.add('CHECK_UPLOAD_LIMIT_NUM', {
+	form_name:		'string',
+	field_id:		'string'
+}, function (args, onDone) {
+	SR.API.GET_FORM_FIELDS({name: args.form_name}, function (err, result_field) {
+		if (err)
+			return onDone(err);
+		
+		for (var i in result_field.fields)
+			if (result_field.fields[i].id === args.field_id)
+				return onDone(null, result_field.fields[i].num);
+		
+		return onDone('查無資訊');
+	});
+});
+
 SR.API.add('TRANSLATE_FORM_FIELDS', {
 	field_data:		'object'
 }, function (args, onDone) {
