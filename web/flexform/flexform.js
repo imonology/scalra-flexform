@@ -624,7 +624,7 @@ function flexform_show_table(flexform_values, show_lines) {
 		// content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+count+'\', \'SmallToBig\')">由小到大排序</li>'
 		// content += '</ul>'
 		content += '</li>';
-		html += '<th width="'+width+'%">' + content + '</th>';
+		html += '<th width="'+width+'%" class="text-center">' + content + '</th>';
 		count ++;
 	}
 	html += '</tr>';
@@ -941,25 +941,43 @@ var create_table = function (form, hide, write, td_style) {
 	html += '</table>'
 	
 	if (write)
-		html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\')">確定送出</button>';
+		html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\', \''+hide+'\')">確定送出</button>';
 	
 	return html;
 }
 
-function check_upload(form_name) {
+function check_upload(form_name, hide) {
 	SR.API.GET_FORM_FIELDS({name: form_name}, function (err, result_field) {
 		if (err)
 			return onDone(err);
 		
-		for (var i in result_field.fields)
+		hide =hide.split(",");
+		
+		for (var i in result_field.fields) {
+			// 檢查必填欄位
+			var dom = document.getElementById(result_field.fields[i].id)
+			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
+				var is_hide = false;
+				for (var t in hide)
+					if (hide[t] === result_field.fields[i].id) is_hide = true;
+				if (!is_hide && dom.value === '') {
+						alert(result_field.fields[i].name + ' 為必填欄位');
+						dom.focus();
+						return;
+				}
+			}
+				
+			
+			// 檢查上傳數量
 			if (result_field.fields[i].num) {
-				var upload_id = document.getElementById(result_field.fields[i].id).value.split(",");
+				var upload_id = dom.value.split(",");
 				var use_num = upload_id.length -1;
 				if (use_num > result_field.fields[i].num) {
 					alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
 					return ;
 				}
 			}
+		}
 		upload();
 	});
 	
@@ -1158,3 +1176,30 @@ function has_str(arr, str){
 	return (arr.indexOf(str) > (-1));
 }
 
+function statistics_flexform(form_name) {
+	var html = '';
+	// 左邊
+	html += '<div style="float: left;width: 20%;">';
+	html += '<ul class="nostyle">';
+	html += '<li class="nostyle">';
+	html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+	html += '所有類別';
+	html += '</li>';
+	html += '<ul class="nostyle">';
+	
+		html += '<li class="nostyle">';
+		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+		html += '測試';
+		html += '</li>';
+		html += '<li class="nostyle">';
+		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+		html += '測試2';
+		html += '</li>';
+	html += '</ul>';
+	html += '</ul>';
+	html += '</div>';
+	
+	// 右邊
+	html += '<div style="float: left;width: 80%;">test2</div>';
+	return html;
+}

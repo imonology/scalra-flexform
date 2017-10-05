@@ -115,3 +115,9 @@ li.drop-down-menu:hover > ul {
 	height: 200px;   
 }   
 
+.nostyle {
+	list-style-type:none;
+	margin: 0px;
+    padding: 0px;   
+}
+
