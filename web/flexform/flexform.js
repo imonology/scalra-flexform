@@ -709,7 +709,7 @@ var create_table = function (form, hide, write, td_style) {
 	console.log(form);
 	
 	var html = '';
-	html += '<table border="1" class="customTable">';
+	html += '<table border="1" class="customTable" >';
 	var fields = form.data.fields;
 	
 	function c_table(fields, value) {
@@ -1176,14 +1176,17 @@ function has_str(arr, str){
 	return (arr.indexOf(str) > (-1));
 }
 
-function statistics_flexform(form_name) {
+function statistics_flexform(form_name, filter, onDone) {
 	var html = '';
 	// 左邊
 	html += '<div style="float: left;width: 20%;">';
 	html += '<ul class="nostyle">';
 	html += '<li class="nostyle">';
 	html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-	html += '所有類別';
+	html += '所有';
+	html += '</li>';
+	html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+	html += '類別';
 	html += '</li>';
 	html += '<ul class="nostyle">';
 	
@@ -1200,6 +1203,27 @@ function statistics_flexform(form_name) {
 	html += '</div>';
 	
 	// 右邊
-	html += '<div style="float: left;width: 80%;">test2</div>';
-	return html;
+	SR.API.QUERY_FORM({name:'Question', query:{verify: 'true'}}, function (err, form) {
+		if (err) {
+			return LOG.error('no form can be found');		
+		}
+		console.log('查出來的form');
+		console.log(form);
+		
+		html += '<div style="float: left;width: 80%;">';
+		var values = form.data.values;
+		form.data.values = null;
+		
+		for (var record_id in values) {
+			html += '<div class="statistics" style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
+			form.data.values = {};
+			form.data.values[record_id] = values[record_id];
+			html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;']);
+			html += '</div>';
+			html += '<br>';
+		}
+			
+		html += '</div>';
+		return onDone(null, html);
+	});
 }
