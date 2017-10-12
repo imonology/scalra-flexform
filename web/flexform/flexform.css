@@ -119,5 +119,16 @@ li.drop-down-menu:hover > ul {
 	list-style-type:none;
 	margin: 0px;
     padding: 0px;   
+
+}
+.nostyle2 {
+	list-style-type:none;
+	margin: 0px;
+    padding: 0px;   
+	margin-left:1em;
+}
+
+.text-center {
+    text-align: center;
 }
 

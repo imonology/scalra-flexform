@@ -1176,41 +1176,90 @@ function has_str(arr, str){
 	return (arr.indexOf(str) > (-1));
 }
 
-function statistics_flexform(form_name, filter, onDone) {
+function btn_search(){
+	location.href = 'statistics?search=' + document.getElementById('search').value;
+}
+
+function onSearchKeyPress (event) {
+	if (event.keyCode === 13) {
+		btn_search();
+	}
+}
+
+function statistics_flexform(form_name, filter, category, onDone) {
 	var html = '';
-	// 左邊
-	html += '<div style="float: left;width: 20%;">';
-	html += '<ul class="nostyle">';
-	html += '<li class="nostyle">';
-	html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-	html += '所有';
-	html += '</li>';
-	html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-	html += '類別';
-	html += '</li>';
-	html += '<ul class="nostyle">';
+	var search = '';
+
 	
-		html += '<li class="nostyle">';
-		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-		html += '測試';
-		html += '</li>';
-		html += '<li class="nostyle">';
-		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-		html += '測試2';
-		html += '</li>';
-	html += '</ul>';
-	html += '</ul>';
-	html += '</div>';
+	if (getParameterByName('search'))
+		search = getParameterByName('search');
+
+	// query_partial
+	var para = {name:'Question', query:{verify: 'true'}};
 	
-	// 右邊
-	SR.API.QUERY_FORM({name:'Question', query:{verify: 'true'}}, function (err, form) {
+	if (search.length !== 0) {
+		var partial = {};
+		for (var i in filter)
+			partial[filter[i]] = search;
+		para.query_partial = partial;
+	}
+	SR.API.QUERY_FORM(para, function (err, form) {
 		if (err) {
-			return LOG.error('no form can be found');		
+			return console.log('no form can be found');		
 		}
+		
+
 		console.log('查出來的form');
 		console.log(form);
 		
+		// 左邊
+		html += '<div style="float: left;width: 20%;">';
+		html += '<ul class="nostyle">';
+		html += '<li class="nostyle">';
+		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+		html += '所有 ('+Object.keys(form.data.values).length+')';
+		html += '</li>';
+		for (var i in category) 
+			for (var j in form.data.fields) 
+				if (form.data.fields[j].id === category[i]) {
+					var options =  form.data.fields[j].option.split(',');
+					console.log(options);
+					for (var k in options){
+						html += '<li class="nostyle2">';
+						html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+						html += options[k];
+						html += '</li>';
+					}
+				}
+			
+				
+			
+			
+		
+// 		html += '<ul class="nostyle">';
+
+// 			html += '<li class="nostyle">';
+// 			html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+// 			html += '測試';
+// 			html += '</li>';
+// 			html += '<li class="nostyle">';
+// 			html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+// 			html += '測試2';
+// 			html += '</li>';
+// 		html += '</ul>';
+		html += '</ul>';
+		html += '</div>';
+
+
+		// 右邊
 		html += '<div style="float: left;width: 80%;">';
+		html += '<table><tr>';
+		html += '<td><input type="text" id="search" value="'+search+'" onkeypress="return onSearchKeyPress(event);"></td>';
+		html += '<td width="20%"><button type="button" onclick="javascript:btn_search();">搜尋</button></td>';
+		html += '</tr></table>';
+
+		
+		
 		var values = form.data.values;
 		form.data.values = null;
 		
