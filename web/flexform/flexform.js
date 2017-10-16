@@ -1211,11 +1211,12 @@ function statistics_flexform(form_name, filter, category, onDone) {
 
 		console.log('查出來的form');
 		console.log(form);
+		var values = form.data.values;
 		
 		// 左邊
 		html += '<div style="float: left;width: 20%;">';
 		html += '<ul class="nostyle">';
-		html += '<li class="nostyle">';
+		html += '<li class="nostyle" onclick="statistics_choice_category(this, undefined, undefined, true)"   >';
 		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
 		html += '所有 ('+Object.keys(form.data.values).length+')';
 		html += '</li>';
@@ -1225,31 +1226,21 @@ function statistics_flexform(form_name, filter, category, onDone) {
 					var options =  form.data.fields[j].option.split(',');
 					console.log(options);
 					for (var k in options){
-						html += '<li class="nostyle2">';
-						html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+						var num = 0;
+						for (var record_id in values)
+							if (values[record_id][category[i]] === options[k])
+								num++;
+						html += '<li class="nostyle2" data-num="'+num+'" '+ ((num!== 0)?'onclick="statistics_choice_category(this, \''+'data-category-'+category[i]+'\', \''+options[k]+'\')"  ':'')+'>';
+						html += '<i class="fa fa-chevron-right" aria-hidden="true" ></i>';
 						html += options[k];
+
+						html += ' (' + num + ')';
 						html += '</li>';
 					}
 				}
 			
-				
-			
-			
-		
-// 		html += '<ul class="nostyle">';
-
-// 			html += '<li class="nostyle">';
-// 			html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-// 			html += '測試';
-// 			html += '</li>';
-// 			html += '<li class="nostyle">';
-// 			html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-// 			html += '測試2';
-// 			html += '</li>';
-// 		html += '</ul>';
 		html += '</ul>';
 		html += '</div>';
-
 
 		// 右邊
 		html += '<div style="float: left;width: 80%;">';
@@ -1258,21 +1249,41 @@ function statistics_flexform(form_name, filter, category, onDone) {
 		html += '<td width="20%"><button type="button" onclick="javascript:btn_search();">搜尋</button></td>';
 		html += '</tr></table>';
 
-		
-		
-		var values = form.data.values;
 		form.data.values = null;
 		
 		for (var record_id in values) {
-			html += '<div class="statistics" style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
+			html += '<div class="statistics" name="form_data" ';
+			for (i in category)
+				html += 'data-category-'+category[i] +'="'+values[record_id][category[i]]+'" ';
+			
+			html += 'style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
 			form.data.values = {};
 			form.data.values[record_id] = values[record_id];
 			html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;']);
 			html += '</div>';
-			html += '<br>';
+			// html += '<br>';
 		}
 			
 		html += '</div>';
 		return onDone(null, html);
 	});
 }
+
+function statistics_choice_category(obj, category_id, category_name, all) {
+
+	var datas = document.getElementsByName('form_data');
+	for (var i = 0 ; i < datas.length ; i++) {
+		datas[i].style.display = "block";
+		if (!all)
+			if (datas[i].getAttribute(category_id) !==category_name)
+				datas[i].style.display = "none";
+	}
+}
+
+
+
+
+
+
+
+

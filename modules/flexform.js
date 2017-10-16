@@ -746,6 +746,43 @@ SR.API.add('QUERY_FORM', {
 	onDone(null, form);
 });
 
+SR.API.add('JOINT_FORM', {
+
+	name:			'string',			// form name
+	original_form:	'object',
+	link_key:		'string',
+
+}, function (args, onDone) {
+	LOG.warn('開始')
+	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
+		var o_form = Object.assign({}, args.original_form);
+		var form2 = Object.assign({}, form);
+		LOG.warn('找')
+
+		var keys = [];
+		for (var i in form2.data.fields)
+			if (form2.data.fields[i].id !== args.link_key) {
+				keys.push(form2.data.fields[i].id)
+				o_form.data.fields.push(form2.data.fields[i]);
+			}
+	
+		for (var record_id in o_form.data.values){
+			for (var record_id2 in form2.data.values) {
+				
+				if (form2.data.values[record_id2][args.link_key] === o_form.data.values[record_id][args.link_key])
+					for (var i in keys)
+						if (!o_form.data.values[record_id][keys[i]])
+							o_form.data.values[record_id][keys[i]] = form2.data.values[record_id2][keys[i]]
+			}
+
+		}
+		LOG.warn(keys)
+		LOG.warn('顯示')
+		LOG.warn(o_form.data.values);
+		onDone(null);
+	});
+});
+
 SR.API.add('DELETE_FIELD', {
 	form_id: 	'+string',		// form id
 	form_name:	'+string',		// form name
