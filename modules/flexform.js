@@ -747,40 +747,71 @@ SR.API.add('QUERY_FORM', {
 });
 
 SR.API.add('JOINT_FORM', {
-
-	name:			'string',			// form name
-	original_form:	'object',
-	link_key:		'string',
-
+	original_form_para:	'object',
+	joint_form_para:	'object',
+	link_key:			'string',
+	joint_form_key:		'+string',
 }, function (args, onDone) {
-	LOG.warn('開始')
-	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
-		var o_form = Object.assign({}, args.original_form);
-		var form2 = Object.assign({}, form);
-		LOG.warn('找')
-
-		var keys = [];
-		for (var i in form2.data.fields)
-			if (form2.data.fields[i].id !== args.link_key) {
-				keys.push(form2.data.fields[i].id)
-				o_form.data.fields.push(form2.data.fields[i]);
+	SR.API.QUERY_FORM(args.original_form_para, function (err, o_form) {
+		if (err)
+			return onDone(err);
+		SR.API.QUERY_FORM(args.joint_form_para, function (err, j_form) {
+			if (err)
+				return onDone(err);
+			var para = {
+				original_form: o_form,
+				joint_form: j_form,
+				link_key: args.link_key
 			}
-	
-		for (var record_id in o_form.data.values){
-			for (var record_id2 in form2.data.values) {
-				
-				if (form2.data.values[record_id2][args.link_key] === o_form.data.values[record_id][args.link_key])
-					for (var i in keys)
-						if (!o_form.data.values[record_id][keys[i]])
-							o_form.data.values[record_id][keys[i]] = form2.data.values[record_id2][keys[i]]
-			}
-
-		}
-		LOG.warn(keys)
-		LOG.warn('顯示')
-		LOG.warn(o_form.data.values);
-		onDone(null);
+			if (args.joint_form_key)
+				para.joint_form_key = args.joint_form_key;
+			
+			SR.API.JOINT_FORM_FUNCTION(para, function (err, r_form) {
+				if (err)
+					return onDone(err);
+				return onDone(null, r_form);
+			});
+		});
 	});
+});
+
+SR.API.add('JOINT_FORM_FUNCTION', {
+	original_form:	'object',
+	joint_form:		'object',
+	link_key:		'string',
+	joint_form_key:	'+string',
+	joint_value:	'+array'
+}, function (args, onDone) {
+	var o_form = JSON.parse(JSON.stringify(args.original_form));
+	var form2 = JSON.parse(JSON.stringify(args.joint_form));
+	// var o_form = Object.assign({}, args.original_form);
+	// var form2 = Object.assign({}, args.joint_form);
+	if (args.joint_form_key)
+		var joint_form_key = args.joint_form_key;
+	else
+		var joint_form_key = args.link_key;
+	var keys = [];
+	for (var i in form2.data.fields)
+		if (form2.data.fields[i].id !== joint_form_key) {
+			keys.push(form2.data.fields[i].id)
+			o_form.data.fields.push(form2.data.fields[i]);
+		}
+
+	for (var record_id in o_form.data.values){
+		for (var record_id2 in form2.data.values) {
+
+			if (form2.data.values[record_id2][joint_form_key] === o_form.data.values[record_id][args.link_key])
+				for (var i in keys) {
+					if (args.joint_value && args.joint_value.indexOf(keys[i])=== -1 )
+						continue;
+					if (!o_form.data.values[record_id][keys[i]]) // do not cover original data
+						o_form.data.values[record_id][keys[i]] = form2.data.values[record_id2][keys[i]]
+				}
+		}
+
+	}
+	onDone(null, o_form);
+
 });
 
 SR.API.add('DELETE_FIELD', {
