@@ -746,7 +746,7 @@ SR.API.add('QUERY_FORM', {
 	onDone(null, form);
 });
 
-SR.API.add('JOINT_FORM', {
+SR.API.add('JOIN_FORM', {
 	original_form_para:	'object',
 	joint_form_para:	'object',
 	link_key:			'string',
@@ -766,7 +766,7 @@ SR.API.add('JOINT_FORM', {
 			if (args.joint_form_key)
 				para.joint_form_key = args.joint_form_key;
 			
-			SR.API.JOINT_FORM_FUNCTION(para, function (err, r_form) {
+			SR.API.JOIN_FORM_FUNCTION(para, function (err, r_form) {
 				if (err)
 					return onDone(err);
 				return onDone(null, r_form);
@@ -775,15 +775,18 @@ SR.API.add('JOINT_FORM', {
 	});
 });
 
-SR.API.add('JOINT_FORM_FUNCTION', {
+SR.API.add('JOIN_FORM_FUNCTION', {
 	original_form:	'object',
 	joint_form:		'object',
 	link_key:		'string',
 	joint_form_key:	'+string',
 	joint_value:	'+array'
 }, function (args, onDone) {
+	// o_form = UTIL.clone(args.original_form);
+	// form2 = UTIL.clone(args.joint_form);
 	var o_form = JSON.parse(JSON.stringify(args.original_form));
 	var form2 = JSON.parse(JSON.stringify(args.joint_form));
+	
 	// var o_form = Object.assign({}, args.original_form);
 	// var form2 = Object.assign({}, args.joint_form);
 	if (args.joint_form_key)

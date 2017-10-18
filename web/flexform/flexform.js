@@ -1204,7 +1204,7 @@ function statistics_flexform(form_name, filter, category, onDone) {
 		para.query_partial = partial;
 	}
 	
-	SR.API.JOINT_FORM({
+	SR.API.JOIN_FORM({
 		original_form_para: 	{name: 'ClassData'},
 		joint_form_para: 		{name: '基本資料', show: ['name']},
 		link_key: 				'account'
@@ -1212,20 +1212,15 @@ function statistics_flexform(form_name, filter, category, onDone) {
 		if (err) {
 			return console.log('joint form error!');		
 		}
-		// for (var i in j_form.data.fields)
-		// 	if (j_form.data.fields[i].id === 'name')
-		// 		j_form.data.fields[i].name = '老師姓名'
-		console.log('印出j_form');
-		console.log(j_form);
+		// console.log('印出j_form');
+		// console.log(j_form);
 		SR.API.QUERY_FORM(para, function (err, o_form) {
 			if (err) {
 				return console.log('joint form error!');		
 			}
-			
-			console.log('印出o_form')
-			console.log(o_form)
-
-			SR.API.JOINT_FORM_FUNCTION({
+			// console.log('印出o_form')
+			// console.log(o_form)
+			SR.API.JOIN_FORM_FUNCTION({
 				original_form: 	o_form,
 				joint_form: 	j_form,
 				link_key:		'class_id'
@@ -1233,9 +1228,8 @@ function statistics_flexform(form_name, filter, category, onDone) {
 				if (err) {
 					return console.log('joint form error!');		
 				}
-				console.log('印出form')
-				console.log(form)
-				
+				// console.log('印出form')
+				// console.log(form)
 				var values = form.data.values;
 
 				// 左邊
