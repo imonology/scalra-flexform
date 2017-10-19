@@ -497,6 +497,7 @@ SR.API.add('CREATE_FORM', {
 SR.API.add('QUERY_FORM', {
 	id:		'+string',			// form id
 	name:	'+string',			// form name
+	already_form:	'+object',	// 
 	query:	'+object',			// optional query finding exact matches
 	query_partial: '+object',	// query for any value partially matching the specified query keys' values
 	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval  
@@ -506,7 +507,10 @@ SR.API.add('QUERY_FORM', {
 	end_date:	'+string',
 	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
 }, function (args, onDone) {
-	var form = l_get(args.id, args.name);	
+	if (args.already_form)
+		var form = args.already_form;
+	else
+		var form = l_get(args.id, args.name);	
 	
 	// no valid form found
 	if (!form) {

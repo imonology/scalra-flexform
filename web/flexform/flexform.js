@@ -726,7 +726,7 @@ var create_table = function (form, hide, write, td_style) {
 			
 			// display field name
 			
-			html += '<td style="'+(td_style?td_style[0]:'')+'">' + fields[i].name + '</td>';
+			html += '<td style="'+(td_style?td_style[0]:'')+'">' + fields[i].name + (fields[i].must ? '*' : '') +  '</td>';
 			
 			// show field content
 			html += '<td style="'+(td_style?td_style[1]:'')+'">';
@@ -1186,7 +1186,7 @@ function onSearchKeyPress (event) {
 	}
 }
 
-function statistics_flexform(form_name, filter, category, onDone) {
+function statistics_flexform(form, filter, category, onDone) {
 	var html = '';
 	var search = '';
 
@@ -1194,8 +1194,7 @@ function statistics_flexform(form_name, filter, category, onDone) {
 	if (getParameterByName('search'))
 		search = getParameterByName('search');
 
-	// query_partial
-	var para = {name:'Question', query:{verify: 'true'}};
+	var para = {already_form: form};
 	
 	if (search.length !== 0) {
 		var partial = {};
@@ -1204,89 +1203,67 @@ function statistics_flexform(form_name, filter, category, onDone) {
 		para.query_partial = partial;
 	}
 	
-	SR.API.JOIN_FORM({
-		original_form_para: 	{name: 'ClassData'},
-		joint_form_para: 		{name: '基本資料', show: ['name']},
-		link_key: 				'account'
-	}, function (err, j_form) {
+	SR.API.QUERY_FORM(para, function (err, o_form) {
 		if (err) {
 			return console.log('joint form error!');		
 		}
-		// console.log('印出j_form');
-		// console.log(j_form);
-		SR.API.QUERY_FORM(para, function (err, o_form) {
-			if (err) {
-				return console.log('joint form error!');		
-			}
-			// console.log('印出o_form')
-			// console.log(o_form)
-			SR.API.JOIN_FORM_FUNCTION({
-				original_form: 	o_form,
-				joint_form: 	j_form,
-				link_key:		'class_id'
-			}, function (err, form) {
-				if (err) {
-					return console.log('joint form error!');		
-				}
-				// console.log('印出form')
-				// console.log(form)
-				var values = form.data.values;
+		// console.log('印出form')
+		// console.log(form)
+		var values = form.data.values;
 
-				// 左邊
-				html += '<div style="float: left;width: 20%;">';
-				html += '<ul class="nostyle">';
-				html += '<li class="nostyle" onclick="statistics_choice_category(this, undefined, undefined, true)"   >';
-				html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-				html += '所有 ('+Object.keys(form.data.values).length+')';
-				html += '</li>';
-				for (var i in category) 
-					for (var j in form.data.fields) 
-						if (form.data.fields[j].id === category[i]) {
-							var options =  form.data.fields[j].option.split(',');
-							console.log(options);
-							for (var k in options){
-								var num = 0;
-								for (var record_id in values)
-									if (values[record_id][category[i]] === options[k])
-										num++;
-								html += '<li class="nostyle2" data-num="'+num+'" '+ ((num!== 0)?'onclick="statistics_choice_category(this, \''+'data-category-'+category[i]+'\', \''+options[k]+'\')"  ':'')+'>';
-								html += '<i class="fa fa-chevron-right" aria-hidden="true" ></i>';
-								html += options[k];
+		// 左邊
+		html += '<div style="float: left;width: 20%;">';
+		html += '<ul class="nostyle">';
+		html += '<li class="nostyle" onclick="statistics_choice_category(this, undefined, undefined, true)"   >';
+		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+		html += '所有 ('+Object.keys(form.data.values).length+')';
+		html += '</li>';
+		for (var i in category) 
+			for (var j in form.data.fields) 
+				if (form.data.fields[j].id === category[i]) {
+					var options =  form.data.fields[j].option.split(',');
+					console.log(options);
+					for (var k in options){
+						var num = 0;
+						for (var record_id in values)
+							if (values[record_id][category[i]] === options[k])
+								num++;
+						html += '<li class="nostyle2" data-num="'+num+'" '+ ((num!== 0)?'onclick="statistics_choice_category(this, \''+'data-category-'+category[i]+'\', \''+options[k]+'\')"  ':'')+'>';
+						html += '<i class="fa fa-chevron-right" aria-hidden="true" ></i>';
+						html += options[k];
 
-								html += ' (' + num + ')';
-								html += '</li>';
-							}
-						}
-
-				html += '</ul>';
-				html += '</div>';
-
-				// 右邊
-				html += '<div style="float: left;width: 80%;">';
-				html += '<table><tr>';
-				html += '<td><input type="text" id="search" value="'+search+'" onkeypress="return onSearchKeyPress(event);"></td>';
-				html += '<td width="20%"><button type="button" onclick="javascript:btn_search();">搜尋</button></td>';
-				html += '</tr></table>';
-
-				form.data.values = null;
-
-				for (var record_id in values) {
-					html += '<div class="statistics" name="form_data" ';
-					for (i in category)
-						html += 'data-category-'+category[i] +'="'+values[record_id][category[i]]+'" ';
-
-					html += 'style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
-					form.data.values = {};
-					form.data.values[record_id] = values[record_id];
-					html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;']);
-					html += '</div>';
-					// html += '<br>';
+						html += ' (' + num + ')';
+						html += '</li>';
+					}
 				}
 
-				html += '</div>';
-				return onDone(null, html);
-			});
-		});
+		html += '</ul>';
+		html += '</div>';
+
+		// 右邊
+		html += '<div style="float: left;width: 80%;">';
+		html += '<table><tr>';
+		html += '<td><input type="text" id="search" value="'+search+'" onkeypress="return onSearchKeyPress(event);"></td>';
+		html += '<td width="20%"><button type="button" onclick="javascript:btn_search();">搜尋</button></td>';
+		html += '</tr></table>';
+
+		form.data.values = null;
+
+		for (var record_id in values) {
+			html += '<div class="statistics" name="form_data" ';
+			for (i in category)
+				html += 'data-category-'+category[i] +'="'+values[record_id][category[i]]+'" ';
+
+			html += 'style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
+			form.data.values = {};
+			form.data.values[record_id] = values[record_id];
+			html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;']);
+			html += '</div>';
+			// html += '<br>';
+		}
+
+		html += '</div>';
+		return onDone(null, html);
 	});
 }
 
