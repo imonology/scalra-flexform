@@ -39,6 +39,32 @@ SR.Module.add('ExcelImporter', l_module);
 //
 
 var xlsx = require('node-xlsx'); 
+
+SR.API.add('WRITE_XLSX', {
+	filename:		'string',			
+	columns:		'array',					
+}, function (args, onDone) {
+	var file_path = SR.path.resolve(SR.Settings.UPLOAD_PATH, args.filename);
+ 
+	var buffer = xlsx.build([
+	{
+	  name:'sheet1',
+	  data:args.columns
+	}
+	]);
+	SR.fs.writeFileSync(file_path, buffer, {'flag':'w'});
+	return onDone(null, file_path);
+});
+
+
+SR.API.add('TEST_READ_XLSX', {
+	filename:		'string',							
+}, function (args, onDone) {
+	var file_path = SR.path.resolve(SR.Settings.UPLOAD_PATH, args.filename);
+	var excelObj = xlsx.parse(file_path);
+	return onDone(null, excelObj);
+});
+
 SR.API.add('READ_XLSX', {
 	path:		'string',			// path to excel file
 	columns:	'array',			// an array of strings of columns to be selected
