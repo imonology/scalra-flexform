@@ -1213,31 +1213,49 @@ function statistics_flexform(form, filter, category, onDone) {
 
 		// 左邊
 		html += '<div style="float: left;width: 20%;">';
-		html += '<ul class="nostyle">';
-		html += '<li class="nostyle" onclick="statistics_choice_category(this, undefined, undefined, true)"   >';
-		html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-		html += '所有 ('+Object.keys(form.data.values).length+')';
-		html += '</li>';
+
 		for (var i in category) 
 			for (var j in form.data.fields) 
 				if (form.data.fields[j].id === category[i]) {
-					var options =  form.data.fields[j].option.split(',');
-					console.log(options);
+					html += '<h1 style="text-align:left;">'+form.data.fields[j].name+'</h1>'
+					
+						
+						
+					html += '<ul class="nostyle">';
+					html += '<li style="text-align:left;" class="nostyle" onclick="statistics_choice_category(this, undefined, undefined, true)"   >';
+					html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+					html += '所有 ('+Object.keys(form.data.values).length+')';
+					html += '</li>';
+					if (form.data.fields[j].option){
+						var options =  form.data.fields[j].option.split(',');
+					} else {
+						var options = [];
+						for (var record_id in values)
+							options.push(values[record_id][category[i]]);
+						options = Array.from( new Set(options) );
+					}
+						
 					for (var k in options){
 						var num = 0;
 						for (var record_id in values)
 							if (values[record_id][category[i]] === options[k])
 								num++;
-						html += '<li class="nostyle2" data-num="'+num+'" '+ ((num!== 0)?'onclick="statistics_choice_category(this, \''+'data-category-'+category[i]+'\', \''+options[k]+'\')"  ':'')+'>';
+						html += '<li style="text-align:left;" class="nostyle2" data-num="'+num+'" '+ ((num!== 0)?'onclick="statistics_choice_category(this, \''+'data-category-'+category[i]+'\', \''+options[k]+'\')"  ':'')+'>';
+						
+						
 						html += '<i class="fa fa-chevron-right" aria-hidden="true" ></i>';
+						html += '<input type="checkbox" name="'+category[i]+'" value="'+options[k]+'" >';
+						html += '<label >';
 						html += options[k];
-
 						html += ' (' + num + ')';
+						html += '</label>';
 						html += '</li>';
 					}
-				}
+					html += '</ul>';
 
-		html += '</ul>';
+					html += '<br>';
+				}
+		
 		html += '</div>';
 
 		// 右邊
@@ -1263,6 +1281,7 @@ function statistics_flexform(form, filter, category, onDone) {
 		}
 
 		html += '</div>';
+		
 		return onDone(null, html);
 	});
 }
@@ -1278,7 +1297,11 @@ function statistics_choice_category(obj, category_id, category_name, all) {
 	}
 }
 
-
+function enable_checkbox() {
+	$('input[type=checkbox]+label').click(function(){
+		$(this).prev().prop('checked', !$(this).prev().is(':checked'));
+	});;
+}
 
 
 
