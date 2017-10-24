@@ -670,17 +670,24 @@ SR.API.add('QUERY_FORM', {
 				matched = false;	
 			}
 		}
-
+		
 		// query for any value partially matching the specified query keys' values
 		if (args.query_partial) {
+			LOG.warn('start query partial')
+			LOG.warn(args.query_partial)
+			LOG.warn('record = ')
+			LOG.warn(record);
 			var non_matched = 0;
 			for (var key in args.query_partial) {
 				if (typeof record[key] === 'string' && 
 					record[key].indexOf(args.query_partial[key]) === (-1)) {
-					non_matched++;
+					non_matched++; 
 				}
 			}
 			// non of the fields have partial matches at all
+			LOG.warn('數量')
+			LOG.warn(non_matched);
+			LOG.warn(Object.keys(args.query_partial).length);
 			if (non_matched === Object.keys(args.query_partial).length) {
 				matched = false;
 			}
@@ -731,6 +738,8 @@ SR.API.add('QUERY_FORM', {
 			}
 		}
 	
+		LOG.warn('最後判斷match')
+		LOG.warn(matched)
 		// will keep/return this row only if fully matched
 		if (matched) {
 			form.data.values[id] = record;	
@@ -746,7 +755,7 @@ SR.API.add('QUERY_FORM', {
 			LOG.warn(datas);
 		}
 	}
-	
+	LOG.warn(form);
 	onDone(null, form);
 });
 

@@ -42,16 +42,21 @@ var xlsx = require('node-xlsx');
 
 SR.API.add('WRITE_XLSX', {
 	filename:		'string',			
-	columns:		'array',					
+	columns:		'+array',	
+	data:			'+array'
 }, function (args, onDone) {
 	var file_path = SR.path.resolve(SR.Settings.UPLOAD_PATH, args.filename);
- 
-	var buffer = xlsx.build([
-	{
-	  name:'sheet1',
-	  data:args.columns
-	}
-	]);
+ 	if (args.columns) {
+		var buffer = xlsx.build([
+		{
+		  name:'sheet1',
+		  data:args.columns
+		}
+		]);
+	} else if (args.data)
+		var buffer = xlsx.build(args.data);
+	else 
+		return onDone(null, '錯誤');
 	SR.fs.writeFileSync(file_path, buffer, {'flag':'w'});
 	return onDone(null, file_path);
 });

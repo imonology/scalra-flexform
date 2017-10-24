@@ -641,7 +641,7 @@ function flexform_show_table(flexform_values, show_lines) {
 	html += '</table>';
 	if (show_lines) {
 		table_para.show_lines = show_lines
-		html += '<button onclick="flexform_table_show_more(this, \''+flexform_table_num+'\')">Show more '+(flexform_values.data.length - show_lines - 1)+' row</button>';
+		html += '<button id="btnShowMore" onclick="flexform_table_show_more(this, \''+flexform_table_num+'\')">Show more '+(flexform_values.data.length - show_lines - 1)+' row</button>';
 	}
 	flexform_table_num++;
 	flexform_tables_para.push(table_para);
@@ -704,7 +704,7 @@ function flexform_change_row(f_table, i, j) {
 // create a table with upload form
 // 'form': form field & data to be displayed
 // 
-var create_table = function (form, hide, write, td_style) {
+var create_table = function (form, hide, write, td_style, show) {
 	console.log('print form');
 	console.log(form);
 	
@@ -722,7 +722,10 @@ var create_table = function (form, hide, write, td_style) {
 			}
 			
 			// begin a row of data
-			html += '<tr>';
+			if (show)
+				html += '<tr '+ (show.indexOf(fields[i].id)!== -1? ' data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y"') +' >';
+			else
+				html += '<tr>'
 			
 			// display field name
 			
@@ -923,8 +926,10 @@ var create_table = function (form, hide, write, td_style) {
 			
 			html += '</td>'
 			html += '</tr>';
-		} 
-			
+
+		}
+		if (show)
+			html += '<tr><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
 		return html;
 	}
 	
@@ -944,6 +949,15 @@ var create_table = function (form, hide, write, td_style) {
 		html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\', \''+hide+'\')">確定送出</button>';
 	
 	return html;
+}
+
+function show_detail(btn){
+	console.log('檢查')
+	console.log(btn)
+    var parent = btn.parentNode;
+	console.log(parent);
+	var all_tr = parent.childNodes; 
+	console.log(all_tr);
 }
 
 function check_upload(form_name, hide) {
@@ -1186,7 +1200,7 @@ function onSearchKeyPress (event) {
 	}
 }
 
-function statistics_flexform(form, filter, category, onDone) {
+function statistics_flexform(form, filter, category, onDone, show) {
 	var html = '';
 	var search = '';
 
@@ -1202,7 +1216,8 @@ function statistics_flexform(form, filter, category, onDone) {
 			partial[filter[i]] = search;
 		para.query_partial = partial;
 	}
-	
+	console.log('para = ');
+	console.log(para);
 	SR.API.QUERY_FORM(para, function (err, o_form) {
 		if (err) {
 			return console.log('joint form error!');		
@@ -1222,7 +1237,7 @@ function statistics_flexform(form, filter, category, onDone) {
 						
 						
 					html += '<ul class="nostyle">';
-					html += '<li style="text-align:left;" class="nostyle" onclick="statistics_choice_category(this, undefined, undefined, true)"   >';
+					html += '<li style="text-align:left;" class="nostyle" onclick="statistics_choice_category()"   >';
 					html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
 					html += '所有 ('+Object.keys(form.data.values).length+')';
 					html += '</li>';
@@ -1240,11 +1255,10 @@ function statistics_flexform(form, filter, category, onDone) {
 						for (var record_id in values)
 							if (values[record_id][category[i]] === options[k])
 								num++;
-						html += '<li style="text-align:left;" class="nostyle2" data-num="'+num+'" '+ ((num!== 0)?'onclick="statistics_choice_category(this, \''+'data-category-'+category[i]+'\', \''+options[k]+'\')"  ':'')+'>';
-						
+						html += '<li style="text-align:left;" class="nostyle2" data-num="'+num+'"  onclick="statistics_choice_category()"  >';
 						
 						html += '<i class="fa fa-chevron-right" aria-hidden="true" ></i>';
-						html += '<input type="checkbox" name="'+category[i]+'" value="'+options[k]+'" >';
+						html += '<input type="checkbox" name="category" data-type="'+category[i]+'" value="'+options[k]+'" >';
 						html += '<label >';
 						html += options[k];
 						html += ' (' + num + ')';
@@ -1275,7 +1289,7 @@ function statistics_flexform(form, filter, category, onDone) {
 			html += 'style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
 			form.data.values = {};
 			form.data.values[record_id] = values[record_id];
-			html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;']);
+			html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;'], show);
 			html += '</div>';
 			// html += '<br>';
 		}
@@ -1286,15 +1300,25 @@ function statistics_flexform(form, filter, category, onDone) {
 	});
 }
 
-function statistics_choice_category(obj, category_id, category_name, all) {
-
+function statistics_choice_category() {
+	// 找出目前checkbox勾選哪些
+	var all_choice = {};
+	var categorys = document.getElementsByName('category');
+	for (var i in categorys) 
+		if (categorys[i].checked) {
+			if (!all_choice[categorys[i].getAttribute('data-type')])
+				all_choice[categorys[i].getAttribute('data-type')] = [];
+			all_choice[categorys[i].getAttribute('data-type')].push(categorys[i].value);
+		}
+	// 篩選
 	var datas = document.getElementsByName('form_data');
 	for (var i = 0 ; i < datas.length ; i++) {
 		datas[i].style.display = "block";
-		if (!all)
-			if (datas[i].getAttribute(category_id) !==category_name)
+		for (var key in all_choice) 
+			if (all_choice[key].indexOf(datas[i].getAttribute('data-category-' + key)) === -1)
 				datas[i].style.display = "none";
 	}
+	
 }
 
 function enable_checkbox() {
