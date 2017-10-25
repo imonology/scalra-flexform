@@ -1240,6 +1240,7 @@ function onSearchKeyPress (event) {
 }
 
 function statistics_flexform(form, filter, category, onDone, show) {
+	// show: 避免一次顯示太多資料，在這邊定義初始時要顯示哪些資料
 	var html = '';
 	var search = '';
 
