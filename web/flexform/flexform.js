@@ -100,10 +100,10 @@ var create_record_dev = function(dom_id, record, original_name){
 	if (record.length === 0)
 		return html;
 	html += '<div class="recordDiv" id="'+record+'">';
-	html += '<table><tr><td colspan="2">' + original_name + '</td></tr><tr><td>'
+	html += '<table style="margin:0;"><tr><td colspan="2">' + original_name + '</td></tr><tr><td>'
 	html += '<audio src="/web/images/'+record+'" controls="controls"></audio>';
 	html += '</td>';
-	html += '<td><button onclick="remove_img( \''+dom_id+'\' ,\''+record+'\')">刪除</button></td>';
+	html += '<td><button onclick="remove_img( \''+dom_id+'\' ,\''+record+'\', \'record\')">刪除</button></td>';
 	html += '</tr></table>';
 	html += '</div>';
 	return html;
@@ -116,11 +116,28 @@ var open_new_tab = function(url){
 	);
 }
 
-var remove_img = function(dom_id, id) {
+var remove_img = function(dom_id, id, type) {
+
 	document.getElementById(id).remove();
-	var files = document.getElementById(dom_id).value.split(",");
-	files.splice(files.indexOf(id), 1);
-	document.getElementById(dom_id).value = files;
+	if (!type) {
+		var files = document.getElementById(dom_id).value.split(",");
+		files.splice(files.indexOf(id), 1);
+		document.getElementById(dom_id).value = files;
+	} else if (type === 'record') {
+		var files = JSON.parse(document.getElementById(dom_id).value);
+		var index = -1;
+		for (var i = 0 ; i < files.length ; i++)
+			if (files[i].filename === id) {
+				index = i;
+				break;
+			}
+		if (index != -1)
+			files.splice(index, 1);
+		document.getElementById(dom_id).value = JSON.stringify(files);
+	} else {
+		console.log('error');
+	}
+	
 	get_img_num();
 }
 
@@ -157,21 +174,22 @@ var show_imgs = function(imgs) {
 
 var show_record = function(records) {
 	var html = '';
-	// console.log('records = ');
-	// console.log(records);
 	if (!records)
 		return '';
-	var records = records.split(",");
-	// console.log('show records');
-	// console.log(records);
-
-	for(var i in records) {
-		if (records[i].length === 0)
-			continue;
+	// var records = records.split(",");
+	
+	var records = JSON.parse(records);
+	
+	// for(var i in records) {
+	for(var i = 0 ; i < records.length ; i++) {
 		html += '<div >';
-
-		html += '<audio src="/web/images/'+records[i]+'" controls="controls"></audio>';
-
+		// html += '<audio src="/web/images/'+records[i]+'" controls="controls"></audio>';
+		
+		html += '<table style="margin:0;"><tr><td colspan="2">' + records[i].filetitle + '</td></tr><tr><td>'
+		html += '<audio src="/web/images/'+records[i].filename+'" controls="controls"></audio>';
+		html += '</td>';
+		html += '</tr></table>';
+		
 		html += '</div>';
 	}
 	return html;
@@ -250,9 +268,15 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 var onRecordUploaded = function(err, record_filenames, dom_id, original_filenames) {
 	if (!err) {
 		console.log('已上傳錄音檔');
-		var files = document.getElementById(dom_id).value.split(",");
-		document.getElementById(dom_id).value = record_filenames.concat(files);
-		console.log(record_filenames);
+		if (document.getElementById(dom_id).value.length === 0)
+			var files = [];
+		else
+			var files = JSON.parse(document.getElementById(dom_id).value);
+		for (var i in record_filenames)
+			files.push({filetitle: original_filenames[i], filename: record_filenames[i]});
+
+		document.getElementById(dom_id).value = JSON.stringify(files);
+
 		for (var i in record_filenames)
 			add_record(dom_id , record_filenames[i], original_filenames[i]);
 	}
@@ -709,7 +733,7 @@ var create_table = function (form, hide, write, td_style, show) {
 	console.log(form);
 	
 	var html = '';
-	html += '<table border="1" class="customTable" >';
+	html += '<table border="1" class="customTable" style="margin:0">';
 	var fields = form.data.fields;
 	
 	function c_table(fields, value) {
@@ -723,9 +747,9 @@ var create_table = function (form, hide, write, td_style, show) {
 			
 			// begin a row of data
 			if (show)
-				html += '<tr '+ (show.indexOf(fields[i].id)!== -1? ' data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y"') +' >';
+				html += '<tr '+ (show.indexOf(fields[i].id)!== -1? ' style="" data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y"') +' >';
 			else
-				html += '<tr>'
+				html += '<tr>';
 			
 			// display field name
 			
@@ -929,7 +953,7 @@ var create_table = function (form, hide, write, td_style, show) {
 
 		}
 		if (show)
-			html += '<tr><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
+			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
 		return html;
 	}
 	
@@ -954,10 +978,25 @@ var create_table = function (form, hide, write, td_style, show) {
 function show_detail(btn){
 	console.log('檢查')
 	console.log(btn)
-    var parent = btn.parentNode;
-	console.log(parent);
-	var all_tr = parent.childNodes; 
-	console.log(all_tr);
+	console.log(btn.innerHTML);
+	var lock ;
+	if (btn.innerHTML === '檢視細節') {
+		lock = false;
+		btn.innerHTML = '隱藏細節';
+	} else {
+		lock = true;
+		btn.innerHTML = '檢視細節';
+	} 
+    var parent = btn.parentNode.parentNode.parentNode; 
+	
+	var all_tr = parent.childNodes; // Find all other <tr>
+	
+	for (var i = 0 ; i < all_tr.length ; i++)
+		if (all_tr[i].getAttribute('data-can-hide') === 'y')
+			if (lock)
+				all_tr[i].style.display = "none";
+			else
+				all_tr[i].style.display = "";
 }
 
 function check_upload(form_name, hide) {
@@ -1224,25 +1263,25 @@ function statistics_flexform(form, filter, category, onDone, show) {
 		}
 		// console.log('印出form')
 		// console.log(form)
-		var values = form.data.values;
+		var values = o_form.data.values;
 
 		// 左邊
 		html += '<div style="float: left;width: 20%;">';
 
 		for (var i in category) 
-			for (var j in form.data.fields) 
-				if (form.data.fields[j].id === category[i]) {
-					html += '<h1 style="text-align:left;">'+form.data.fields[j].name+'</h1>'
+			for (var j in o_form.data.fields) 
+				if (o_form.data.fields[j].id === category[i]) {
+					html += '<h1 style="text-align:left;">'+o_form.data.fields[j].name+'</h1>'
 					
 						
 						
 					html += '<ul class="nostyle">';
 					html += '<li style="text-align:left;" class="nostyle" onclick="statistics_choice_category()"   >';
 					html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-					html += '所有 ('+Object.keys(form.data.values).length+')';
+					html += '所有 ('+Object.keys(o_form.data.values).length+')';
 					html += '</li>';
-					if (form.data.fields[j].option){
-						var options =  form.data.fields[j].option.split(',');
+					if (o_form.data.fields[j].option){
+						var options =  o_form.data.fields[j].option.split(',');
 					} else {
 						var options = [];
 						for (var record_id in values)
@@ -1279,7 +1318,7 @@ function statistics_flexform(form, filter, category, onDone, show) {
 		html += '<td width="20%"><button type="button" onclick="javascript:btn_search();">搜尋</button></td>';
 		html += '</tr></table>';
 
-		form.data.values = null;
+		o_form.data.values = null;
 
 		for (var record_id in values) {
 			html += '<div class="statistics" name="form_data" ';
@@ -1287,9 +1326,9 @@ function statistics_flexform(form, filter, category, onDone, show) {
 				html += 'data-category-'+category[i] +'="'+values[record_id][category[i]]+'" ';
 
 			html += 'style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
-			form.data.values = {};
-			form.data.values[record_id] = values[record_id];
-			html += create_table(form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;'], show);
+			o_form.data.values = {};
+			o_form.data.values[record_id] = values[record_id];
+			html += create_table(o_form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;'], show);
 			html += '</div>';
 			// html += '<br>';
 		}

@@ -538,7 +538,6 @@ SR.API.add('QUERY_FORM', {
 		fields: [],
 		values: {}
 	};
-	
 	var full_fields = full_form.data.fields;
 	var full_values = full_form.data.values;
 	
@@ -573,7 +572,6 @@ SR.API.add('QUERY_FORM', {
 	for (var i=0; i < full_fields.length; i++) {
 		fields[full_fields[i].id] = full_fields[i];			
 	}
-	
 	// TODO: need to fix these logic (seems too complicated)
 	// go over each row of data, and copy only matching values
 	for (var id in full_values) {
@@ -673,10 +671,7 @@ SR.API.add('QUERY_FORM', {
 		
 		// query for any value partially matching the specified query keys' values
 		if (args.query_partial) {
-			LOG.warn('start query partial')
-			LOG.warn(args.query_partial)
-			LOG.warn('record = ')
-			LOG.warn(record);
+
 			var non_matched = 0;
 			for (var key in args.query_partial) {
 				if (typeof record[key] === 'string' && 
@@ -685,9 +680,6 @@ SR.API.add('QUERY_FORM', {
 				}
 			}
 			// non of the fields have partial matches at all
-			LOG.warn('數量')
-			LOG.warn(non_matched);
-			LOG.warn(Object.keys(args.query_partial).length);
 			if (non_matched === Object.keys(args.query_partial).length) {
 				matched = false;
 			}
@@ -738,14 +730,14 @@ SR.API.add('QUERY_FORM', {
 			}
 		}
 	
-		LOG.warn('最後判斷match')
-		LOG.warn(matched)
+		// LOG.warn('最後判斷match')
+		// LOG.warn(matched)
 		// will keep/return this row only if fully matched
 		if (matched) {
 			form.data.values[id] = record;	
 		}
 	}		
-
+	
 	// not used?
 	for (i in form.data.fields){
 		if (form.data.fields[i].sorting) {
@@ -755,7 +747,7 @@ SR.API.add('QUERY_FORM', {
 			LOG.warn(datas);
 		}
 	}
-	LOG.warn(form);
+
 	onDone(null, form);
 });
 
