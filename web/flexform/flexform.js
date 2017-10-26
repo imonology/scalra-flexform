@@ -524,7 +524,7 @@ function flexform_to_flexform_table(form) {
 	return flexform_table;
 }
 
-function array_to_flexform_table(arr_data, para) {
+function array_to_flexform_table(arr_data, para = {}) {
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
@@ -544,10 +544,7 @@ function array_to_flexform_table(arr_data, para) {
 	// console.log('arr_data:');
 	// console.log(arr_data);
 
-	if (!para)
-		var invalidContent = [];
-	else
-		var invalidContent = para.invalidContent || [];
+	var invalidContent = para.invalidContent || [];
 
 	for (var i=1; i < arr_data.length; i++) {
 
@@ -622,13 +619,21 @@ function switch_sort_up_down(table_num, cell_num, obj) {
 	}
 }
 
-function flexform_show_table(flexform_values, show_lines) {
+function flexform_show_table(flexform_values, show_lines, para = {}) {
+	// para.colStyle = [{ cssKey: cssValue }]
+	para.colStyle = para.colStyle || [];
+	// para.hideTitle = true || false
+	para.hideTitle = para.hideTitle || false
 	var html = '';
 	var table_para = {};
 	table_para.data_num = flexform_values.data.length;
-	html += '<table id="flexform-table'+flexform_table_num+'"  border="1" class="customTable">';
+	html += '<table id="flexform-table'+flexform_table_num+'"  border="1" class="customTable" style="table-layout: fixed;">';
 	// field
-	html += '<tr>';
+	if (!!para.hideTitle) {
+		html += '<tr style="display: none;"></tr><tr style="display: none;">';
+	} else {
+		html += '<tr>';
+	}
 	// for (var i in flexform_values.field) 
 	// 	html += '<th  onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\')" >' + flexform_values.field[i].value + '</th>';
 	var count = 0;
@@ -648,7 +653,19 @@ function flexform_show_table(flexform_values, show_lines) {
 		// content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+count+'\', \'SmallToBig\')">由小到大排序</li>'
 		// content += '</ul>'
 		content += '</li>';
-		html += '<th width="'+width+'%" class="text-center">' + content + '</th>';
+
+		let style = '';
+		if (para.colStyle[i]) {
+			if (!para.colStyle[i].width) {
+				para.colStyle[i].width = `${width}%`
+			}
+
+			style = obj2inlineCSS(para.colStyle[i]);
+		} else {
+			style = `width: ${width}%`;
+		}
+
+		html += `<th style="${style}" class="text-center">${content}</th>`;
 		count ++;
 	}
 	html += '</tr>';
@@ -657,7 +674,7 @@ function flexform_show_table(flexform_values, show_lines) {
 		if (show_lines)
 			html += '<tr '+(i>show_lines-1?'style="display: none;"':'')+'>';
 		for (var j in flexform_values.field) 
-			html += '<td>' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+			html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
 		html += '</tr>';
 	}
 	
@@ -671,6 +688,14 @@ function flexform_show_table(flexform_values, show_lines) {
 	flexform_tables_para.push(table_para);
 	return html;
 } // function flexform_show_table()
+
+function obj2inlineCSS(obj) {
+	if (!obj) return '';
+
+	return Object.keys(obj).reduce((result, key) => {
+		return result + `${key}: ${obj[key]}; `;
+	}, '');
+}
 
 function flexform_table_show_more(btn, table_num) {
 	var f_table = document.getElementById('flexform-table' + table_num);
