@@ -697,6 +697,60 @@ function obj2inlineCSS(obj) {
 	}, '');
 }
 
+function flexform_show_vertical_table(data, option = {}) {
+	const table_para = {};
+	table_para.data_num = data.data.length;
+	option = Object.assign({}, {
+		// default value
+		field: null
+	}, option);
+	table_para.option = option;
+
+	let result = '';
+	data.data.forEach((val, i ) => {
+		result += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;">`;
+
+		let fieldArr = [];
+		if (!(!!option.field && option.field.length > 0)) {
+			fieldArr = data.field;
+		} else {
+			fieldArr = generateFieldData(data.field, option.field);
+		}
+
+		fieldArr.forEach((f, j) => {
+			result += '<tr>';
+			result += `<th style="width: 150px; text-align: center">${f.value || f.key}</th>`;
+			result += `<td style="text-align: left">${data.data[i][f.key]}</td>`;
+			result += '</tr>';
+		});
+
+		result += '<table>';
+	});
+
+	flexform_table_num++;
+	flexform_tables_para.push(table_para);
+	return result;
+}
+
+function generateFieldData(oriField, showField) {
+	return showField.map((key, i) => {
+		let value = key;
+		oriField.some((val, i) => {
+			if (val.key === key) {
+				value = val.value;
+				return true;
+			}
+
+			return false;
+		});
+
+		return {
+			key,
+			value
+		}
+	})
+}
+
 function flexform_table_show_more(btn, table_num) {
 	var f_table = document.getElementById('flexform-table' + table_num);
 	var show_lines = flexform_tables_para[parseInt(table_num)].show_lines;
