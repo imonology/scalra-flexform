@@ -513,7 +513,7 @@ function flexform_to_flexform_table(form) {
 	flexform_table.field = [];
 	flexform_table.data = [];
 	for (var i in form.data.fields)
-		flexform_table.field.push({key: form.data.fields[i].id, value: form.data.fields[i].name});
+		flexform_table.field.push(Object.assign({}, form.data.fields[i], { key: form.data.fields[i].id, value: form.data.fields[i].name }));
 	for (var record_id in form.data.values) {
 		var temp_data = {};
 		for (var i in flexform_table.field) 
@@ -702,13 +702,14 @@ function flexform_show_vertical_table(data, option = {}) {
 	table_para.data_num = data.data.length;
 	option = Object.assign({}, {
 		// default value
-		field: null
+		field: null, // ['field key']
+		editable: false, // ture || false
+		customRow: [], // ['row content (DOM string in a <tr>)']
 	}, option);
 	table_para.option = option;
-
 	let result = '';
 	data.data.forEach((val, i ) => {
-		result += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;">`;
+		result += `<table id="flexform-table${flexform_table_num}" border="1" class="customTable" style="table-layout: fixed;">`;
 
 		let fieldArr = [];
 		if (!(!!option.field && option.field.length > 0)) {
@@ -720,35 +721,72 @@ function flexform_show_vertical_table(data, option = {}) {
 		fieldArr.forEach((f, j) => {
 			result += '<tr>';
 			result += `<th style="width: 150px; text-align: center">${f.value || f.key}</th>`;
-			result += `<td style="text-align: left">${data.data[i][f.key]}</td>`;
+			result += `<td style="text-align: left">${formatValue(data.data[i], f, option.editable && f.editable)}</td>`;
 			result += '</tr>';
 		});
 
-		result += '<table>';
-	});
+		if (option.editable) {
+			result += `
+				<tr>
+					<td colspan="2">
+						<button class="btn-editFlexform" data-recordid="${data.data[i].record_id}">修改</button>${' '}
+						<button class="btn-delFlexform" data-recordid="${data.data[i].record_id}">刪除</button>
+					</td>
+				</tr>
+			`
+		}
 
-	flexform_table_num++;
-	flexform_tables_para.push(table_para);
+		option.customRow.forEach((val, i) => {
+			result += `<tr>${val.replace(/%record_id%/g, data.data[i].record_id)}</tr>`;
+		})
+
+		result += '<table>';
+		flexform_table_num++;
+		flexform_tables_para.push(table_para);
+	});
 	return result;
 }
 
 function generateFieldData(oriField, showField) {
 	return showField.map((key, i) => {
-		let value = key;
-		oriField.some((val, i) => {
+		let fieldObj = { key, value: key };
+		oriField.some((val, j) => {
 			if (val.key === key) {
-				value = val.value;
+				fieldObj = Object.assign({}, oriField[j], { value: val.value, key })
 				return true;
 			}
 
 			return false;
 		});
 
-		return {
-			key,
-			value
-		}
+		return fieldObj;
 	})
+}
+
+function formatValue(data, fieldData, editable) {
+	if (!editable) {
+		switch (fieldData.type) {
+			case 'boolean':
+				return !!data[fieldData.key] ? '是' : '否';
+			case 'timestamp': 
+				return moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm');
+			case 'textarea':
+				return `<pre>${data[fieldData.key]}</pre>`;
+			default:
+				return data[fieldData.key];
+		}
+	} else {
+		switch (fieldData.type) {
+			case 'boolean':
+				return `<input class="input-${fieldData.key}" type="checkbox" ${!!data[fieldData.key] === true ? 'checked' : ''} /><label>　</label>`;
+			case 'timestamp': 
+				return `<input class="input-${fieldData.key}" type="text" value="${moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm')}">`;
+			case 'textarea':
+				return `<textarea class="input-${fieldData.key}">${data[fieldData.key]}</textarea>`;
+			default:
+				return `<input class="input-${fieldData.key}" type="text" value="${data[fieldData.key]}" />`;
+		}
+	}
 }
 
 function flexform_table_show_more(btn, table_num) {
