@@ -762,12 +762,20 @@ var create_table = function (form, hide, write, td_style, show) {
 	var fields = form.data.fields;
 	
 	function c_table(fields, value, record_id) {
+		if (!write&& !value)
+			return '';
 		var html = '';
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
 			
 			if (record_id)
 				var save_id = record_id + '-' + fields[i].id;
+			else
+				var save_id = fields[i].id;
+			if (value) {
+				var save_value = value[fields[i].id];
+			} else
+				var save_value = '';
 			
 			// check if the field is hidden or specified as 'hide'
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
@@ -840,6 +848,7 @@ var create_table = function (form, hide, write, td_style, show) {
 						html += '<br>';
 						textarea_id.push(save_id);
 						html += '<textarea rows="3" cols="20" id="'+save_id+'">';
+						html += save_value;
 					} else {
 						html += '<textarea rows="3" cols="20" readonly="readonly">';
 						html += value[fields[i].id];
@@ -849,8 +858,8 @@ var create_table = function (form, hide, write, td_style, show) {
 					
 				case 'date':
 					if (write) {
-						html += '<input type="text" value="" id="'+fields[i].id+'">';
-						date_pickers.push(fields[i].id);						
+						html += '<input type="text" id="'+save_id+'" value="'+save_value+'">';
+						date_pickers.push(save_id);	
 					} else {
 						html += value[fields[i].id];
 					}
@@ -858,7 +867,7 @@ var create_table = function (form, hide, write, td_style, show) {
 					
 				case 'autocomplete': 
 					if (write) {
-						html += '<input type="text" id="' + fields[i].id + '" >';
+						html += '<input type="text" id="' + save_id + '" value="'+save_value+'">';
 						$( function() {
 							
 							if (fields[i].autocomplete_setting) {
@@ -944,10 +953,10 @@ var create_table = function (form, hide, write, td_style, show) {
 					if (write) {
 						var options = fields[i].option.split(',');
 
-						html += '<select id="'+ fields[i].id + '">';
+						html += '<select id="'+ save_id + '">';
 						for (var j=0; j < options.length; j++) {
 
-							html += '<option value="' + options[j] + '" >' + options[j] + '</option>';
+							html += '<option value="' + options[j] + '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
 						}
 						html += '</select>';
 					} else {
@@ -956,21 +965,23 @@ var create_table = function (form, hide, write, td_style, show) {
 					break;
 				case 'lock':
 					if (write) {
-						var value = getParameterByName(fields[i].id);
-						var value_list = value.split(',');
-
-						html += '<select id="' + fields[i].id + '">';
+						var lock_value = getParameterByName(fields[i].id);
+						var value_list = lock_value.split(',');
+						if (save_value)
+							value_list = [save_value];
+						html += '<select id="' + save_id + '">';
 						for (var j=0; j < value_list.length; j++) {	
 							html += '<option value="' + value_list[j] + '" >' + value_list[j] + '</option>';
 						}
 						html += '</select>';
 					} else {
+						
 						html += value[fields[i].id];
 					}
 					break;
 				default:
 					if (write) {
-						html += '<input type="text" id="' + fields[i].id +'">';					
+						html += '<input type="text" id="' + save_id +'">';					
 					} else {
 						html += value[fields[i].id];
 					}
@@ -994,6 +1005,7 @@ var create_table = function (form, hide, write, td_style, show) {
 	// show all valid records in the form.data.values
 	for (var record_id in form.data.values) {
 		var value = form.data.values[record_id];
+		
 		html += c_table(fields, value, record_id);
 	}
 
