@@ -758,12 +758,16 @@ var create_table = function (form, hide, write, td_style, show) {
 	console.log(form);
 	
 	var html = '';
-	html += '<table border="1" class="customTable" style="margin:0">';
+	
 	var fields = form.data.fields;
 	
-	function c_table(fields, value) {
+	function c_table(fields, value, record_id) {
 		var html = '';
+		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
+			
+			if (record_id)
+				var save_id = record_id + '-' + fields[i].id;
 			
 			// check if the field is hidden or specified as 'hide'
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
@@ -979,23 +983,23 @@ var create_table = function (form, hide, write, td_style, show) {
 		}
 		if (show)
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
+		html += '</table>';
+		if (write)
+			html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\', \''+hide+'\' '+(record_id?', \''+record_id+ '\'':'')+' )">'+(value?'確定修改':'確定送出')+'</button>';
+		
 		return html;
 	}
 	
-	if (write) {
-		html += c_table(fields);		
+
+	// show all valid records in the form.data.values
+	for (var record_id in form.data.values) {
+		var value = form.data.values[record_id];
+		html += c_table(fields, value, record_id);
 	}
-	else {
-		// show all valid records in the form.data.values
-		for (var record_id in form.data.values) {
-			var value = form.data.values[record_id];
-			html += c_table(fields, value);
-		}
-	}
-	html += '</table>'
-	
-	if (write)
-		html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\', \''+hide+'\')">確定送出</button>';
+
+	if (Object.keys(form.data.values).length === 0)
+		html += c_table(fields);	
+
 	
 	return html;
 }
@@ -1024,7 +1028,9 @@ function show_detail(btn){
 				all_tr[i].style.display = "";
 }
 
-function check_upload(form_name, hide) {
+
+// 如果有upload_record_id，則是修改，若沒有則是新增
+function check_upload(form_name, hide, upload_record_id) {
 	SR.API.GET_FORM_FIELDS({name: form_name}, function (err, result_field) {
 		if (err)
 			return onDone(err);
@@ -1056,6 +1062,7 @@ function check_upload(form_name, hide) {
 				}
 			}
 		}
+		console.log('叫哪邊')
 		upload();
 	});
 	
