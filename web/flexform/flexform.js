@@ -818,7 +818,7 @@ var create_table = function (form, hide, write, td_style, show) {
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadFile">';
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 						html += '<input type="file" name="upload" id="upload_file" multiple="multiple">';
-						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded, undefined, undefined, \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
+						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+save_id+'\', onPhotoUploaded, undefined, undefined, \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
 						html += '<input type="hidden" value="" id="' + save_id + '">';
 
 						html += '<div id="show_upload_img"></div>';
@@ -834,12 +834,12 @@ var create_table = function (form, hide, write, td_style, show) {
 					if (write) {
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
 						html += '<input type="hidden" id="'+save_id+'-encode" value="">';
-						html += '<input type="file" id="inputTxt-'+fields[i].id+'">';
-						html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+fields[i].id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+fields[i].id+'\')">上傳文字檔</button>';
+						html += '<input type="file" id="inputTxt-'+save_id+'">';
+						html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+save_id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+save_id+'\')">上傳文字檔</button>';
 						html += '</form>';					
 						html += '<br>';
-						textarea_id.push(fields[i].id);
-						html += '<textarea rows="3" cols="20" id="'+fields[i].id+'">';
+						textarea_id.push(save_id);
+						html += '<textarea rows="3" cols="20" id="'+save_id+'">';
 					} else {
 						html += '<textarea rows="3" cols="20" readonly="readonly">';
 						html += value[fields[i].id];
