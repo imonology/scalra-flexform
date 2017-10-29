@@ -796,9 +796,9 @@ var create_table = function (form, hide, write, td_style, show) {
 						var num = (fields[i].num ? fields[i].num : 5);
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadRecord">';
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
-						html += '<input type="file" name="upload" id="inputRecord-'+fields[i].id+'" multiple="multiple">';
-						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord-'+fields[i].id+'\', \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
-						html += '<input type="hidden" value="" id="' + fields[i].id + '">';
+						html += '<input type="file" name="upload" id="inputRecord-'+save_id+'" multiple="multiple">';
+						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+save_id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord-'+save_id+'\', \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
+						html += '<input type="hidden" value="" id="' + save_id + '">';
 
 						html += '<div id="show_upload_record"></div>';
 						html += '</form>';
@@ -819,7 +819,7 @@ var create_table = function (form, hide, write, td_style, show) {
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 						html += '<input type="file" name="upload" id="upload_file" multiple="multiple">';
 						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded, undefined, undefined, \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
-						html += '<input type="hidden" value="" id="' + fields[i].id + '">';
+						html += '<input type="hidden" value="" id="' + save_id + '">';
 
 						html += '<div id="show_upload_img"></div>';
 						html += '</form>';				
@@ -833,7 +833,7 @@ var create_table = function (form, hide, write, td_style, show) {
 				case 'textarea':
 					if (write) {
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
-						html += '<input type="hidden" id="'+fields[i].id+'-encode" value="">';
+						html += '<input type="hidden" id="'+save_id+'-encode" value="">';
 						html += '<input type="file" id="inputTxt-'+fields[i].id+'">';
 						html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+fields[i].id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+fields[i].id+'\')">上傳文字檔</button>';
 						html += '</form>';					
