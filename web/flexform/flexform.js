@@ -712,7 +712,7 @@ function flexform_show_vertical_table(data, option = {}) {
 	let loopData = JSON.parse(JSON.stringify(data.data));
 	!!option.reverse && loopData.reverse();
 	loopData.forEach((val, i) => {
-		result += `<table id="flexform-table${flexform_table_num}" border="1" class="customTable" style="table-layout: fixed;">`;
+		result += `<table id="flexform-table${flexform_table_num}" data-recordid="${loopData[i].record_id}" border="1" class="customTable" style="table-layout: fixed;">`;
 
 		let fieldArr = [];
 		if (!(!!option.field && option.field.length > 0)) {
