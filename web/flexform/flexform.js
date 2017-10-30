@@ -704,11 +704,14 @@ function flexform_show_vertical_table(data, option = {}) {
 		// default value
 		field: null, // ['field key']
 		editable: false, // ture || false
+		reverse: false, // true || false
 		customRow: [], // ['row content (DOM string in a <tr>)']
 	}, option);
 	table_para.option = option;
 	let result = '';
-	data.data.forEach((val, i ) => {
+	let loopData = JSON.parse(JSON.stringify(data.data));
+	!!option.reverse && loopData.reverse();
+	loopData.forEach((val, i) => {
 		result += `<table id="flexform-table${flexform_table_num}" border="1" class="customTable" style="table-layout: fixed;">`;
 
 		let fieldArr = [];
@@ -721,7 +724,7 @@ function flexform_show_vertical_table(data, option = {}) {
 		fieldArr.forEach((f, j) => {
 			result += '<tr>';
 			result += `<th style="width: 150px; text-align: center">${f.value || f.key}</th>`;
-			result += `<td style="text-align: left">${formatValue(data.data[i], f, option.editable && f.editable)}</td>`;
+			result += `<td style="text-align: left">${formatValue(loopData[i], f, option.editable && f.editable)}</td>`;
 			result += '</tr>';
 		});
 
@@ -729,18 +732,18 @@ function flexform_show_vertical_table(data, option = {}) {
 			result += `
 				<tr>
 					<td colspan="2">
-						<button class="btn-editFlexform" data-recordid="${data.data[i].record_id}">修改</button>${' '}
-						<button class="btn-delFlexform" data-recordid="${data.data[i].record_id}">刪除</button>
+						<button class="btn-editFlexform" data-recordid="${loopData[i].record_id}">修改</button>${' '}
+						<button class="btn-delFlexform" data-recordid="${loopData[i].record_id}">刪除</button>
 					</td>
 				</tr>
 			`
 		}
 
-		option.customRow.forEach((val, i) => {
-			result += `<tr>${val.replace(/%record_id%/g, data.data[i].record_id)}</tr>`;
-		})
+		option.customRow.forEach((val, j) => {
+			result += `<tr>${val.replace(/%record_id%/g, loopData[i].record_id)}</tr>`;
+		});
 
-		result += '<table>';
+		result += '</table>';
 		flexform_table_num++;
 		flexform_tables_para.push(table_para);
 	});
