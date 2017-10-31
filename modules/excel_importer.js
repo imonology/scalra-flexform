@@ -41,11 +41,12 @@ SR.Module.add('ExcelImporter', l_module);
 var xlsx = require('node-xlsx'); 
 
 SR.API.add('WRITE_XLSX', {
-	filename:		'string',			
+	// filename:		'string',			
 	columns:		'+array',	
 	data:			'+array'
 }, function (args, onDone) {
-	var file_path = SR.path.resolve(SR.Settings.UPLOAD_PATH, args.filename);
+	var filanema = UTIL.createToken() + '.xlsx';
+	var file_path = SR.path.resolve(SR.Settings.UPLOAD_PATH, filanema);
  	if (args.columns) {
 		var buffer = xlsx.build([
 		{
@@ -58,7 +59,7 @@ SR.API.add('WRITE_XLSX', {
 	else 
 		return onDone(null, '錯誤');
 	SR.fs.writeFileSync(file_path, buffer, {'flag':'w'});
-	return onDone(null, file_path);
+	return onDone(null, filanema);
 });
 
 
