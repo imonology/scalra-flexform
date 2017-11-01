@@ -244,10 +244,15 @@ SR.API.add('GET_FORM', {
 // also returns the data read with optional flag
 SR.API.add('IS_UTF8', {
 	filename:		'string',
+	path:			'+string',
 	return_data:	'+boolean'		// whether to return the read data
 }, function (args, onDone) {
 	
-	var filepath = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
+	var filepath = "";
+	if(args.path)
+		filepath = args.path;
+	else
+		filepath = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
 	SR.fs.exists(filepath, function (exists) {
 		
 		if (!exists) {
@@ -266,7 +271,7 @@ SR.API.add('IS_UTF8', {
 			data = undefined;
 		}
 		
-		return onDone(null, utf8, data);
+		return onDone(null, {utf8:utf8, data:data});
 	});
 });
 
@@ -1789,12 +1794,14 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 		SR.API.IS_UTF8({
 			filename:		file_name,
 			return_data:	true
-		}, function (err, is_utf8, data) {
+		}, function (err, result) {
 					   
 			if (err) {
 				return onD(err); 
 			}
 
+			var is_utf8 = result.is_utf8;
+			var data = result.data;
 			var ext = SR.path.extname(file_name).substring(1);
 			LOG.warn('filename: ' + file_name + ' isUTF8: ' + is_utf8 + ' ext: ' + ext, l_name);
 
