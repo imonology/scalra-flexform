@@ -153,6 +153,7 @@ var add_record = function(dom_id, record, original_name) {
 
 var show_imgs = function(imgs) {
 	var html = '';
+	console.log(imgs)
 	var imgs = imgs.split(",");
 	console.log('show imgs');
 	console.log(imgs);
@@ -851,11 +852,12 @@ function flexform_change_row(f_table, i, j) {
 var create_table = function (form, hide, write, td_style, show) {
 	console.log('print form');
 	console.log(form);
-	
+	if (!td_style)
+		td_style =  ['width:20%;','text-align:left;'];
 	var html = '';
 	
 	var fields = form.data.fields;
-	
+
 	function c_table(fields, value, record_id) {
 		if (!write&& !value)
 			return '';
@@ -928,7 +930,8 @@ var create_table = function (form, hide, write, td_style, show) {
 						html += '</form>';				
 					} else {
 						html += '<div id="uploaded_photo">';
-						html += show_imgs(value[fields[i].id]);
+						if (value[fields[i].id])
+							html += show_imgs(value[fields[i].id]);
 						html += '</div>';						
 					}
 					break;
@@ -1076,7 +1079,7 @@ var create_table = function (form, hide, write, td_style, show) {
 					break;
 				default:
 					if (write) {
-						html += '<input type="text" id="' + save_id +'">';					
+						html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
 					} else {
 						html += value[fields[i].id];
 					}
@@ -1143,10 +1146,13 @@ function check_upload(form_name, hide, upload_record_id) {
 			return onDone(err);
 		
 		hide =hide.split(",");
-		
+		var values = {};
 		for (var i in result_field.fields) {
 			// 檢查必填欄位
-			var dom = document.getElementById(result_field.fields[i].id)
+			if (upload_record_id)
+				var dom = document.getElementById(upload_record_id + '-' + result_field.fields[i].id);
+			else
+				var dom = document.getElementById(result_field.fields[i].id);
 			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 				var is_hide = false;
 				for (var t in hide)
@@ -1156,7 +1162,11 @@ function check_upload(form_name, hide, upload_record_id) {
 						dom.focus();
 						return;
 				}
-			}
+				
+				values[result_field.fields[i].id] = dom.value;
+			} else if (result_field.fields[i].show === true) 
+				values[result_field.fields[i].id] = dom.value;
+			
 				
 			
 			// 檢查上傳數量
@@ -1169,11 +1179,33 @@ function check_upload(form_name, hide, upload_record_id) {
 				}
 			}
 		}
-		console.log('叫哪邊')
-		upload();
+		
+		if (window.upload) // check custom funciton
+			upload(result_field, upload_record_id, values);
+		else
+			default_upload(result_field, upload_record_id, values);
+		
+		
 	});
 	
 }
+
+function default_upload(field, record_id, values) {
+	var para = {form_name: field.name, values: values};
+	if (record_id)
+		para.record_id = record_id;
+
+	SR.API.UPDATE_FIELD(para, function (err, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		console.log('success');
+		if (window.upload_callback) // check custom funciton
+			upload_callback();
+	});
+}
+
 
 function upload_table2(form_name, fields, onDone) {
 	
