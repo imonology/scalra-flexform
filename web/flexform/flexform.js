@@ -704,6 +704,7 @@ function flexform_show_vertical_table(data, option = {}) {
 		// default value
 		field: null, // ['field key']
 		editable: false, // ture || false
+		deletable: true, // true || false
 		reverse: false, // true || false
 		customRow: [], // ['row content (DOM string in a <tr>)']
 	}, option);
@@ -733,7 +734,9 @@ function flexform_show_vertical_table(data, option = {}) {
 				<tr>
 					<td colspan="2">
 						<button class="btn-editFlexform" data-recordid="${loopData[i].record_id}">修改</button>${' '}
-						<button class="btn-delFlexform" data-recordid="${loopData[i].record_id}">刪除</button>
+						${ option.deletable &&
+							`<button class="btn-delFlexform" data-recordid="${loopData[i].record_id}">刪除</button>` || ''
+						}
 					</td>
 				</tr>
 			`
