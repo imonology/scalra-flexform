@@ -1008,8 +1008,7 @@ SR.API.add('UPDATE_FIELD', {
 		
 	}
 	
-	
-	l_add_form({form:form, values_map:values_map, para:args}, function(err, result){
+	l_add_form({form: form, values_map: values_map, para: args}, function (err, result) {
 		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
 	});
 });
@@ -1050,7 +1049,7 @@ var l_add = function (para) {
 	}
 }
 
-var l_add_form = function( para, onDone ) {
+var l_add_form = function (para, onDone) {
 	if (para.para.record_id) {
 		LOG.warn('使用record_id');                           
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
@@ -1073,7 +1072,7 @@ var l_add_form = function( para, onDone ) {
 		LOG.warn('使用new_record_id');
 		//LOG.warn(para.form.data.values);
 		
-		para.form.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
+		para.form.add({id: para.para.new_record_id, values: para.values_map}, function (err, result) {
 			if (err) {
 				return onDone(err);	
 			}

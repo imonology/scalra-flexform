@@ -124,7 +124,9 @@ var remove_img = function(dom_id, id, type) {
 		files.splice(files.indexOf(id), 1);
 		document.getElementById(dom_id).value = files;
 	} else if (type === 'record') {
-		var files = JSON.parse(document.getElementById(dom_id).value);
+		console.log(document.getElementById(dom_id).value)
+		// var new_value = save_value.replace(/\"/g, "'");
+		var files = JSON.parse(document.getElementById(dom_id).value.replace(/\'/g, '"'));
 		var index = -1;
 		for (var i = 0 ; i < files.length ; i++)
 			if (files[i].filename === id) {
@@ -143,11 +145,11 @@ var remove_img = function(dom_id, id, type) {
 
 
 var add_img = function(dom_id, img) {
-	document.getElementById('show_upload_img').innerHTML += create_img_dev(dom_id , img);
+	document.getElementById(dom_id + '-show_upload_img').innerHTML += create_img_dev(dom_id , img);
 }
 
 var add_record = function(dom_id, record, original_name) {
-	document.getElementById('show_upload_record').innerHTML += create_record_dev(dom_id , record, original_name);
+	document.getElementById(dom_id + '-show_upload_record').innerHTML += create_record_dev(dom_id , record, original_name);
 }
 
 
@@ -271,8 +273,10 @@ var onRecordUploaded = function(err, record_filenames, dom_id, original_filename
 		console.log('已上傳錄音檔');
 		if (document.getElementById(dom_id).value.length === 0)
 			var files = [];
-		else
+		else {
+
 			var files = JSON.parse(document.getElementById(dom_id).value);
+		}
 		for (var i in record_filenames)
 			files.push({filetitle: original_filenames[i], filename: record_filenames[i]});
 
@@ -903,9 +907,27 @@ var create_table = function (form, hide, write, td_style, show) {
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 						html += '<input type="file" name="upload" id="inputRecord-'+save_id+'" multiple="multiple">';
 						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+save_id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord-'+save_id+'\', \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
-						html += '<input type="hidden" value="" id="' + save_id + '">';
 
-						html += '<div id="show_upload_record"></div>';
+						if (save_value.length !== 0) {
+							var new_value = save_value.replace(/\"/g, "'");
+							// console.log(new_value.replace(/\"/g, "'"));
+						}
+							
+						console.log('new_value')
+						console.log(new_value);
+						
+						
+						html += '<input type="hidden" value="'+new_value+'" id="' + save_id + '">';
+						console.log('save_value = ')
+						console.log(save_value )
+						html += '<div id="'+save_id+'-show_upload_record">';
+						if (save_value.length !== 0) {
+							var files = JSON.parse(save_value);
+							for (var i in files) 
+								html += create_record_dev(save_id , files[i].filename, files[i].filetitle);
+						}
+						html += '</div>';
+							
 						html += '</form>';
 					} else {
 						html += '<div id="uploaded_record">';
@@ -924,9 +946,17 @@ var create_table = function (form, hide, write, td_style, show) {
 						html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 						html += '<input type="file" name="upload" id="upload_file" multiple="multiple">';
 						html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+save_id+'\', onPhotoUploaded, undefined, undefined, \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
-						html += '<input type="hidden" value="" id="' + save_id + '">';
+						html += '<input type="hidden" value="'+save_value+'" id="' + save_id + '">';
 
-						html += '<div id="show_upload_img"></div>';
+						html += '<div id="'+save_id+'-show_upload_img">';
+						console.log(save_value);
+						if (save_value.length !== 0) {
+							var files = save_value.split(',');
+							for (var i in files) 
+								html += create_img_dev(save_id, files[i])
+						}
+						html += '</div>';
+						
 						html += '</form>';				
 					} else {
 						html += '<div id="uploaded_photo">';
