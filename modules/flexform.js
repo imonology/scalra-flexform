@@ -9,7 +9,7 @@
 */
 var moment = require('moment');
 var isUtf8 = require('is-utf8');
-
+var iconv = require('iconv-lite');
 
 var l_name = 'FlexForm';
 
@@ -244,10 +244,15 @@ SR.API.add('GET_FORM', {
 // also returns the data read with optional flag
 SR.API.add('IS_UTF8', {
 	filename:		'string',
+	path:			'+string',
 	return_data:	'+boolean'		// whether to return the read data
 }, function (args, onDone) {
 	
-	var filepath = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
+	var filepath = "";
+	if(args.path)
+		filepath = args.path;
+	else
+		filepath = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
 	SR.fs.exists(filepath, function (exists) {
 		
 		if (!exists) {
@@ -261,12 +266,14 @@ SR.API.add('IS_UTF8', {
 			// see if we need to re-read for utf8 content
 			if (utf8) {
 				data = SR.fs.readFileSync(filepath, {encoding: 'utf8'});
+			} else {
+				data = iconv.decode(data, 'Big5');
 			}
 		} else {
 			data = undefined;
 		}
 		
-		return onDone(null, utf8, data);
+		return onDone(null, {utf8:utf8, data:data});
 	});
 });
 
@@ -1001,8 +1008,7 @@ SR.API.add('UPDATE_FIELD', {
 		
 	}
 	
-	
-	l_add_form({form:form, values_map:values_map, para:args}, function(err, result){
+	l_add_form({form: form, values_map: values_map, para: args}, function (err, result) {
 		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
 	});
 });
@@ -1043,7 +1049,7 @@ var l_add = function (para) {
 	}
 }
 
-var l_add_form = function( para, onDone ) {
+var l_add_form = function (para, onDone) {
 	if (para.para.record_id) {
 		LOG.warn('使用record_id');                           
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
@@ -1066,7 +1072,7 @@ var l_add_form = function( para, onDone ) {
 		LOG.warn('使用new_record_id');
 		//LOG.warn(para.form.data.values);
 		
-		para.form.add({id:para.para.new_record_id, values:para.values_map}, function (err, result) {
+		para.form.add({id: para.para.new_record_id, values: para.values_map}, function (err, result) {
 			if (err) {
 				return onDone(err);	
 			}
@@ -1789,12 +1795,14 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 		SR.API.IS_UTF8({
 			filename:		file_name,
 			return_data:	true
-		}, function (err, is_utf8, data) {
+		}, function (err, result) {
 					   
 			if (err) {
 				return onD(err); 
 			}
 
+			var is_utf8 = result.is_utf8;
+			var data = result.data;
 			var ext = SR.path.extname(file_name).substring(1);
 			LOG.warn('filename: ' + file_name + ' isUTF8: ' + is_utf8 + ' ext: ' + ext, l_name);
 
