@@ -9,7 +9,7 @@
 */
 var moment = require('moment');
 var isUtf8 = require('is-utf8');
-
+var iconv = require('iconv-lite');
 
 var l_name = 'FlexForm';
 
@@ -266,6 +266,8 @@ SR.API.add('IS_UTF8', {
 			// see if we need to re-read for utf8 content
 			if (utf8) {
 				data = SR.fs.readFileSync(filepath, {encoding: 'utf8'});
+			} else {
+				data = iconv.decode(data, 'Big5');
 			}
 		} else {
 			data = undefined;
