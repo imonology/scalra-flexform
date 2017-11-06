@@ -856,7 +856,7 @@ function flexform_change_row(f_table, i, j) {
 // create a table with upload form
 // 'form': form field & data to be displayed
 // 
-var create_table = function (form, hide, write, td_style, show) {
+var create_table = function (form, hide, write, td_style, show, del) {
 	console.log('print form');
 	console.log(form);
 	if (!td_style)
@@ -1128,7 +1128,8 @@ var create_table = function (form, hide, write, td_style, show) {
 		html += '</table>';
 		if (write)
 			html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\', \''+hide+'\' '+(record_id?', \''+record_id+ '\'':'')+' )">'+(value?'確定修改':'確定送出')+'</button>';
-		
+		if (del)
+			html += '<button class="btn btn-primary" onClick="delete_field(\''+form.name+'\', \''+record_id+'\')" >刪除</button>';
 		return html;
 	}
 	
@@ -1171,6 +1172,19 @@ function show_detail(btn){
 				all_tr[i].style.display = "";
 }
 
+
+function delete_field(form_name, record_id){
+	console.log('刪除' + form_name + '的' + record_id);
+	SR.API.DELETE_FIELD({form_name:form_name, record_id: record_id}, function(err, result) {
+		if(err){
+			console.log(err);
+			return;
+		}
+		alert('刪除成功!');
+		window.location.reload();
+	});
+	
+}
 
 // 如果有upload_record_id，則是修改，若沒有則是新增
 function check_upload(form_name, hide, upload_record_id) {
@@ -1443,8 +1457,9 @@ function onSearchKeyPress (event) {
 	}
 }
 
-function statistics_flexform(form, filter, category, onDone, show) {
+function statistics_flexform(form, filter, category, onDone, show, del) {
 	// show: 避免一次顯示太多資料，在這邊定義初始時要顯示哪些資料
+	// del: 是否開啟刪除btn
 	var html = '';
 	var search = '';
 
@@ -1533,7 +1548,7 @@ function statistics_flexform(form, filter, category, onDone, show) {
 			html += 'style="border-width:1px;border-style:dashed;border-color:white;padding:3px;"  >';
 			o_form.data.values = {};
 			o_form.data.values[record_id] = values[record_id];
-			html += create_table(o_form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;'], show);
+			html += create_table(o_form, ['lng', 'lat', 'datetime'], false, ['width:20%;','text-align:left;'], show, del);
 			html += '</div>';
 			// html += '<br>';
 		}
