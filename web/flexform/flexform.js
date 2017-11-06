@@ -513,7 +513,12 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
-function flexform_to_flexform_table(form) {
+function flexform_to_flexform_table(form, option = {}) {
+	Object.assign({}, {
+		sortDesc: null, // key in object should be sorted
+		sortAsc: null // key in object should be sorted
+	}, option);
+
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
@@ -526,6 +531,15 @@ function flexform_to_flexform_table(form) {
 		temp_data['record_id'] = record_id;
 		flexform_table.data.push(temp_data);
 	}
+
+	if (!!option.sortDesc) {
+		flexform_table.data.sort((a, b) => a[option.sortDesc] > b[option.sortDesc] ? 1 : -1);
+	}
+
+	if (!!option.sortAsc) {
+		flexform_table.data.sort((a, b) => a[option.sortAsc] < b[option.sortAsc] ? 1 : -1);
+	}
+
 	return flexform_table;
 }
 
