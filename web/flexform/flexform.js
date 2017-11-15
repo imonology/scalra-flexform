@@ -513,7 +513,12 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
-function flexform_to_flexform_table(form) {
+function flexform_to_flexform_table(form, option = {}) {
+	Object.assign({}, {
+		sortDesc: null, // key in object should be sorted
+		sortAsc: null // key in object should be sorted
+	}, option);
+
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
@@ -526,6 +531,15 @@ function flexform_to_flexform_table(form) {
 		temp_data['record_id'] = record_id;
 		flexform_table.data.push(temp_data);
 	}
+
+	if (!!option.sortDesc) {
+		flexform_table.data.sort((a, b) => a[option.sortDesc] > b[option.sortDesc] ? 1 : -1);
+	}
+
+	if (!!option.sortAsc) {
+		flexform_table.data.sort((a, b) => a[option.sortAsc] < b[option.sortAsc] ? 1 : -1);
+	}
+
 	return flexform_table;
 }
 
@@ -628,11 +642,13 @@ function flexform_show_table(flexform_values, show_lines, para = {}) {
 	// para.colStyle = [{ cssKey: cssValue }]
 	para.colStyle = para.colStyle || [];
 	// para.hideTitle = true || false
-	para.hideTitle = para.hideTitle || false
+	para.hideTitle = para.hideTitle || false;
+	// para.tableName = ''
+	para.tableName = para.tableName || null;
 	var html = '';
 	var table_para = {};
 	table_para.data_num = flexform_values.data.length;
-	html += '<table id="flexform-table'+flexform_table_num+'"  border="1" class="customTable" style="table-layout: fixed;">';
+	html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
 	// field
 	if (!!para.hideTitle) {
 		html += '<tr style="display: none;"></tr><tr style="display: none;">';
@@ -676,8 +692,12 @@ function flexform_show_table(flexform_values, show_lines, para = {}) {
 	html += '</tr>';
 	
 	for (var i in flexform_values.data) {
-		if (show_lines)
-			html += '<tr '+(i>show_lines-1?'style="display: none;"':'')+'>';
+		if (show_lines) {
+			html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
+		} else {
+			html += `<tr data-recordid="${flexform_values.data[i].record_id}">`;
+		}
+
 		for (var j in flexform_values.field) 
 			html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
 		html += '</tr>';
