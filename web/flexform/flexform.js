@@ -177,10 +177,10 @@ var show_imgs = function(imgs) {
 
 var show_record = function(records) {
 	var html = '';
-	if (!records)
+	if (!records || records === 'undefined' || records.length === 0)
 		return '';
 	// var records = records.split(",");
-	
+
 	var records = JSON.parse(records);
 	
 	// for(var i in records) {
@@ -1153,11 +1153,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 		return html;
 	}
 	
-
 	// show all valid records in the form.data.values
 	for (var record_id in form.data.values) {
 		var value = form.data.values[record_id];
-		
 		html += c_table(fields, value, record_id);
 	}
 
