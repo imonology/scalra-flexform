@@ -258,10 +258,10 @@ SR.API.add('IS_UTF8', {
 		if (!exists) {
 			return onDone('file not exist!');
 		}
-		
+		// LOG.warn('開始檢測');
 		var data = SR.fs.readFileSync(filepath);
 		var utf8 = isUtf8(data);
-		
+		// LOG.warn(utf8);
 		if (args.return_data === true) {
 			// see if we need to re-read for utf8 content
 			if (utf8) {

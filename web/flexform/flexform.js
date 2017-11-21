@@ -441,8 +441,9 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 							console.log('文件不存在');
 							return;
 						}
+						// console.log('檢測結果');
 						// console.log(result);
-						if(result)
+						if(result.utf8)
 							document.getElementById(dom_id+'-encode').value = 'utf-8';
 						else
 							document.getElementById(dom_id+'-encode').value = 'big5';
@@ -455,7 +456,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 							else
 								return onDone(null, this.result);
 						});
-						if (result)
+						if (result.utf8)
 							var encode = 'utf-8';
 						else
 							var encode = 'big5';
