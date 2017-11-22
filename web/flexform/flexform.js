@@ -1212,6 +1212,8 @@ function check_upload(form_name, hide, upload_record_id) {
 			return onDone(err);
 		
 		hide =hide.split(",");
+		var err_message = '';
+		var f_dom = undefined;
 		var values = {};
 		for (var i in result_field.fields) {
 			// 檢查必填欄位
@@ -1224,9 +1226,12 @@ function check_upload(form_name, hide, upload_record_id) {
 				for (var t in hide)
 					if (hide[t] === result_field.fields[i].id) is_hide = true;
 				if (!is_hide && dom.value === '') {
-						alert(result_field.fields[i].name + ' 為必填欄位');
-						dom.focus();
-						return;
+					err_message += result_field.fields[i].name + ' 為必填欄位\n';
+					// alert(result_field.fields[i].name + ' 為必填欄位');
+					if (!f_dom)
+						f_dom = dom;
+						// dom.focus();
+					// return;
 				}
 				
 				values[result_field.fields[i].id] = dom.value;
@@ -1240,11 +1245,20 @@ function check_upload(form_name, hide, upload_record_id) {
 				var upload_id = dom.value.split(",");
 				var use_num = upload_id.length -1;
 				if (use_num > result_field.fields[i].num) {
-					alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
-					return ;
+					err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
+					// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
+					// return ;
 				}
 			}
 		}
+		
+		if (err_message.length !== 0) {
+			alert(err_message);
+			if (f_dom)
+				f_dom.focus();
+			return;
+		}
+		
 		
 		if (window.upload) // check custom funciton
 			upload(result_field, upload_record_id, values);
