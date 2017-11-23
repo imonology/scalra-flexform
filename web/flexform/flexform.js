@@ -527,7 +527,7 @@ function flexform_to_flexform_table(form, opt) {
 	flexform_table.field = [];
 	flexform_table.data = [];
 	for (var i in form.data.fields) {
-		var t = JSON.parse(JSON.stringify(form.data.fields[i]));
+		var t = SR.clone(form.data.fields[i]);
 		t['key'] = form.data.fields[i].id;
 		t['value'] = form.data.fields[i].name;
 		flexform_table.field.push(t);
@@ -819,7 +819,7 @@ function generateFieldData(oriField, showField) {
 		oriField.some(function(val, j) {
 			if (val.key === key) {
 				// fieldObj = Object.assign({}, oriField[j], { value: val.value, key: key })
-				var t = JSON.parse(JSON.stringify(oriField[j]));
+				var t = SR.clone(oriField[j]);
 				t['value'] = val.value;
 				t['key'] = key;
 				fieldObj = t;
@@ -1264,10 +1264,14 @@ function check_upload(form_name, hide, upload_record_id) {
 				var dom = document.getElementById(upload_record_id + '-' + result_field.fields[i].id);
 			else
 				var dom = document.getElementById(result_field.fields[i].id);
+			var is_hide = false;
+			for (var t in hide) 
+				if (hide[t] === result_field.fields[i].id) is_hide = true;
+			if (is_hide)
+				continue;
+			
+			
 			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
-				var is_hide = false;
-				for (var t in hide)
-					if (hide[t] === result_field.fields[i].id) is_hide = true;
 				if (!is_hide && dom.value === '') {
 					err_message += result_field.fields[i].name + ' 為必填欄位\n';
 					// alert(result_field.fields[i].name + ' 為必填欄位');
@@ -1276,7 +1280,7 @@ function check_upload(form_name, hide, upload_record_id) {
 						// dom.focus();
 					// return;
 				}
-				
+				console.log(is_hide)
 				values[result_field.fields[i].id] = dom.value;
 			} else if (result_field.fields[i].show === true) 
 				values[result_field.fields[i].id] = dom.value;
