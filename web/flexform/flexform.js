@@ -516,16 +516,23 @@ var flexform_tables_para = [];
 
 function flexform_to_flexform_table(form, opt) {
 	var option = opt || {};
-	Object.assign({}, {
-		sortDesc: null, // key in object should be sorted
-		sortAsc: null // key in object should be sorted
-	}, option);
+	// Object.assign({}, {
+	// 	sortDesc: null, // key in object should be sorted
+	// 	sortAsc: null // key in object should be sorted
+	// }, option);
+	option['sortDesc'] = null;
+	option['sortAsc'] = null;
 
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
-	for (var i in form.data.fields)
-		flexform_table.field.push(Object.assign({}, form.data.fields[i], { key: form.data.fields[i].id, value: form.data.fields[i].name }));
+	for (var i in form.data.fields) {
+		var t = JSON.parse(JSON.stringify(form.data.fields[i]));
+		t['key'] = form.data.fields[i].id;
+		t['value'] = form.data.fields[i].name;
+		flexform_table.field.push(t);
+		// flexform_table.field.push(Object.assign({}, form.data.fields[i], { key: form.data.fields[i].id, value: form.data.fields[i].name }));
+	}
 	for (var record_id in form.data.values) {
 		var temp_data = {};
 		for (var i in flexform_table.field) 
@@ -735,14 +742,20 @@ function flexform_show_vertical_table(data, opt) {
 	var option = opt || {};
 	const table_para = {};
 	table_para.data_num = data.data.length;
-	option = Object.assign({}, {
-		// default value
-		field: null, // ['field key']
-		editable: false, // ture || false
-		deletable: true, // true || false
-		reverse: false, // true || false
-		customRow: [], // ['row content (DOM string in a <tr>)']
-	}, option);
+	// option = Object.assign({}, {
+	// 	// default value
+	// 	field: null, // ['field key']
+	// 	editable: false, // ture || false
+	// 	deletable: true, // true || false
+	// 	reverse: false, // true || false
+	// 	customRow: [], // ['row content (DOM string in a <tr>)']
+	// }, option);
+	option['field'] = null;
+	option['editable'] = false;
+	option['deletable'] = true;
+	option['reverse'] = false;
+	option['customRow'] = [];
+	
 	table_para.option = option;
 	let result = '';
 	let loopData = JSON.parse(JSON.stringify(data.data));
@@ -805,7 +818,11 @@ function generateFieldData(oriField, showField) {
 		let fieldObj = { key: key, value: key };
 		oriField.some(function(val, j) {
 			if (val.key === key) {
-				fieldObj = Object.assign({}, oriField[j], { value: val.value, key: key })
+				// fieldObj = Object.assign({}, oriField[j], { value: val.value, key: key })
+				var t = JSON.parse(JSON.stringify(oriField[j]));
+				t['value'] = val.value;
+				t['key'] = key;
+				fieldObj = t;
 				return true;
 			}
 
