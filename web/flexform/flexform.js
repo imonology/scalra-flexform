@@ -514,7 +514,8 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 var flexform_table_num = 0;
 var flexform_tables_para = [];
 
-function flexform_to_flexform_table(form, option = {}) {
+function flexform_to_flexform_table(form, opt) {
+	var option = opt || {};
 	Object.assign({}, {
 		sortDesc: null, // key in object should be sorted
 		sortAsc: null // key in object should be sorted
@@ -534,17 +535,18 @@ function flexform_to_flexform_table(form, option = {}) {
 	}
 
 	if (!!option.sortDesc) {
-		flexform_table.data.sort((a, b) => a[option.sortDesc] > b[option.sortDesc] ? 1 : -1);
+		flexform_table.data.sort(function(a, b) {a[option.sortDesc] > b[option.sortDesc] ? 1 : -1});
 	}
 
 	if (!!option.sortAsc) {
-		flexform_table.data.sort((a, b) => a[option.sortAsc] < b[option.sortAsc] ? 1 : -1);
+		flexform_table.data.sort(function(a, b){ a[option.sortAsc] < b[option.sortAsc] ? 1 : -1});
 	}
 
 	return flexform_table;
 }
 
-function array_to_flexform_table(arr_data, para = {}) {
+function array_to_flexform_table(arr_data, pa) {
+	var para = pa || {};
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
@@ -639,7 +641,8 @@ function switch_sort_up_down(table_num, cell_num, obj) {
 	}
 }
 
-function flexform_show_table(flexform_values, show_lines, para = {}) {
+function flexform_show_table(flexform_values, show_lines, pa) {
+	var para = pa || {};
 	// para.colStyle = [{ cssKey: cssValue }]
 	para.colStyle = para.colStyle || [];
 	// para.hideTitle = true || false
@@ -649,7 +652,8 @@ function flexform_show_table(flexform_values, show_lines, para = {}) {
 	var html = '';
 	var table_para = {};
 	table_para.data_num = flexform_values.data.length;
-	html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
+	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="customTable" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + '>';
+	// html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
 	// field
 	if (!!para.hideTitle) {
 		html += '<tr style="display: none;"></tr><tr style="display: none;">';
@@ -679,28 +683,32 @@ function flexform_show_table(flexform_values, show_lines, para = {}) {
 		let style = '';
 		if (para.colStyle[i]) {
 			if (!para.colStyle[i].width) {
-				para.colStyle[i].width = `${width}%`
+				para.colStyle[i].width = width;
 			}
 
 			style = obj2inlineCSS(para.colStyle[i]);
 		} else {
-			style = `width: ${width}%`;
+			style = 'width: ' + width + '%';
 		}
 
-		html += `<th style="${style}" class="text-center">${content}</th>`;
+		// html += `<th style="${style}" class="text-center">${content}</th>`;
+		html += '<th style="' + style+ '" class="text-center">' + content + '</th>';
 		count ++;
 	}
 	html += '</tr>';
 	
 	for (var i in flexform_values.data) {
 		if (show_lines) {
-			html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
+			// html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
+			html += '<tr ' + ( i>show_lines-1?'style="display: none;"':'') +  'data-recordid="' + flexform_values.data[i].record_id + '">';
 		} else {
-			html += `<tr data-recordid="${flexform_values.data[i].record_id}">`;
+			// html += `<tr data-recordid="${flexform_values.data[i].record_id}">`;
+			html += '<tr data-recordid="' + flexform_values.data[i].record_id + '">';
 		}
 
 		for (var j in flexform_values.field) 
-			html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+			html += '<td style="' + obj2inlineCSS(para.colStyle[j]) + '">' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+			// html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
 		html += '</tr>';
 	}
 	
@@ -718,12 +726,13 @@ function flexform_show_table(flexform_values, show_lines, para = {}) {
 function obj2inlineCSS(obj) {
 	if (!obj) return '';
 
-	return Object.keys(obj).reduce((result, key) => {
-		return result + `${key}: ${obj[key]}; `;
+	return Object.keys(obj).reduce(function(result, key) {
+		return result + key + ': ' + obj[key] + '; ';
 	}, '');
 }
 
-function flexform_show_vertical_table(data, option = {}) {
+function flexform_show_vertical_table(data, opt) {
+	var option = opt || {};
 	const table_para = {};
 	table_para.data_num = data.data.length;
 	option = Object.assign({}, {
@@ -738,8 +747,9 @@ function flexform_show_vertical_table(data, option = {}) {
 	let result = '';
 	let loopData = JSON.parse(JSON.stringify(data.data));
 	!!option.reverse && loopData.reverse();
-	loopData.forEach((val, i) => {
-		result += `<table id="flexform-table${flexform_table_num}" data-recordid="${loopData[i].record_id}" border="1" class="customTable" style="table-layout: fixed;">`;
+	loopData.forEach(function(val, i) {
+		// result += `<table id="flexform-table${flexform_table_num}" data-recordid="${loopData[i].record_id}" border="1" class="customTable" style="table-layout: fixed;">`;
+		result += '<table id="flexform-table' + flexform_table_num + '" data-recordid="' + loopData[i].record_id + '" border="1" class="customTable" style="table-layout: fixed;">';
 
 		let fieldArr = [];
 		if (!(!!option.field && option.field.length > 0)) {
@@ -748,28 +758,39 @@ function flexform_show_vertical_table(data, option = {}) {
 			fieldArr = generateFieldData(data.field, option.field);
 		}
 
-		fieldArr.forEach((f, j) => {
+		fieldArr.forEach(function(f, j) {
 			result += '<tr>';
-			result += `<th style="width: 150px; text-align: center">${f.value || f.key}</th>`;
-			result += `<td style="text-align: left">${formatValue(loopData[i], f, option.editable && f.editable)}</td>`;
+			// result += `<th style="width: 150px; text-align: center">${f.value || f.key}</th>`;
+			result += '<th style="width: 150px; text-align: center">' + (f.value || f.key) + '</th>';
+			// result += `<td style="text-align: left">${formatValue(loopData[i], f, option.editable && f.editable)}</td>`;
+			result += '<td style="text-align: left">' + formatValue(loopData[i], f, option.editable && f.editable) + '</td>';
 			result += '</tr>';
 		});
 
 		if (option.editable) {
-			result += `
-				<tr>
-					<td colspan="2">
-						<button class="btn-editFlexform" data-recordid="${loopData[i].record_id}">修改</button>${' '}
-						${ option.deletable &&
-							`<button class="btn-delFlexform" data-recordid="${loopData[i].record_id}">刪除</button>` || ''
-						}
-					</td>
-				</tr>
-			`
+			// result += `
+			// 	<tr>
+			// 		<td colspan="2">
+			// 			<button class="btn-editFlexform" data-recordid="${loopData[i].record_id}">修改</button>${' '}
+			// 			${ option.deletable &&
+			// 				`<button class="btn-delFlexform" data-recordid="${loopData[i].record_id}">刪除</button>` || ''
+			// 			}
+			// 		</td>
+			// 	</tr>
+			// `
+			result += 
+				'<tr>' + 
+					'<td colspan="2">' +
+						'<button class="btn-editFlexform" data-recordid="' + loopData[i].record_id + '">修改</button> ' +
+						( option.deletable ? '<button class="btn-delFlexform" data-recordid="' + loopData[i].record_id + '">刪除</button>' : '') +
+					'</td>' +
+				'</tr>'
+			
 		}
 
-		option.customRow.forEach((val, j) => {
-			result += `<tr>${val.replace(/%record_id%/g, loopData[i].record_id)}</tr>`;
+		option.customRow.forEach(function(val, j) {
+			// result += `<tr>${val.replace(/%record_id%/g, loopData[i].record_id)}</tr>`;
+			result += '<tr>' + val.replace(/%record_id%/g, loopData[i].record_id) + '</tr>';
 		});
 
 		result += '</table>';
@@ -780,11 +801,11 @@ function flexform_show_vertical_table(data, option = {}) {
 }
 
 function generateFieldData(oriField, showField) {
-	return showField.map((key, i) => {
-		let fieldObj = { key, value: key };
-		oriField.some((val, j) => {
+	return showField.map(function(key, i) {
+		let fieldObj = { key: key, value: key };
+		oriField.some(function(val, j) {
 			if (val.key === key) {
-				fieldObj = Object.assign({}, oriField[j], { value: val.value, key })
+				fieldObj = Object.assign({}, oriField[j], { value: val.value, key: key })
 				return true;
 			}
 
@@ -803,20 +824,25 @@ function formatValue(data, fieldData, editable) {
 			case 'timestamp': 
 				return moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm');
 			case 'textarea':
-				return `<pre>${data[fieldData.key]}</pre>`;
+				return '<pre>' + data[fieldData.key] + '</pre>';
+				// return `<pre>${data[fieldData.key]}</pre>`;
 			default:
 				return data[fieldData.key];
 		}
 	} else {
 		switch (fieldData.type) {
 			case 'boolean':
-				return `<input class="input-${fieldData.key}" type="checkbox" ${!!data[fieldData.key] === true ? 'checked' : ''} /><label>　</label>`;
+				return '<input class="input-' + fieldData.key + '" type="checkbox" ' + (!!data[fieldData.key] === true ? 'checked' : '' )+' /><label>　</label>';
+				// return `<input class="input-${fieldData.key}" type="checkbox" ${!!data[fieldData.key] === true ? 'checked' : ''} /><label>　</label>`;
 			case 'timestamp': 
-				return `<input class="input-${fieldData.key}" type="text" value="${moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm')}">`;
+				return '<input class="input-' + fieldData.key + '" type="text" value="' + moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm') + '">';
+				// return `<input class="input-${fieldData.key}" type="text" value="${moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm')}">`;
 			case 'textarea':
-				return `<textarea class="input-${fieldData.key}">${data[fieldData.key]}</textarea>`;
+				return '<textarea class="input-' + fieldData.key + '">' + data[fieldData.key] + '</textarea>';
+				// return `<textarea class="input-${fieldData.key}">${data[fieldData.key]}</textarea>`;
 			default:
-				return `<input class="input-${fieldData.key}" type="text" value="${data[fieldData.key]}" />`;
+				return '<input class="input-' + fieldData.key + '" type="text" value="' + data[fieldData.key] + '" />';
+				// return `<input class="input-${fieldData.key}" type="text" value="${data[fieldData.key]}" />`;
 		}
 	}
 }
