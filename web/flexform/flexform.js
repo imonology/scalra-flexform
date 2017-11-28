@@ -274,7 +274,8 @@ var onRecordUploaded = function(err, record_filenames, dom_id, original_filename
 		if (document.getElementById(dom_id).value.length === 0)
 			var files = [];
 		else {
-
+			console.log(dom_id);
+			console.log(document.getElementById(dom_id).value);
 			var files = JSON.parse(document.getElementById(dom_id).value);
 		}
 		for (var i in record_filenames)
@@ -978,11 +979,12 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						if (save_value.length !== 0) {
 							var new_value = save_value.replace(/\"/g, "'");
 							// console.log(new_value.replace(/\"/g, "'"));
+						} else{
+							var new_value = '';
 						}
-							
+						
 						console.log('new_value')
 						console.log(new_value);
-						
 						
 						html += '<input type="hidden" value="'+new_value+'" id="' + save_id + '">';
 						console.log('save_value = ')
