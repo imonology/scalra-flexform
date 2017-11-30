@@ -1149,6 +1149,22 @@ SR.API.add('UPDATE_FORM', {
 	var parent_record_id = args.record_id;
 	delete args['record_id'];
 	var jq = SR.JobQueue.createQueue();
+	
+	
+	for (var j in form.data.fields) {
+		var id = form.data.fields[j].id;
+		if (typeof(form.data.fields[j].unit)!=='undefined' ) {
+			if (form.data.fields[j].unit==='true') {
+				for (var temp_record_id in form.data.values) 
+					for (var i=0; i < value_array.length; i++) {
+						if (form.data.values[temp_record_id][id] === value_array[i][id])
+							return onDone(id + ' is unit value');
+					}
+			}
+		}
+	}
+	
+	
 	// store each with unique record_id
 	for (var i=0; i < value_array.length; i++) {
 
@@ -1196,6 +1212,7 @@ SR.API.add('UPDATE_FORM', {
 		// LOG.warn(value_array[i]);
 		// LOG.warn(form.data.fields);
 		for (var j in form.data.fields) {
+
 			if (typeof(form.data.fields[j].default)!=='undefined') {
 				LOG.warn(form.data.fields[j].id + '為default');
 				if (!value_array[i][form.data.fields[j].id]) {
