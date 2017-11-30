@@ -959,7 +959,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			
 			// display field name
 			
-			html += '<td style="'+(td_style?td_style[0]:'')+'">' + fields[i].name + (fields[i].must ? '*' : '') +  '</td>';
+			html += '<td style="'+(td_style?td_style[0]:'')+' ; vertical-align:middle;">' + fields[i].name + (fields[i].must ? '*' : '') +  '</td>';
 			
 			// show field content
 			html += '<td style="'+(td_style?td_style[1]:'')+'">';
