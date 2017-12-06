@@ -512,6 +512,7 @@ SR.API.add('QUERY_FORM', {
 	show_unchecked: '+object',	// only show if specified checkboxes are unchecked
 	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
 	end_date:	'+string',
+	record_id:	'+string',		// query for specific record_id
 	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
 }, function (args, onDone) {
 	if (args.already_form)
@@ -588,6 +589,9 @@ SR.API.add('QUERY_FORM', {
 		var record = full_values[id];
 		var matched = true;
 		
+		if (args.record_id && args.record_id != id) {
+			continue;
+		}
 		// ignore rows where the fields do not match
 		if (args.query || args.select_time) {
 			
@@ -1154,7 +1158,7 @@ SR.API.add('UPDATE_FORM', {
 	for (var j in form.data.fields) {
 		var id = form.data.fields[j].id;
 		if (typeof(form.data.fields[j].unit)!=='undefined' ) {
-			if (form.data.fields[j].unit==='true') {
+			if (form.data.fields[j].unit) {
 				for (var temp_record_id in form.data.values) 
 					for (var i=0; i < value_array.length; i++) {
 						if (form.data.values[temp_record_id][id] === value_array[i][id])

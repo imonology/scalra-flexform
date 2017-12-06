@@ -344,7 +344,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	
 	console.log('formData = ');
 	console.log(formData);
-	
+	formData['__proto__']['test'] = 'ssss';
 	var filename;
 	// console.log('傳入的 ' + dom_id);
 	console.log('upload_id = ' + upload_id);
@@ -411,8 +411,9 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	}
 	
 	console.log(upload_url + '/upload');
-
+	
 	$.ajax({
+
 		url: upload_url + '/upload',
 		type: 'POST',
 		data: formData,
