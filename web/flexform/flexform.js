@@ -1168,8 +1168,15 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						if (save_value)
 							value_list = [save_value];
 						html += '<select id="' + save_id + '">';
+						var lock_show = getParameterByName(fields[i].id + '-show')
+						if (lock_show)
+							lock_show = lock_show.split(',');
+						else
+							lock_show = value_list;
+
+						// var lock_show = lock_show.split(',');
 						for (var j=0; j < value_list.length; j++) {	
-							html += '<option value="' + value_list[j] + '" >' + value_list[j] + '</option>';
+							html += '<option value="' + value_list[j] + '" >' + lock_show[j] + '</option>';
 						}
 						html += '</select>';
 					} else {
