@@ -410,11 +410,14 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 		return;
 	}
 	
-	console.log(upload_url + '/upload');
-	
+	var xProgressID = SR.getGUID();
+	// console.log(upload_url + '/do_upload?X-Progress-ID=' + xProgressID);
+	// console.log(upload_url + '/new_upload')
+	// console.log('使用new_upload')
 	$.ajax({
 
-		url: upload_url + '/upload',
+		// url: upload_url + '/do_upload?X-Progress-ID=' + xProgressID,
+		url:	upload_url + '/upload',
 		type: 'POST',
 		data: formData,
 //		async: false,
@@ -507,10 +510,48 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 				return;
 			}
 		},
+// 		xhr: function() {
+// 			// create an XMLHttpRequest
+// 			var xhr = new XMLHttpRequest();
+
+// 			// listen to the 'progress' event
+// 			xhr.upload.addEventListener('progress', function(evt) {
+
+// 			  if (evt.lengthComputable) {
+// 				// calculate the percentage of upload completed
+// 				var percentComplete = evt.loaded / evt.total;
+// 				percentComplete = parseInt(percentComplete * 100);
+				  
+// 				console.log(percentComplete)
+// // 				// update the Bootstrap progress bar with the new percentage
+// // 				$('.progress-bar').text(percentComplete + '%');
+// // 				$('.progress-bar').width(percentComplete + '%');
+
+// // 				// once the upload reaches 100%, set the progress bar text to done
+// // 				if (percentComplete === 100) {
+// // 				  $('.progress-bar').html('Done');
+// // 				}
+
+// 			  }
+
+// 			}, false);
+
+// 			return xhr;
+// 		},
 		error: function() {
 			$("#spanMessage").html("failure to connect to server");
 		}
 	});
+
+	// var uploadIntervalID = setInterval(function(){
+	// 	$.get('/progress?X-Progress-ID=' + xProgressID, function(data){
+	// 		if(data.status === 'done'){
+	// 			clearInterval(uploadIntervalID);
+	// 		}
+	// 		updateViewUploadStatus(data);
+	// 	}).error(function(){clearInterval(uploadIntervalID)});
+	// }, 250);
+	
 }
 
 var flexform_table_num = 0;
@@ -922,6 +963,7 @@ function flexform_change_row(f_table, i, j) {
 // create a table with upload form
 // 'form': form field & data to be displayed
 // 
+// td_style: can custom set td style(可以客製化設定每個td的style)
 var create_table = function (form, hide, write, td_style, show, del) {
 	console.log('print form');
 	console.log(form);
@@ -1164,6 +1206,8 @@ var create_table = function (form, hide, write, td_style, show, del) {
 				case 'lock':
 					if (write) {
 						var lock_value = getParameterByName(fields[i].id);
+						// console.log(fields[i].id)
+						// console.log(lock_value)
 						var value_list = lock_value.split(',');
 						if (save_value)
 							value_list = [save_value];
