@@ -115,7 +115,8 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 		console.error('cannot find fields info for [' + form_id + ']');
 		return undefined;
 	}
-	
+	console.log('印出form內容')
+	console.log(form_data[form_id])
 	// field name/info
 	var fields = form_data[form_id].fields;
 	var hide = form_data[form_id].hide;
@@ -220,6 +221,23 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 				html += create_img_dev(entry_id + '-' + fields[i].id, imgs[ii]);
 			html += '</div>';
 			
+		} else if (fields[i].type === 'record') {
+			var num = (fields[i].num ? fields[i].num : 5);
+			// var value = values_data.replace(/\"/g, "&quot;");
+			
+			html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadRecord">';
+			html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
+			html += '<input type="file" name="upload" id="inputRecord" multiple="multiple">';
+			html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+entry_id + '-' + fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \''+entry_id + '-' + fields[i].id+'\', \''+form_data[form_id].name+'\', \''+fields[i].id+'\' )">Upload</button>';
+			
+			html += '<div id="show_upload_record">';
+			if (values_data.length !== 0) {
+
+				var files = JSON.parse(values_data);
+				for (var ii in files) 
+					html += create_record_dev(entry_id + '-' + fields[i].id , files[ii].filename, files[ii].filetitle);
+			}
+			html += '</div>';
 		} else if (fields[i].type === 'autocomplete') {
 			var value = values_data.replace(/\"/g, "&quot;");
 			html += '<input type="text" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">';

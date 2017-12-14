@@ -965,6 +965,7 @@ function flexform_change_row(f_table, i, j) {
 // 
 // td_style: can custom set td style(可以客製化設定每個td的style)
 var create_table = function (form, hide, write, td_style, show, del) {
+	console.log('呼叫create_table')
 	console.log('print form');
 	console.log(form);
 	if (!td_style)
@@ -1035,6 +1036,8 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '<div id="'+save_id+'-show_upload_record">';
 						if (save_value.length !== 0) {
 							var files = JSON.parse(save_value);
+							console.log('印出這邊的file');
+							console.log(files);
 							for (var i in files) 
 								html += create_record_dev(save_id , files[i].filename, files[i].filetitle);
 						}
