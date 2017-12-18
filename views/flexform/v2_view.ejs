@@ -1,0 +1,38 @@
+<% layout('template/common') %>
+<% block('title').append('<title>List</title>') %>
+
+<script>
+var form_name = '<%=form.name%>';
+var hide = '<%=form.hide%>'.split(',');;
+var onConnect = function () {
+	init_html(function(err, html){
+		document.getElementById('data').innerHTML = html;	
+	});
+}
+
+function init_html(onDone) {
+	var html = '';
+	SR.API.QUERY_FORM( {name:form_name}, function (err, form) {
+		if (err) {
+			console.log('error');
+			return 	onDone(null, html);
+		}
+		
+		for(var record in form.data.values) {
+			var f = SR.clone(form);
+			f.data.values = {};
+			f.data.values[record] = form.data.values[record];
+			
+			html += create_table(f, []);
+			html += '<br>'
+		}
+		
+		return 	onDone(null, html);
+	});
+}
+</script>
+			
+<section id="three" class="wrapper style2 special">
+	<div id="data"></div>
+</section>
+

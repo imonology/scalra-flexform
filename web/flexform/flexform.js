@@ -965,9 +965,7 @@ function flexform_change_row(f_table, i, j) {
 // 
 // td_style: can custom set td style(可以客製化設定每個td的style)
 var create_table = function (form, hide, write, td_style, show, del) {
-	console.log('呼叫create_table')
-	console.log('print form');
-	console.log(form);
+	var hide = (hide ? hide : []);
 	if (!td_style)
 		td_style =  ['width:20%;','text-align:left;'];
 	var html = '';
