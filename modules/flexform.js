@@ -1922,7 +1922,72 @@ SR.API.add('QUERY_AUTOCOMPLETE', {
 	});
 });
 
+SR.API.add('flexform_to_flexform_table', {
+	_direct: 	true,
+	form:		'object',
+	opt:		'+object',
+}, function (args, onDone) {
+	var option = args.opt || {};
+	var form = args.form;
+	// Object.assign({}, {
+	// 	sortDesc: null, // key in object should be sorted
+	// 	sortAsc: null // key in object should be sorted
+	// }, option);
+	option['sortDesc'] = null;
+	option['sortAsc'] = null;
 
+	var flexform_table = {};
+	flexform_table.field = [];
+	flexform_table.data = [];
+	for (var i in form.data.fields) {
+		var t = JSON.parse(JSON.stringify(form.data.fields[i]));
+		// var t = SR.clone(form.data.fields[i]);
+		t['key'] = form.data.fields[i].id;
+		t['value'] = form.data.fields[i].name;
+		flexform_table.field.push(t);
+		// flexform_table.field.push(Object.assign({}, form.data.fields[i], { key: form.data.fields[i].id, value: form.data.fields[i].name }));
+	}
+	for (var record_id in form.data.values) {
+		var temp_data = {};
+		for (var i in flexform_table.field) 
+			temp_data[flexform_table.field[i].key] = form.data.values[record_id][flexform_table.field[i].key];
+		temp_data['record_id'] = record_id;
+		flexform_table.data.push(temp_data);
+	}
+
+	if (!!option.sortDesc) {
+		flexform_table.data.sort(function(a, b) {a[option.sortDesc] > b[option.sortDesc] ? 1 : -1});
+	}
+
+	if (!!option.sortAsc) {
+		flexform_table.data.sort(function(a, b){ a[option.sortAsc] < b[option.sortAsc] ? 1 : -1});
+	}
+
+	return flexform_table;
+});
+
+SR.API.add('flexform_table_add_field', { // flexform_table_add_field(0, flex_form, {key:'new_f', value: '新的欄位'}, ['a','b'])
+	_direct: 			true,
+	insert_num:			'int',
+	flexform_table:		'object',
+	field:				'object',
+	datas:				'array'
+}, function (args, onDone) {
+	// insert_num: 插入的位置
+	// flexform_table: 需插入的flexform_table
+	// field: 插入的欄位，須包含key和value
+	// datas: 寫入原先已有的data，需和現在data數量相同的array
+	var insert_num = args.insert_num;
+	var flexform_table = args.flexform_table;
+	var field = args.field;
+	var datas = args.datas;
+	if (datas.length !== flexform_table.data.length)
+		return flexform_table;
+	flexform_table.field.splice(insert_num, 0, field);
+	for (var i in datas)
+		flexform_table.data[i][field.key] = datas[i];
+	return flexform_table;
+});
 
 SR.Callback.onStart(function () {
 	// make sure /web/images directory exists

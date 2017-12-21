@@ -692,6 +692,8 @@ function switch_sort_up_down(table_num, cell_num, obj) {
 }
 
 function flexform_show_table(flexform_values, show_lines, pa) {
+	// console.log('flexform_values = ');
+	// console.log(flexform_values);
 	var para = pa || {};
 	// para.colStyle = [{ cssKey: cssValue }]
 	para.colStyle = para.colStyle || [];
