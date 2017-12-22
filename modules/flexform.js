@@ -1989,7 +1989,28 @@ SR.API.add('flexform_table_add_field', { // flexform_table_add_field(0, flex_for
 	return flexform_table;
 });
 
+SR.API.add('substitute_value', { 
+	_direct: 			true,
+	target_form:		'string',
+	target:				'string',
+	target_value:		'string',
+	value:				'array'
+}, function (args, onDone) {
+	var form = l_get(args.id, args.target_form);
+	var new_value = []
+	for (var i in args.value)
+		for (var record_id in form.data.values) 
+			if (args.value[i] === form.data.values[record_id][args.target]) {
+				args.value[i] = form.data.values[record_id][args.target_value];
+				new_value.push(form.data.values[record_id][args.target_value]);
+				break;
+			}
+	return new_value;
+});
+
 SR.Callback.onStart(function () {
 	// make sure /web/images directory exists
 	UTIL.validatePath(SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images'));
 })
+
+

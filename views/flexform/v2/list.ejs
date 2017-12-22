@@ -1,7 +1,7 @@
 <% layout('template/common') %>
-<% block('title').append('<title>課程管理</title>') %>
-
+<% block('title').append('<title>'+(typeof(para.title)!=='undefined' ? para.title : 'List')+'</title>') %>
 	
+<script>
 <%
 SR.API.QUERY_FORM(para.form_query, function (err, data) {
 	if (err) {
@@ -9,51 +9,62 @@ SR.API.QUERY_FORM(para.form_query, function (err, data) {
 		return ;
 	}
 	var flextable_data = SR.API.flexform_to_flexform_table({form: data});
-	for (var i in hide) 
+	var substitute_data = [];
+	
+	
+	for (var i in para.add_field) {
+		var position = (typeof(para.add_field[i].position) !== 'undefined' ? para.add_field[i].position : flextable_data.field.length);
+		if (para.add_field[i].type === 'button') {
+			var add_value = [];
+			for (var j in flextable_data.data) {
+				var temp = '<button id="'+para.add_field[i].btn_id+'" class="btn btn-primary" onClick="'+para.add_field[i].func_name+'(';
+				var first = true;
+				for (var k in para.add_field[i].value) {
+					if (first) 
+						first = false;
+					else
+						temp += ', ';
+						
+					temp += '\''+ flextable_data.data[i][para.add_field[i].value[k]] +'\'';
+				}
+				temp += ')">'+para.add_field[i].field_name+'</button>';
+				add_value.push(temp);
+			}
+			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {key: para.add_field[i].func_name, value: para.add_field[i].field_name}, datas : add_value});
+		} else if (para.add_field[i].type === 'substitute') {
+			
+			var temp_substitute_data = {target_form : para.add_field[i].target_form, target: para.add_field[i].target, target_value: para.add_field[i].target_value};
+			var value = [];
+			for (var j in flextable_data.data) 
+				value.push(flextable_data.data[j][para.add_field[i].from]);
+			temp_substitute_data['value'] = value;
+			substitute_data.push(temp_substitute_data);
+			var add_value = SR.API.substitute_value(temp_substitute_data);
+			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {key: 'add_field_' + i, value: para.add_field[i].field_name}, datas : add_value});
+		}
+	}
+	
+	for (var i in para.hide) 
 		for (var j in flextable_data.field)
-			if (hide[i] === flextable_data.field[j].id) {
+			if (para.hide[i] === flextable_data.field[j].id) {
 				flextable_data.field.splice(j, 1);
 				break;
 			}
-	for (var i in para.add_field) 
-		if (para.add_field[i].type === 'button') {
-			var position = (para.add_field[i].position ? para.add_field[i].position : flextable_data.field.length);
-			var add_value = [];
-			// for (var j in flextable_data.data) {
-			// 	// var temp = '<button id="'+para.add_field[i].btn_id+'" class="btn btn-primary" onClick="'+para.add_field[i].func_name+'(';
-			// 	// var first = true;
-			// 	// for (var k in para.add_field[i].value) {
-			// 	// 	if (first) {
-			// 	// 		temp += ', ';
-			// 	// 		first = false;
-			// 	// 	}
-			// 	// 	temp += '\''+ flextable_data.data[i][para.add_field[i].value[k]] +'\'';
-			// 	// }
-			// 	// temp += ')">'+para.add_field[i].field_name+'</button>';
-			// 	// add_value.push(temp);
-			// }
-		}
-	
-	
-});
-%>
-	
-<script>
-<% var f = encodeURIComponent(JSON.stringify(flextable_data)); %>
-var flextable_data = JSON.parse(decodeURIComponent("<%-f %>"));
-
-<% var f2 = encodeURIComponent(JSON.stringify(para)); %>
-var para = JSON.parse(decodeURIComponent("<%-f2 %>"));
+	var f = encodeURIComponent(JSON.stringify(flextable_data));
+	%>
+	var flextable_data = JSON.parse(decodeURIComponent("<%-f %>"));
+<% }); %>
 	
 var onConnect = function () {
-	console.log(para)
 	init_html();
 }
 
 var init_html = function() {
 	var html = '';
-
 	html += flexform_show_table( flextable_data ) ;
+	<% if (typeof(para.add_btn) !== 'undefined') { %>
+		html = '<input type="button" value="<%=para.add_btn.btn_value%>" onclick="<%=para.add_btn.func_name%>()">' + html; 
+	<% } %> 
 	document.getElementById('table_area').innerHTML = html;
 }
 
