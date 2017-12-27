@@ -1161,7 +1161,7 @@ SR.API.add('UPDATE_FORM', {
 			if (form.data.fields[j].unit) {
 				for (var temp_record_id in form.data.values) 
 					for (var i=0; i < value_array.length; i++) {
-						if (form.data.values[temp_record_id][id] === value_array[i][id])
+						if (form.data.values[temp_record_id][id] === value_array[i][id] && (typeof(value_array[i]['_record_id']) === 'undefined' || value_array[i]['_record_id'] !== temp_record_id))
 							return onDone(id + ' is unit value');
 					}
 			}

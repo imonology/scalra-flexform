@@ -1194,7 +1194,12 @@ var create_table = function (form, hide, write, td_style, show, del) {
 					break;
 				case 'choice':
 					if (write) {
-						var options = fields[i].option.split(',');
+						console.log('fields[i] = ')
+						console.log(fields[i])
+						if (typeof(fields[i].option) === 'object')
+							var options = fields[i].option;
+						else if (typeof(fields[i].option) !== 'undefined')
+							var options = fields[i].option.split(',');
 
 						html += '<select id="'+ save_id + '">';
 						for (var j=0; j < options.length; j++) {
@@ -1209,7 +1214,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 				case 'lock':
 					if (write) {
 						var lock_value = getParameterByName(fields[i].id);
-						// console.log(fields[i].id)
+						console.log(fields[i].id)
 						// console.log(lock_value)
 						var value_list = lock_value.split(',');
 						if (save_value)

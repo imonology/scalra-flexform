@@ -187,6 +187,8 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			//}
 			
 			// pull-down version
+			// console.log('options = ');
+			// console.log(options);
 			html += '<select id="' + entry_id + '-' + fields[i].id + '">';
 			for (var j=0; j < options.length; j++) {
 				var checked = (options[j] === values_data);			
