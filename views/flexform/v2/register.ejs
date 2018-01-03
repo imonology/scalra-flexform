@@ -1,0 +1,63 @@
+<% layout('template/common') %>
+<% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
+		
+<script>
+
+<%
+var form = {
+	name: add_form_name,
+	data: {
+		fields: add,
+		values: {}
+	},
+	
+};
+form.data.fields.push({id: 'email', name: 'E-mail', type: 'email', desc: '填寫您的E-mail', must: true, show: true, option: undefined});
+form.data.fields.push({id: 'account', name: '帳號', type: 'account', desc: '帳號', must: true, show: true, option: undefined});
+form.data.fields.push({id: 'password', name: '密碼', type: 'password', desc: '密碼', must: true, show: true, option: undefined});
+form.data.fields.push({id: 'confirm_password', name: '確認密碼', type: 'password', desc: '請再輸入一次密碼', must: true, show: true, option: undefined});
+var f = encodeURIComponent(JSON.stringify(form));
+
+%>
+var form = JSON.parse(decodeURIComponent("<%-f %>")); 
+	
+	
+var onConnect = function () {
+	console.log(form);
+	init_html(function(err, html){
+		document.getElementById('sub_title').innerHTML = '<%=(typeof(s_title)!=='undefined')?s_title:'基本資料'%>';
+		document.getElementById('data').innerHTML = html;	
+	});
+}
+
+function init_html(onDone) {
+	var html = '';
+	html += create_table(form, [], true);
+	return onDone(null, html);
+}
+
+function check_password() {
+	if (document.getElementById('password').value !== document.getElementById('confirm_password').value) 
+		return false;
+	return true;
+}
+
+function upload() {
+	if (!check_password()) {
+		alert('輸入的密碼不一緻！');
+		return;
+	}
+	flexform_register({
+		account: document.getElementById('account').value, 
+		email: document.getElementById('email').value, 
+		password: document.getElementById('password').value
+	}, (window.flexform_resgister_done ? flexform_resgister_done : null));
+}
+
+</script>
+			
+<section id="three" class="wrapper style2 special">
+	<h2 id='sub_title'></h2>
+	<div id="data"></div>
+</section>
+

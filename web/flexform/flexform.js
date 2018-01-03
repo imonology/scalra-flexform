@@ -966,6 +966,7 @@ function flexform_change_row(f_table, i, j) {
 // 'form': form field & data to be displayed
 // 
 // td_style: can custom set td style(可以客製化設定每個td的style)
+var form_data = undefined;
 var create_table = function (form, hide, write, td_style, show, del) {
 	var hide = (hide ? hide : []);
 	if (!td_style)
@@ -1007,7 +1008,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			
 			// show field content
 			html += '<td style="'+(td_style?td_style[1]:'')+'">';
-			
+
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
 				case 'record':
@@ -1036,8 +1037,6 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '<div id="'+save_id+'-show_upload_record">';
 						if (save_value.length !== 0) {
 							var files = JSON.parse(save_value);
-							console.log('印出這邊的file');
-							console.log(files);
 							for (var i in files) 
 								html += create_record_dev(save_id , files[i].filename, files[i].filetitle);
 						}
@@ -1133,8 +1132,6 @@ var create_table = function (form, hide, write, td_style, show, del) {
 								var ans = [];
 								// console.log('找到的r_form');
 								// console.log(r_form);
-								console.log('multiple型別');
-								console.log(typeof(result.multiple));
 								var r_form = result.form;
 								function haveSame(arr, str) {
 									for (var i in arr)
@@ -1236,6 +1233,13 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += value[fields[i].id];
 					}
 					break;
+				case 'password':
+					if (write) {
+						html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';					
+					} else {
+						html += value[fields[i].id];
+					}
+					break;
 				default:
 					if (write) {
 						html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
@@ -1252,8 +1256,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 		if (show)
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
 		html += '</table>';
+		form_data = form.data;
 		if (write)
-			html += '<button class="btn btn-primary" onClick="check_upload(\''+form.name+'\', \''+hide+'\' '+(record_id?', \''+record_id+ '\'':'')+' )">'+(value?'確定修改':'確定送出')+'</button>';
+			html += '<button class="btn btn-primary" onClick="check_upload(\''+hide+'\' '+(record_id?', \''+record_id+ '\'':'')+' )">'+(value?'確定修改':'確定送出')+'</button>';
 		if (del)
 			html += '<button class="btn btn-primary" onClick="delete_field(\''+form.name+'\', \''+record_id+'\')" >刪除</button>';
 		return html;
@@ -1310,73 +1315,91 @@ function delete_field(form_name, record_id){
 	
 }
 
+var l_validateEmail = function (email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}
+
+var l_validateAccount = function (account) {
+    var re = /^\w+$/;
+    return re.test(account);
+}
+
 // 如果有upload_record_id，則是修改，若沒有則是新增
-function check_upload(form_name, hide, upload_record_id) {
-	SR.API.GET_FORM_FIELDS({name: form_name}, function (err, result_field) {
-		if (err)
-			return onDone(err);
-		
-		hide =hide.split(",");
-		var err_message = '';
-		var f_dom = undefined;
-		var values = {};
-		for (var i in result_field.fields) {
-			// 檢查必填欄位
-			if (upload_record_id)
-				var dom = document.getElementById(upload_record_id + '-' + result_field.fields[i].id);
-			else
-				var dom = document.getElementById(result_field.fields[i].id);
-			var is_hide = false;
-			for (var t in hide) 
-				if (hide[t] === result_field.fields[i].id) is_hide = true;
-			if (is_hide)
-				continue;
-			
-			
-			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
-				if (!is_hide && dom.value === '') {
-					err_message += result_field.fields[i].name + ' 為必填欄位\n';
-					// alert(result_field.fields[i].name + ' 為必填欄位');
-					if (!f_dom)
-						f_dom = dom;
-						// dom.focus();
-					// return;
-				}
-				console.log(is_hide)
-				values[result_field.fields[i].id] = dom.value;
-			} else if (result_field.fields[i].show === true) 
-				values[result_field.fields[i].id] = dom.value;
-			
-				
-			
-			// 檢查上傳數量
-			if (result_field.fields[i].num) {
-				var upload_id = dom.value.split(",");
-				var use_num = upload_id.length -1;
-				if (use_num > result_field.fields[i].num) {
-					err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
-					// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
-					// return ;
-				}
+function check_upload(hide, upload_record_id) {
+	var result_field = form_data;
+	hide = hide.split(",");
+	var err_message = '';
+	var f_dom = undefined;
+	var values = {};
+	for (var i in result_field.fields) {
+		// 檢查必填欄位
+		if (upload_record_id)
+			var dom = document.getElementById(upload_record_id + '-' + result_field.fields[i].id);
+		else
+			var dom = document.getElementById(result_field.fields[i].id);
+		var is_hide = false;
+		for (var t in hide) 
+			if (hide[t] === result_field.fields[i].id) is_hide = true;
+		if (is_hide)
+			continue;
+
+		if (!dom)
+			continue;
+		if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
+			if (!is_hide && dom.value === '') {
+				err_message += result_field.fields[i].name + ' 為必填欄位\n';
+				// alert(result_field.fields[i].name + ' 為必填欄位');
+				if (!f_dom)
+					f_dom = dom;
+					// dom.focus();
+				// return;
+			}
+			console.log(is_hide)
+			values[result_field.fields[i].id] = dom.value;
+		} else if (result_field.fields[i].show === true) 
+			values[result_field.fields[i].id] = dom.value;
+		if (result_field.fields[i].type === 'email' && dom.value !== '') {
+			if (!l_validateEmail(dom.value)){
+				err_message += result_field.fields[i].name + ' 格式錯誤，需為E-mail格式!\n';
+				if (!f_dom)
+					f_dom = dom;
+			}
+		} 
+		if (result_field.fields[i].type === 'account' && dom.value !== '') {
+			if (!l_validateAccount(dom.value)) {
+				err_message += result_field.fields[i].name + ' 格式錯誤\n';
+				if (!f_dom)
+					f_dom = dom;
+			}
+		}
+
+
+		// 檢查上傳數量
+		if (result_field.fields[i].num) {
+			var upload_id = dom.value.split(",");
+			var use_num = upload_id.length -1;
+			if (use_num > result_field.fields[i].num) {
+				err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
+				// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
+				// return ;
 			}
 		}
 		
-		if (err_message.length !== 0) {
-			alert(err_message);
-			if (f_dom)
-				f_dom.focus();
-			return;
-		}
 		
-		
-		if (window.upload) // check custom funciton
-			upload(result_field, upload_record_id, values);
-		else
-			default_upload(result_field, upload_record_id, values);
-		
-		
-	});
-	
+	}
+
+	if (err_message.length !== 0) {
+		alert(err_message);
+		if (f_dom)
+			f_dom.focus();
+		return;
+	}
+
+	if (window.upload) // check custom funciton
+		upload(result_field, upload_record_id, values);
+	else
+		default_upload(result_field, upload_record_id, values);
 }
 
 function default_upload(field, record_id, values) {
@@ -1728,6 +1751,27 @@ function enable_checkbox() {
 	});;
 }
 
+function flexform_register(input, onDone){
+	if (!onDone) {
+		var onDone = function (err, result) {
+			if (err) {
+				console.error(err);
+				alert(err);
+				return;
+			}
+			alert('註冊成功! 自動登入...');
+			SR.API._ACCOUNT_LOGIN(input, function(){
+				window.location = '/main';
+			});
+					
+		}
+	}
+
+	if (input.account === '' || input.password === '' || input.email === '') {
+		return alert('please fill in complete registeration data \n請填寫完整註冊資料');	
+	}
+	SR.API._ACCOUNT_REGISTER(input, onDone);
+}
 
 
 
