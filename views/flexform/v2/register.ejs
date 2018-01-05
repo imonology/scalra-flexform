@@ -5,17 +5,19 @@
 
 <%
 var form = {
-	name: add_form_name,
 	data: {
-		fields: add,
+		fields: [],
 		values: {}
 	},
 	
 };
-form.data.fields.push({id: 'email', name: 'E-mail', type: 'email', desc: '填寫您的E-mail', must: true, show: true, option: undefined});
+if (typeof(add) !== 'undefined')
+	form.data.fields = add;
+
 form.data.fields.push({id: 'account', name: '帳號', type: 'account', desc: '帳號', must: true, show: true, option: undefined});
 form.data.fields.push({id: 'password', name: '密碼', type: 'password', desc: '密碼', must: true, show: true, option: undefined});
 form.data.fields.push({id: 'confirm_password', name: '確認密碼', type: 'password', desc: '請再輸入一次密碼', must: true, show: true, option: undefined});
+form.data.fields.push({id: 'email', name: 'E-mail', type: 'email', desc: '填寫您的E-mail', must: true, show: true, option: undefined});
 var f = encodeURIComponent(JSON.stringify(form));
 
 %>
@@ -23,9 +25,8 @@ var form = JSON.parse(decodeURIComponent("<%-f %>"));
 	
 	
 var onConnect = function () {
-	console.log(form);
 	init_html(function(err, html){
-		document.getElementById('sub_title').innerHTML = '<%=(typeof(s_title)!=='undefined')?s_title:'基本資料'%>';
+		document.getElementById('sub_title').innerHTML = '<%=(typeof(s_title)!=='undefined')?s_title:'註冊帳號'%>';
 		document.getElementById('data').innerHTML = html;	
 	});
 }
@@ -42,16 +43,81 @@ function check_password() {
 	return true;
 }
 
+function getInput() {
+	var para = {
+		account: document.getElementById('account').value, 
+		email: document.getElementById('email').value, 
+		password: document.getElementById('password').value
+	};
+	<% if (typeof(add) !== 'undefined') { 
+		for (var i in add) { %>
+			para['<%=add[i].id%>'] = document.getElementById('<%=add[i].id%>').value;
+		<% } %>		
+	<% } %>
+	return para;
+}
+
 function upload() {
 	if (!check_password()) {
 		alert('輸入的密碼不一緻！');
 		return;
 	}
-	flexform_register({
-		account: document.getElementById('account').value, 
-		email: document.getElementById('email').value, 
-		password: document.getElementById('password').value
-	}, (window.flexform_resgister_done ? flexform_resgister_done : null));
+	flexform_register(getInput(), onCreateAccount);
+}
+
+function onCreateAccount(err, result) {
+	if (err) {
+		switch (err) {				
+			case 'ACCOUNT_EXISTS':
+				alert('帳密不符或帳號不存在');
+				return;
+			default:
+				alert(err);
+				return;
+		}
+	}
+	<% if (typeof(add_form_name) !=='undefined') { %>
+	SR.API.GET_FORM_FIELDS({name: '<%=add_form_name%>'}, function (err, data) {
+		if (err) {
+			alert(err);
+			return;
+		}
+		var fields = data.fields;
+		var para = {
+			form_name: '<%=add_form_name%>',
+			values: {}
+		};
+
+		for (var i in fields) 
+			if (document.getElementById(fields[i].id))
+				para.values[fields[i].id] = document.getElementById(fields[i].id).value
+		console.log(para);
+		SR.API.UPDATE_FIELD(para, function (err, result) {
+			if (err) {
+				alert(err);
+				return;
+			}
+			if(Object.keys(window).indexOf('<%=add_onDone_func%>') !== -1) {
+				var do_func = window['<%=add_onDone_func%>'];
+				do_func(getInput());
+			} else 
+				onSuccess();
+		});
+	});
+	<% } else { %>
+		onSuccess();
+	<% } %>
+}
+
+function onSuccess() {
+	SR.API._ACCOUNT_LOGIN(getInput(), function(err) {
+		if (err){
+			alert(err);
+			return;
+		}
+		alert('註冊成功');
+		window.location = '/main';
+	});
 }
 
 </script>
