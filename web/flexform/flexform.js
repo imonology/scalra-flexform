@@ -962,6 +962,23 @@ function flexform_change_row(f_table, i, j) {
 	}
 } // flexform_change_row()
 
+
+var datepicker_setting = {
+	//defaultDate : (new Date(new Date().getFullYear() - 60 + "/01/01") - new Date()) / (1000 * 60 * 60 * 24),
+	defaultDate : new Date,
+	yearRange : "-100:+0",
+	maxDate : '+0',
+	dayNamesMin : ['日', '一', '二', '三', '四', '五', '六'],
+	monthNamesShort	: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+	//可使用下拉式選單 - 月份
+	changeMonth : true,
+	//可使用下拉式選單 - 年份
+	changeYear : true,
+	//設定 下拉式選單月份 在 年份的後面
+	showMonthAfterYear : true,
+	dateFormat: 'yy-mm-dd'
+}
+
 // create a table with upload form
 // 'form': form field & data to be displayed
 // 
@@ -1257,6 +1274,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
 		html += '</table>';
 		form_data = form.data;
+		form_data['name'] = form.name;
 		if (write)
 			html += '<button class="btn btn-primary" onClick="check_upload(\''+hide+'\' '+(record_id?', \''+record_id+ '\'':'')+' )">'+(value?'確定修改':'確定送出')+'</button>';
 		if (del)
@@ -1374,7 +1392,6 @@ function check_upload(hide, upload_record_id) {
 			}
 		}
 
-
 		// 檢查上傳數量
 		if (result_field.fields[i].num) {
 			var upload_id = dom.value.split(",");
@@ -1385,8 +1402,6 @@ function check_upload(hide, upload_record_id) {
 				// return ;
 			}
 		}
-		
-		
 	}
 
 	if (err_message.length !== 0) {
@@ -1406,15 +1421,19 @@ function default_upload(field, record_id, values) {
 	var para = {form_name: field.name, values: values};
 	if (record_id)
 		para.record_id = record_id;
-
-	SR.API.UPDATE_FIELD(para, function (err, result) {
-		if (err) {
-			console.log(err);
-			return;
-		}
-		console.log('success');
-		if (window.upload_callback) // check custom funciton
-			upload_callback();
+	SR.API.GET_ACCOUNT({}, function (err, account_result) {
+		for (var i in field.fields)
+			if (field.fields[i].id === 'account' && !err && !para.values.account)
+				para.values['account'] = account_result.account;
+		SR.API.UPDATE_FIELD(para, function (err, result) {
+			if (err) {
+				console.log(err);
+				return;
+			}
+			console.log('success');
+			if (window.upload_callback) // check custom funciton
+				upload_callback(result, values);
+		});
 	});
 }
 

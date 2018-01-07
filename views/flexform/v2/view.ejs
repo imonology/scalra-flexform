@@ -3,7 +3,6 @@
 	
 <script>
 <%
-	
 	var show_form = function(form) {
 		form = JSON.parse(JSON.stringify(form));
 		SR.API.TRANSLATE_FORM_FIELDS({field_data: form.data}, function (err, field_data) {
@@ -32,17 +31,21 @@
 				return ;
 			}
 			show_form(form);
-
 		});
 	}
 %>
-	
-	
+
 var onConnect = function () {
-	console.log('yoyoyo')
 	init_html(function(err, html){
 		document.getElementById('sub_title').innerHTML = sub_title;
 		document.getElementById('data').innerHTML = html;	
+		if (typeof(date_pickers) !== 'undefined') {
+			for (var i=0; i < date_pickers.length; i++) {
+				$(function() {
+					$("#" + date_pickers[i]).datepicker(datepicker_setting);
+				});
+			}
+		}
 	});
 }
 
@@ -67,12 +70,24 @@ function init_html(onDone) {
 			html += '</div>';
 		}
 	<% } else { %>
-		html += create_table(form, [], true);
+		console.log('')
+		html += create_table(form, [], true);   
 	<% } %>
 	return onDone(null, html);
 }
 
-function upload_callback() {
+function upload_callback(result, values) {
+	<% if (typeof(ondone_func)!== 'undefined' ) {  %>
+		if(Object.keys(window).indexOf('<%=ondone_func%>') !== -1) {
+			var do_func = window['<%=ondone_func%>'];
+			do_func(result, values);
+		} else
+			success();
+	<% } else { %>
+		success();
+	<% } %>
+}
+function success() {
 	alert('填寫已完成!!');
 	window.history.back();
 }

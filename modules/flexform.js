@@ -308,6 +308,14 @@ SR.API.add('QUERY_ALL_LIST', {
 	});
 });
 
+SR.API.add('GET_ACCOUNT', {
+	_login: 	true,
+}, function (args, onDone, extra) {
+	if (!extra)
+		return onDone('only can use in client');
+	return onDone(null, {account: extra.session._user.account});
+});
+
 SR.API.add('QUERY_GROUP_MEMBER_LIST', {
 	_login: 	true,
 	group_id:	'string',
