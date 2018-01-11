@@ -1,6 +1,6 @@
 {
   "name": "scalra-flexform",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "A flexible form module for Scalra framework",
   "main": "index.js",
   "dependencies": {
