@@ -75,11 +75,33 @@ function init_html(onDone) {
 	<% } %>
 	return onDone(null, html);
 }
+														
+function flexform_custom_upload(field, record_id, values) {
+	<% if (typeof(before_upload)!== 'undefined' ) {  %>
+		if(Object.keys(window).indexOf('<%=before_upload%>') !== -1) {
+			var do_func = window['<%=before_upload%>'];
+			do_func(field, record_id, values, function(err, datas){
+				if (err) {
+					console.log(err);
+					return ;
+				}
+				if (typeof(datas) === 'undefined')
+					default_upload(field, record_id, values);
+				else
+					default_upload(datas.field, datas.record_id, datas.values);
+			});
+		} else
+			default_upload(field, record_id, values);
+	<% } else { %>
+		default_upload(field, record_id, values);
+	<% } %>
+	
+}													
 
 function upload_callback(result, values) {
-	<% if (typeof(ondone_func)!== 'undefined' ) {  %>
-		if(Object.keys(window).indexOf('<%=ondone_func%>') !== -1) {
-			var do_func = window['<%=ondone_func%>'];
+	<% if (typeof(ondone_name)!== 'undefined' ) {  %>
+		if(Object.keys(window).indexOf('<%=ondone_name%>') !== -1) {
+			var do_func = window['<%=ondone_name%>'];
 			do_func(result, values);
 		} else
 			success();

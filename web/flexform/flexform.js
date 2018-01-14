@@ -1411,8 +1411,8 @@ function check_upload(hide, upload_record_id) {
 		return;
 	}
 
-	if (window.upload) // check custom funciton
-		upload(result_field, upload_record_id, values);
+	if (window.flexform_custom_upload) // check custom funciton
+		flexform_custom_upload(result_field, upload_record_id, values);
 	else
 		default_upload(result_field, upload_record_id, values);
 }
