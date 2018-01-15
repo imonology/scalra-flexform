@@ -553,6 +553,55 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	// }, 250);
 	
 }
+//有進度條的上傳
+function doUploadProgress(btnId, onDone, onProgress) {
+	var files = $('#' + btnId).get(0).files;
+
+	if (files.length > 0) {
+		// create a FormData object which will be sent as the data payload in the
+		// AJAX request
+		var formData = new FormData();
+
+		// loop through all the selected files and add them to the formData object
+		for (var i = 0; i < files.length; i++) {
+			var file = files[i];
+			// add the files to formData object for the data payload
+			formData.append('upload', file, file.name);
+		}
+		
+		$.ajax({
+			url: '/upload',
+			type: 'POST',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function (data) {
+				//console.log('upload successful!');
+				onDone(null, data);
+			},
+			xhr: function() {//這邊是處理進度條用的
+				// create an XMLHttpRequest
+				var xhr = new XMLHttpRequest();
+				// listen to the 'progress' event
+				xhr.upload.addEventListener('progress', function(evt) {
+					if (evt.lengthComputable) {
+						// calculate the percentage of upload completed
+						var percentComplete = evt.loaded / evt.total;
+						percentComplete = parseInt(percentComplete * 100);
+						onProgress(percentComplete);
+					}
+				}, false);
+
+				return xhr;
+			},
+			error: function() {
+				//console.log('failure to connect to server');
+				//$("#spanMessage").html("failure to connect to server");
+				onDone('failure to connect to server');
+			}
+		});
+	}
+}
 
 var flexform_table_num = 0;
 var flexform_tables_para = [];
@@ -774,6 +823,47 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 	flexform_tables_para.push(table_para);
 	return html;
 } // function flexform_show_table()
+//DB資料轉表格(直式) PS.須先使用flexform_to_flexform_table轉換後才能使用
+function flexform_create_table(flexform_values, extra_data) {
+	var count = 0;
+	var html = '';
+	for (var i in flexform_values.data) {
+		html += '<div style="border-width:1px;border-style:dashed;border-color:white;padding:3px;">';
+		html += '<table id="flexform-table' + count + ' class="customTable" ' + '>';
+		//主資料
+		for (var j in flexform_values.field) {
+			html += '<tr>';
+			var content = '';
+			content += '<th>';
+			if (flexform_values.field[j].value)
+				content += flexform_values.field[j].value;
+			else
+				content += flexform_values.field[j].key;
+			content += '</th>';
+
+			html += content;
+			html += '<td style="">' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+			html += '</tr>';
+		}
+		html += '</table>';
+		
+		//附掛資料(單格只有內容無標題)
+		html += '<table id="flexform-table-extra' + count + '" class="customTable" ' + '>';
+		if (extra_data) {
+			//console.log("this is extar");
+			for (var inx in extra_data[i]) {
+				html += '<tr>';
+				html += '<td style="">' + extra_data[i][inx] + '</td>';
+				html += '</tr>';
+			}
+		}
+		html += '</table>';
+		html += '</div>';
+		++count;
+	}
+	
+	return html;
+}
 
 function obj2inlineCSS(obj) {
 	if (!obj) return '';

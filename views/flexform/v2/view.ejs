@@ -77,9 +77,9 @@ function init_html(onDone) {
 }
 														
 function flexform_custom_upload(field, record_id, values) {
-	<% if (typeof(before_upload)!== 'undefined' ) {  %>
-		if(Object.keys(window).indexOf('<%=before_upload%>') !== -1) {
-			var do_func = window['<%=before_upload%>'];
+	<% if (typeof(onBeforeUpload_name)!== 'undefined' ) {  %>
+		if(Object.keys(window).indexOf('<%=onBeforeUpload_name%>') !== -1) {
+			var do_func = window['<%=onBeforeUpload_name%>'];
 			do_func(field, record_id, values, function(err, datas){
 				if (err) {
 					console.log(err);
@@ -99,9 +99,9 @@ function flexform_custom_upload(field, record_id, values) {
 }													
 
 function upload_callback(result, values) {
-	<% if (typeof(ondone_name)!== 'undefined' ) {  %>
-		if(Object.keys(window).indexOf('<%=ondone_name%>') !== -1) {
-			var do_func = window['<%=ondone_name%>'];
+	<% if (typeof(onDone_name)!== 'undefined' ) {  %>
+		if(Object.keys(window).indexOf('<%=onDone_name%>') !== -1) {
+			var do_func = window['<%=onDone_name%>'];
 			do_func(result, values);
 		} else
 			success();
