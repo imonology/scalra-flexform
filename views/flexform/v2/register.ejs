@@ -57,7 +57,7 @@ function getInput() {
 	return para;
 }
 
-function upload() {
+function flexform_custom_upload() {
 	if (!check_password()) {
 		alert('輸入的密碼不一緻！');
 		return;
@@ -91,7 +91,6 @@ function onCreateAccount(err, result) {
 		for (var i in fields) 
 			if (document.getElementById(fields[i].id))
 				para.values[fields[i].id] = document.getElementById(fields[i].id).value
-		console.log(para);
 		SR.API.UPDATE_FIELD(para, function (err, result) {
 			if (err) {
 				alert(err);

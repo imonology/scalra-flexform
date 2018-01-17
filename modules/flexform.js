@@ -878,11 +878,15 @@ SR.API.add('UPDATE_FIELD', {
 	form_name:	'+string',		// form name
 	record_id: 	'+string',		// unique record id, if not exist, then it's same as UPDATE_FORM
 	values: 	'object',		// data to be stored
-}, function (args, onDone) {
+}, function (args, onDone, extra) {
 
 	if (!args.form_id && !args.form_name)
 		return onDone('values not found for form_id or form_name ');
 	
+	// attach account info if available
+	if (extra && extra.session && extra.session._user && extra.session._user.account) 
+		if (typeof(args.values['account']) === 'undefined') 
+			args.values['account'] = extra.session._user.account;
 	var form = undefined;
 	
 	// get form

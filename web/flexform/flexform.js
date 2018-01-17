@@ -1508,23 +1508,33 @@ function check_upload(hide, upload_record_id) {
 }
 
 function default_upload(field, record_id, values) {
+	console.log(field);
 	var para = {form_name: field.name, values: values};
 	if (record_id)
 		para.record_id = record_id;
+	
+	// NOTE: should not use GET_ACCOUNT on client-side 
+	/*
 	SR.API.GET_ACCOUNT({}, function (err, account_result) {
-		for (var i in field.fields)
-			if (field.fields[i].id === 'account' && !err && !para.values.account)
-				para.values['account'] = account_result.account;
+		
+		if (err) {
+			console.error(err);
+		} else {
+			for (var i in field.fields)
+				if (field.fields[i].id === 'account' && !para.values.account)
+					para.values['account'] = account_result.account;			
+		}
+	*/	
 		SR.API.UPDATE_FIELD(para, function (err, result) {
 			if (err) {
-				console.log(err);
+				console.error(err);
 				return;
 			}
 			console.log('success');
 			if (window.upload_callback) // check custom funciton
 				upload_callback(result, values);
 		});
-	});
+	//});
 }
 
 

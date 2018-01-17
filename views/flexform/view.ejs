@@ -276,10 +276,13 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			textarea_id.push(entry_id + '-' + fields[i].id);
 			html += '<textarea rows="8" id="' + entry_id + '-' + fields[i].id + '" value="' + value + '" title="' + fields[i].desc + '" placeholder="' + fields[i].desc + '">'+value+'</textarea>';
 		} else if (fields[i].type === 'lock') {
+			console.log('record_id = ')
+			console.log(record_id);
 			if (record_id)
 				var value = values_data.replace(/\"/g, "&quot;");
 			else 
 				var value = getParameterByName(fields[i].id);
+			console.log(value);
 			var value_list = value.split(',');
 			
 			html += '<select id="' + entry_id + '-' + fields[i].id + '">';
