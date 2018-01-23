@@ -19,7 +19,7 @@ function do_add_field_and_hide(flextable_data) {
 					else
 						temp += ', ';
 
-					temp += '\''+ flextable_data.data[i][para.add_field[i].value[k]] +'\'';
+					temp += '\''+ flextable_data.data[j][para.add_field[i].value[k]] +'\'';
 				}
 				temp += ')">'+para.add_field[i].field_name+'</button>';
 				add_value.push(temp);
