@@ -51,7 +51,8 @@ var input_error = false;
 if (typeof(form)!== 'undefined') {
 	%> sub_title = '<%=form.name%>'; <%
 	var flextable_data = SR.API.flexform_to_flexform_table({form: form});
-	flextable_data = do_add_field_and_hide( flextable_data );
+	if (typeof(para)!== 'undefined')
+		flextable_data = do_add_field_and_hide( flextable_data );
 	var f = encodeURIComponent(JSON.stringify(flextable_data));
 	%> var flextable_data = JSON.parse(decodeURIComponent("<%-f %>")); <% 
 } else if (typeof(para)!== 'undefined'){
