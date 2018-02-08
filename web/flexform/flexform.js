@@ -145,6 +145,7 @@ var remove_img = function(dom_id, id, type) {
 
 
 var add_img = function(dom_id, img) {
+	console.log(dom_id + '-show_upload_img');
 	document.getElementById(dom_id + '-show_upload_img').innerHTML += create_img_dev(dom_id , img);
 }
 
@@ -269,6 +270,7 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 }
 
 var onRecordUploaded = function(err, record_filenames, dom_id, original_filenames) {
+	console.log('call here');
 	if (!err) {
 		console.log('已上傳錄音檔');
 		if (document.getElementById(dom_id).value.length === 0)
@@ -285,7 +287,8 @@ var onRecordUploaded = function(err, record_filenames, dom_id, original_filename
 
 		for (var i in record_filenames)
 			add_record(dom_id , record_filenames[i], original_filenames[i]);
-	}
+	} else
+		console.log(err);
 }
 
 var onTxtUploaded  = function(err, fname){
@@ -350,7 +353,10 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	console.log('upload_id = ' + upload_id);
 
 	if (upload_id) {
+		console.log(upload_id);
 		var fullPath = document.getElementById(upload_id).value;
+		console.log('印出數量');
+		console.log($("#"+upload_id)[0]);
 		var upload_num = $("#"+upload_id)[0].files.length;
 	} else {
 		var fullPath = document.getElementById('upload_file').value;
@@ -1319,8 +1325,11 @@ var create_table = function (form, hide, write, td_style, show, del) {
 					if (write) {
 						var lock_value = getParameterByName(fields[i].id);
 						console.log(fields[i].id)
-						// console.log(lock_value)
-						var value_list = lock_value.split(',');
+						console.log(lock_value)
+						if (lock_value)
+							var value_list = lock_value.split(',');
+						else
+							value_list = [];
 						if (save_value)
 							value_list = [save_value];
 						html += '<select id="' + save_id + '">';
