@@ -1517,6 +1517,7 @@ function check_upload(hide, upload_record_id) {
 }
 
 function default_upload(field, record_id, values) {
+	console.log('do default_upload');
 	console.log(field);
 	var para = {form_name: field.name, values: values};
 	if (record_id)

@@ -555,11 +555,12 @@ function submit() {
 		alert('填寫成功!');
 		// document.location = '/main';		
 		// FIXME: after first creating user profile, user is returned back to 'register' instead of 'main') screen
-		<% if ( typeof(onSuccessUrl) !== 'undefined' ) { %>
-			document.location = '<%=onSuccessUrl%>';	
-		<% } else { %>
-			history.back();
-		<% } %>
+
+		var url = document.referrer;
+		url = url.split("://")[1];
+		url = url.substring(url.indexOf('/'));
+		document.location = url;
+
 	}
 	
 	submit_form(form_id, function (err, info) {
