@@ -1238,7 +1238,10 @@ var create_table = function (form, hide, write, td_style, show, del) {
 							// console.log('用的form_name');
 							// console.log(form_name);
 							// console.log(key_id);
-							SR.API.QUERY_AUTOCOMPLETE({form_name: form_name, key_id: key_id, value_id: value_id,  field_id: fields[i].id, multiple: multiple}, function (err, result) {
+							var para = {form_name: form_name, key_id: key_id, field_id: fields[i].id, multiple: multiple};
+							if (value_id)
+								para.value_id = value_id;
+							SR.API.QUERY_AUTOCOMPLETE(para, function (err, result) {
 								if (err) {
 									console.log(err);	
 								}
@@ -1255,8 +1258,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 								console.log('顯示');
 								console.log(result);
 								for (var r_id in r_form.data.values)
-									if (!haveSame(ans, r_form.data.values[r_id][result.key_id]))
+									if (!haveSame(ans, r_form.data.values[r_id][result.key_id])) {
 										ans.push(r_form.data.values[r_id][result.key_id] + (result.value_id?'('+r_form.data.values[r_id][result.value_id]+')': ''  ) );
+									}
 								
 								if (result.multiple) {
 									function split( val ) {
@@ -1301,6 +1305,13 @@ var create_table = function (form, hide, write, td_style, show, del) {
 					} else {
 						html += value[fields[i].id];
 					}				
+					break;
+				case 'tag': 
+					if (write) {
+						html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
+					} else {
+						html += value[fields[i].id];
+					}
 					break;
 				case 'choice':
 					if (write) {
@@ -1756,7 +1767,6 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 	// del: 是否開啟刪除btn
 	var html = '';
 	var search = '';
-
 	
 	if (getParameterByName('search'))
 		search = getParameterByName('search');
@@ -1901,8 +1911,4 @@ function flexform_register(input, onDone){
 	}
 	SR.API._ACCOUNT_REGISTER(input, onDone);
 }
-
-
-
-
 

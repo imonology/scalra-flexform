@@ -1,6 +1,9 @@
 <% layout('template/common') %>
 <% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
 	
+<script src="/web/flexform/jquery.tagsinput.js"></script>
+
+
 <script>
 <%
 	var show_form = function(form) {
@@ -53,11 +56,12 @@ var onConnect = function () {
 				});
 			}
 		}
+		$('.tags').tagsInput();
 	});
 }
 
 function init_html(onDone) {
-	var html = '';
+	var html = '';	
 	console.log('form = ');
 	console.log(form);
 	<% if (mode !== 'new' && mode !== 'modify') { %>
