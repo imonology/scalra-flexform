@@ -1110,8 +1110,12 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			}
 			
 			// begin a row of data
-			if (show)
-				html += '<tr '+ (show.indexOf(fields[i].id)!== -1? ' style="" data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y"') +' >';
+			if (show) {
+				html += '<tr '+ (show.indexOf(fields[i].id)!== -1 && !fields[i].show_partial ? ' style="" data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y" ') ;
+				// if (fields[i].show_partial)
+				// 	html += 'data-total_value="'+value[fields[i].id]+'" ';
+				html += ' >';
+			}
 			else
 				html += '<tr>';
 			
@@ -1121,7 +1125,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			
 			// show field content
 			html += '<td style="'+(td_style?td_style[1]:'')+'">';
-
+			
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
 				case 'record':
@@ -1378,7 +1382,22 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			
 			html += '</td>'
 			html += '</tr>';
+			
+			
+			
+			if (show && !write && fields[i].show_partial) {
+				html += '<tr data-partial="y">';
+				html += '<td style="'+(td_style?td_style[0]:'')+' ; vertical-align:middle;" >' + fields[i].name + (fields[i].must ? '*' : '') +  ' </td>';
 
+				// show field content
+				html += '<td style="'+(td_style?td_style[1]:'')+'">';
+				
+				html += value[fields[i].id].substring(0, 12);
+				if (value[fields[i].id].length > 12)
+					html += '...';
+				html += '</td></tr>';
+				continue;
+			}
 		}
 		if (show)
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
@@ -1421,12 +1440,18 @@ function show_detail(btn){
 	
 	var all_tr = parent.childNodes; // Find all other <tr>
 	
-	for (var i = 0 ; i < all_tr.length ; i++)
+	for (var i = 0 ; i < all_tr.length ; i++) {
 		if (all_tr[i].getAttribute('data-can-hide') === 'y')
 			if (lock)
 				all_tr[i].style.display = "none";
 			else
 				all_tr[i].style.display = "";
+		if (all_tr[i].getAttribute('data-partial') === 'y')
+			if (lock)
+				all_tr[i].style.display = "";
+			else
+				all_tr[i].style.display = "none";
+	}
 }
 
 
