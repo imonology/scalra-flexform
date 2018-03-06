@@ -1528,6 +1528,7 @@ function default_upload(field, record_id, values) {
 		SR.API.UPDATE_FIELD(para, function (err, result) {
 			if (err) {
 				console.error(err);
+				alert(err);
 				return;
 			}
 			console.log('success');
