@@ -693,9 +693,20 @@ SR.API.add('QUERY_FORM', {
 
 			var non_matched = 0;
 			for (var key in args.query_partial) {
-				if (typeof record[key] === 'string' && 
-					record[key].indexOf(args.query_partial[key]) === (-1)) {
-					non_matched++; 
+				if ( typeof record[key] === 'string') {
+					if (fields.hasOwnProperty(key) === true && fields[key].type === 'tag') {
+						var temp = record[key].split(",");
+						var have = false;
+						for (var t in temp)
+							if (temp[t] === args.query_partial[key])
+								have = true; 
+						if (!have)
+							non_matched++; 
+					} else {
+						if (record[key].indexOf(args.query_partial[key]) === (-1)) {
+							non_matched++; 
+						}
+					}
 				}
 			}
 			// non of the fields have partial matches at all

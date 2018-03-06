@@ -145,6 +145,7 @@ var remove_img = function(dom_id, id, type) {
 
 
 var add_img = function(dom_id, img) {
+	console.log(dom_id + '-show_upload_img');
 	document.getElementById(dom_id + '-show_upload_img').innerHTML += create_img_dev(dom_id , img);
 }
 
@@ -269,6 +270,7 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 }
 
 var onRecordUploaded = function(err, record_filenames, dom_id, original_filenames) {
+	console.log('call here');
 	if (!err) {
 		console.log('已上傳錄音檔');
 		if (document.getElementById(dom_id).value.length === 0)
@@ -285,7 +287,8 @@ var onRecordUploaded = function(err, record_filenames, dom_id, original_filename
 
 		for (var i in record_filenames)
 			add_record(dom_id , record_filenames[i], original_filenames[i]);
-	}
+	} else
+		console.log(err);
 }
 
 var onTxtUploaded  = function(err, fname){
@@ -350,7 +353,10 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	console.log('upload_id = ' + upload_id);
 
 	if (upload_id) {
+		console.log(upload_id);
 		var fullPath = document.getElementById(upload_id).value;
+		console.log('印出數量');
+		console.log($("#"+upload_id)[0]);
 		var upload_num = $("#"+upload_id)[0].files.length;
 	} else {
 		var fullPath = document.getElementById('upload_file').value;
@@ -1104,8 +1110,12 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			}
 			
 			// begin a row of data
-			if (show)
-				html += '<tr '+ (show.indexOf(fields[i].id)!== -1? ' style="" data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y"') +' >';
+			if (show) {
+				html += '<tr '+ (show.indexOf(fields[i].id)!== -1 && !fields[i].show_partial ? ' style="" data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y" ') ;
+				// if (fields[i].show_partial)
+				// 	html += 'data-total_value="'+value[fields[i].id]+'" ';
+				html += ' >';
+			}
 			else
 				html += '<tr>';
 			
@@ -1115,7 +1125,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			
 			// show field content
 			html += '<td style="'+(td_style?td_style[1]:'')+'">';
-
+			
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
 				case 'record':
@@ -1232,7 +1242,10 @@ var create_table = function (form, hide, write, td_style, show, del) {
 							// console.log('用的form_name');
 							// console.log(form_name);
 							// console.log(key_id);
-							SR.API.QUERY_AUTOCOMPLETE({form_name: form_name, key_id: key_id, value_id: value_id,  field_id: fields[i].id, multiple: multiple}, function (err, result) {
+							var para = {form_name: form_name, key_id: key_id, field_id: fields[i].id, multiple: multiple};
+							if (value_id)
+								para.value_id = value_id;
+							SR.API.QUERY_AUTOCOMPLETE(para, function (err, result) {
 								if (err) {
 									console.log(err);	
 								}
@@ -1249,8 +1262,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 								console.log('顯示');
 								console.log(result);
 								for (var r_id in r_form.data.values)
-									if (!haveSame(ans, r_form.data.values[r_id][result.key_id]))
+									if (!haveSame(ans, r_form.data.values[r_id][result.key_id])) {
 										ans.push(r_form.data.values[r_id][result.key_id] + (result.value_id?'('+r_form.data.values[r_id][result.value_id]+')': ''  ) );
+									}
 								
 								if (result.multiple) {
 									function split( val ) {
@@ -1296,6 +1310,13 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += value[fields[i].id];
 					}				
 					break;
+				case 'tag': 
+					if (write) {
+						html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
+					} else {
+						html += value[fields[i].id];
+					}
+					break;
 				case 'choice':
 					if (write) {
 						console.log('fields[i] = ')
@@ -1319,8 +1340,11 @@ var create_table = function (form, hide, write, td_style, show, del) {
 					if (write) {
 						var lock_value = getParameterByName(fields[i].id);
 						console.log(fields[i].id)
-						// console.log(lock_value)
-						var value_list = lock_value.split(',');
+						console.log(lock_value)
+						if (lock_value)
+							var value_list = lock_value.split(',');
+						else
+							value_list = [];
 						if (save_value)
 							value_list = [save_value];
 						html += '<select id="' + save_id + '">';
@@ -1358,7 +1382,22 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			
 			html += '</td>'
 			html += '</tr>';
+			
+			
+			
+			if (show && !write && fields[i].show_partial) {
+				html += '<tr data-partial="y">';
+				html += '<td style="'+(td_style?td_style[0]:'')+' ; vertical-align:middle;" >' + fields[i].name + (fields[i].must ? '*' : '') +  ' </td>';
 
+				// show field content
+				html += '<td style="'+(td_style?td_style[1]:'')+'">';
+				
+				html += value[fields[i].id].substring(0, 12);
+				if (value[fields[i].id].length > 12)
+					html += '...';
+				html += '</td></tr>';
+				continue;
+			}
 		}
 		if (show)
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
@@ -1401,12 +1440,18 @@ function show_detail(btn){
 	
 	var all_tr = parent.childNodes; // Find all other <tr>
 	
-	for (var i = 0 ; i < all_tr.length ; i++)
+	for (var i = 0 ; i < all_tr.length ; i++) {
 		if (all_tr[i].getAttribute('data-can-hide') === 'y')
 			if (lock)
 				all_tr[i].style.display = "none";
 			else
 				all_tr[i].style.display = "";
+		if (all_tr[i].getAttribute('data-partial') === 'y')
+			if (lock)
+				all_tr[i].style.display = "";
+			else
+				all_tr[i].style.display = "none";
+	}
 }
 
 
@@ -1508,6 +1553,7 @@ function check_upload(hide, upload_record_id) {
 }
 
 function default_upload(field, record_id, values) {
+	console.log('do default_upload');
 	console.log(field);
 	var para = {form_name: field.name, values: values};
 	if (record_id)
@@ -1747,7 +1793,6 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 	// del: 是否開啟刪除btn
 	var html = '';
 	var search = '';
-
 	
 	if (getParameterByName('search'))
 		search = getParameterByName('search');
@@ -1892,8 +1937,4 @@ function flexform_register(input, onDone){
 	}
 	SR.API._ACCOUNT_REGISTER(input, onDone);
 }
-
-
-
-
 

@@ -1,6 +1,9 @@
 <% layout('template/common') %>
 <% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
 	
+<script src="/web/flexform/jquery.tagsinput.js"></script>
+
+
 <script>
 <%
 	var show_form = function(form) {
@@ -12,12 +15,17 @@
 			// LOG.warn('form = ');
 			// LOG.warn(form.data.field );
 			form.data.field = field_data.field;
-		
+			if (typeof(para) !== 'undefined' && typeof(para.hide) !== 'undefined' )
+				var hide = para.hide;
+			else
+				var hide = [];
+			var f2 = encodeURIComponent(JSON.stringify(hide));
 			if (mode === 'new') 
 				form.data.values = {};
 			var f = encodeURIComponent(JSON.stringify(form));
 			%> 
 				var form = JSON.parse(decodeURIComponent("<%-f %>")); 
+				var hide = JSON.parse(decodeURIComponent("<%-f2 %>")); 
 				var sub_title = '<%=(typeof(s_title)!=='undefined')?s_title:form.name%>';
 			<% 
 		});
@@ -37,6 +45,8 @@
 
 var onConnect = function () {
 	init_html(function(err, html){
+		console.log('hide = ');
+		console.log(hide);
 		document.getElementById('sub_title').innerHTML = sub_title;
 		document.getElementById('data').innerHTML = html;	
 		if (typeof(date_pickers) !== 'undefined') {
@@ -46,11 +56,12 @@ var onConnect = function () {
 				});
 			}
 		}
+		$('.tags').tagsInput();
 	});
 }
 
 function init_html(onDone) {
-	var html = '';
+	var html = '';	
 	console.log('form = ');
 	console.log(form);
 	<% if (mode !== 'new' && mode !== 'modify') { %>
@@ -63,15 +74,15 @@ function init_html(onDone) {
 			html += '<div id="show" style="border-width:1px;border-style:dashed;border-color:white;padding:3px;">';
 			
 			<% if (typeof(del) !== 'undefined' && del) { %>
-				html += create_table(f, [], false, null, null, true);
+				html += create_table(f, hide, false, null, null, true);
 			<% } else { %>
-				html += create_table(f, []);
+				html += create_table(f, hide);
 			<% } %>
 			html += '</div>';
 		}
 	<% } else { %>
 		console.log('')
-		html += create_table(form, [], true);   
+		html += create_table(form, hide, true);   
 	<% } %>
 	return onDone(null, html);
 }

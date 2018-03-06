@@ -211,16 +211,21 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 			html += '<input type="file" name="upload" multiple="multiple" id="upload_file">';
 			html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\', \''+entry_id + '-' + fields[i].id+'\', onPhotoUploaded)">Upload</button>';
-			html += '<input type="hidden" value="" id="' + entry_id + '-' + fields[i].id + '">';
+			
+			html += '<input type="hidden" value="'+imgs+'" id="' + entry_id + '-' + fields[i].id + '">';
 			// Workaround to avoid corrupted XHR2 request body in IE10 / IE11
 			html += '<input type="hidden" name="_dontcare">';
 			// if photo exists then display, otherwise make it hidden first			
 			//var display = (values[fields[i].id] ? 'block' : 'none');
 			// html += '<div id="uploaded_photo"><img id="show_image" width="250" src="/web/images/'+value+'.jpg" style="display: none;" onload="has_img(this, \''+entry_id + '-' + fields[i].id +'\', \''+image_id+'\')" onerror="no_img(\''+entry_id + '-' + fields[i].id +'\')" ></div>'
 			
-			html += '<div id="show_upload_img">';
-			for (var ii in imgs)
+			html += '<div id="'+entry_id + '-' + fields[i].id+'-show_upload_img">';
+			
+			for (var ii in imgs) {
+				console.log('印出');
+				console.log(imgs[ii]);
 				html += create_img_dev(entry_id + '-' + fields[i].id, imgs[ii]);
+			}
 			html += '</div>';
 			
 		} else if (fields[i].type === 'record') {
@@ -230,15 +235,17 @@ var generate_table = function (form_id, entry_id, no_delete, record_id) {
 			html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadRecord">';
 			html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 			html += '<input type="file" name="upload" id="inputRecord" multiple="multiple">';
-			html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+entry_id + '-' + fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \''+entry_id + '-' + fields[i].id+'\', \''+form_data[form_id].name+'\', \''+fields[i].id+'\' )">Upload</button>';
+			html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+entry_id + '-' + fields[i].id+'\', onRecordUploaded, \''+['mp3']+'\', \'inputRecord\', \''+form_data[form_id].name+'\', \''+fields[i].id+'\' )">Upload</button>';
 			
-			html += '<div id="show_upload_record">';
+			
 			if (values_data.length !== 0) {
-
 				var files = JSON.parse(values_data);
-				for (var ii in files) 
-					html += create_record_dev(entry_id + '-' + fields[i].id , files[ii].filename, files[ii].filetitle);
-			}
+			} else
+				files = [];
+			html += '<input type="hidden" value="'+files+'" id="' + entry_id + '-' + fields[i].id + '">';
+			html += '<div id="'+entry_id + '-' + fields[i].id+'-show_upload_record">';
+			for (var ii in files) 
+				html += create_record_dev(entry_id + '-' + fields[i].id , files[ii].filename, files[ii].filetitle);
 			html += '</div>';
 		} else if (fields[i].type === 'autocomplete') {
 			var value = values_data.replace(/\"/g, "&quot;");
@@ -548,7 +555,12 @@ function submit() {
 		alert('填寫成功!');
 		// document.location = '/main';		
 		// FIXME: after first creating user profile, user is returned back to 'register' instead of 'main') screen
-		history.back();
+
+		var url = document.referrer;
+		url = url.split("://")[1];
+		url = url.substring(url.indexOf('/'));
+		document.location = url;
+
 	}
 	
 	submit_form(form_id, function (err, info) {
