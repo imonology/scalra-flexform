@@ -891,11 +891,11 @@ function flexform_show_vertical_table(data, opt) {
 	// 	reverse: false, // true || false
 	// 	customRow: [], // ['row content (DOM string in a <tr>)']
 	// }, option);
-	option['field'] = null;
-	option['editable'] = false;
-	option['deletable'] = true;
-	option['reverse'] = false;
-	option['customRow'] = [];
+	option['field'] = option['field'] || null;
+	option['editable'] = option['editable'] || false;
+	option['deletable'] = option['deletable'] || true;
+	option['reverse'] = option['reverse'] || false;
+	option['customRow'] = option['customRow'] || [];
 	
 	table_para.option = option;
 	let result = '';
