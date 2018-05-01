@@ -1571,6 +1571,7 @@ function default_upload(field, record_id, values) {
 					para.values['account'] = account_result.account;			
 		}
 	*/	
+	
 		SR.API.UPDATE_FIELD(para, function (err, result) {
 			if (err) {
 				console.error(err);

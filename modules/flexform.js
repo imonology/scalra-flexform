@@ -894,12 +894,8 @@ SR.API.add('UPDATE_FIELD', {
 	if (!args.form_id && !args.form_name)
 		return onDone('values not found for form_id or form_name ');
 	
-	// attach account info if available
-	if (extra && extra.session && extra.session._user && extra.session._user.account) 
-		if (typeof(args.values['account']) === 'undefined') 
-			args.values['account'] = extra.session._user.account;
 	var form = undefined;
-	
+
 	// get form
 	if (args.form_name) { // by name
 		for (var form_id in l_form) {
@@ -927,6 +923,10 @@ SR.API.add('UPDATE_FIELD', {
 		if (form.data.values.hasOwnProperty(args.record_id) === false)
 			return onDone('values not found for record id [' + args.record_id + ']');	
 		values_map = form.data.values[args.record_id];
+	} else {
+		if (extra && extra.session && extra.session._user && extra.session._user.account) 
+			if (typeof(args.values['account']) === 'undefined') 
+				args.values['account'] = extra.session._user.account;
 	}
 		
 	
@@ -935,6 +935,8 @@ SR.API.add('UPDATE_FIELD', {
 		new_record_id = UTIL.createToken();
 		// values_map[args.record_id] = {};
 	}
+	
+
 	
 	// if (values_map.hasOwnProperty(args.record_id) === false) {
 	// 	return onDone('values not found for record id [' + args.record_id + ']');	
