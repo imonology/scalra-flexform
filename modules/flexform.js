@@ -919,11 +919,11 @@ SR.API.add('UPDATE_FIELD', {
 	LOG.warn(args.values);
 	// var values_map = form.data.values;
 	var values_map = {};
-	if (args.record_id) {
+	if (args.record_id) { // 修改資料
 		if (form.data.values.hasOwnProperty(args.record_id) === false)
 			return onDone('values not found for record id [' + args.record_id + ']');	
 		values_map = form.data.values[args.record_id];
-	} else {
+	} else { // 新增資料
 		if (extra && extra.session && extra.session._user && extra.session._user.account) 
 			if (typeof(args.values['account']) === 'undefined') 
 				args.values['account'] = extra.session._user.account;
@@ -1187,7 +1187,7 @@ SR.API.add('UPDATE_FORM', {
 				for (var temp_record_id in form.data.values) 
 					for (var i=0; i < value_array.length; i++) {
 						if (form.data.values[temp_record_id][id] === value_array[i][id] && (typeof(value_array[i]['_record_id']) === 'undefined' || value_array[i]['_record_id'] !== temp_record_id))
-							return onDone(id + ' is unit value');
+							return onDone({error_type: 'unit', message: id });
 					}
 			}
 		}
