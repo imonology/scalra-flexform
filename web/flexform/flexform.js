@@ -1758,14 +1758,12 @@ function showExcel(xlsx, id, f) {
 
 	// keep refernece to be uploaded later
 	l_xlsx = xlsx;
-	console.log('語言');
-	console.log(language);
 	if (xlsx.errlist.length > 0) {
 		alert(xlsx.errlist);		
 	}
 	else {
 		var button_value = 'Continue Upload';
-		if (language === 'chinese')
+		if (typeof(language) !== 'undefined' && language === 'chinese')
 			button_value = '確定新增';
 		document.getElementById('show_table').innerHTML += '<input type="button" value="'+button_value+'" onclick="submit_excel_import(\''+ id +'\')">';
 	}
