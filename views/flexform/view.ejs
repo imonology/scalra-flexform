@@ -565,7 +565,7 @@ function submit() {
 	
 	submit_form(form_id, function (err, info) {
 		if (err) {
-			if (err.error_type === 'unit')
+			if (err.error_type === 'unique')
 				alert(err.message + '的值已經存在!');
 			return;
 		}
