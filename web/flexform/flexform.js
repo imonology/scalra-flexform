@@ -262,6 +262,8 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 
 var onPhotoUploaded = function (err, image_filenames, dom_id) {
 	if (!err) {
+		console.log(image_filenames)
+		console.log('done here ' + dom_id);
 		var files = document.getElementById(dom_id).value.split(",");
 		document.getElementById(dom_id).value = image_filenames.concat(files);
 		for (var i in image_filenames)
@@ -1650,7 +1652,13 @@ function get_upload_excel(para) {
 	
 	html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' id="frmUploadFile">';
 	html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
-	html += '<input type="file" name="upload" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
+	html += '<input type="file" name="upload" id="uploader" multiple="multiple" ';
+	html += 'onchange="upload_excel(';
+	html += '\'' + id + '\' ';
+	// 刪除mode
+	if (typeof para === 'object' && typeof para.del_mode !== 'undefined' && para.del_mode)
+		html += ', true'
+	html += ')">';
 	//html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
 	//html += '<input type="hidden" value="" id="' + fields[i].id + '">';
 	//html += '<div id="show_upload_img"></div>';
@@ -1666,9 +1674,9 @@ function get_upload_excel(para) {
 	return html;
 }
 
-function upload_excel(upload_id) {
+function upload_excel(upload_id, del_mode) {
 	console.log('call upload_excel');
-	
+
 	var f = document.getElementById('uploader');
 	if (!f.files) {
 		alert('no valid files!');
@@ -1739,7 +1747,7 @@ function upload_excel(upload_id) {
 				result.filelist = list;
 				
 				// perform local display
-				showExcel(result, upload_id, f);
+				showExcel(result, upload_id, f, del_mode);
 			});
 		},
 		error: function (jqXHR) {
@@ -1749,9 +1757,18 @@ function upload_excel(upload_id) {
 }
 
 
-function showExcel(xlsx, id, f) {
-	
+function showExcel(xlsx, id, f, del_mode) {
+	// 刪除mode實作
+	if (typeof del_mode === 'boolean' && del_mode) {
+		xlsx.data.field.push({key: '刪除'});
+		for (var i in xlsx.data.data){
+			xlsx.data.data[i]['刪除'] = '<input type="button" value="刪除" onclick="del_excel_form(\''+ i +'\')">';
+			xlsx.data.data[i].record_id = i;
+		}
+	}
 	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx.data);
+	
+	excel_form_dom = document.getElementById('show_table');
 	
 	// TOFIX: what does this do?
 	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
@@ -1767,6 +1784,20 @@ function showExcel(xlsx, id, f) {
 			button_value = '確定新增';
 		document.getElementById('show_table').innerHTML += '<input type="button" value="'+button_value+'" onclick="submit_excel_import(\''+ id +'\')">';
 	}
+}
+
+var excel_form_dom;
+
+function del_excel_form(record_id) {
+	var tr_list = excel_form_dom.childNodes[0].childNodes[0].childNodes;
+	for (var i in tr_list) 
+		if (typeof tr_list[i].getAttribute !== 'undefined') 
+			if ( tr_list[i].getAttribute('data-recordid') === record_id ) {
+				tr_list[i].style.visibility = 'collapse';
+				for (var j in l_xlsx.data.data)
+					if (l_xlsx.data.data[j].record_id === record_id)
+						l_xlsx.data.data.splice(j,1);
+			}
 }
 
 function submit_excel_import(id) {
