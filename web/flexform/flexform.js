@@ -91,8 +91,20 @@ var create_img_dev = function(dom_id, img){
 	html += '<div class="imgDiv" id="'+img+'">';
 	html += '<img class="fix-img" src="/web/images/'+img+'"  onclick="open_new_tab(\'/web/images/'+img+'\')" />';
 	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
+	// 照片說明
+	var old_data = JSON.parse( document.getElementById(dom_id).value );
+	html += '<input type="text" id="'+img+'-text" onchange="img_text_onchange(this, \''+dom_id+'\', \''+img+'\')">';
 	html += '</div>';
 	return html;
+}
+
+function img_text_onchange(this_text, dom_id, img){
+	var old_data = JSON.parse( document.getElementById(dom_id).value );
+	for (var i in old_data)
+		if (old_data[i].image === img) {
+			old_data[i].text = this_text.value;
+			document.getElementById(dom_id).value = JSON.stringify( old_data );
+		}
 }
 
 var create_record_dev = function(dom_id, record, original_name){
@@ -262,12 +274,35 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 
 var onPhotoUploaded = function (err, image_filenames, dom_id) {
 	if (!err) {
-		console.log(image_filenames)
-		console.log('done here ' + dom_id);
+		/*
+		// 之前已經新增的
 		var files = document.getElementById(dom_id).value.split(",");
+		// 新加入的
 		document.getElementById(dom_id).value = image_filenames.concat(files);
+		*/
+		// 之前已經新增的
+		if (document.getElementById(dom_id).value.length !== 0)
+			var old_data = JSON.parse( document.getElementById(dom_id).value );
+		else 
+			var old_data = [];
+		// 新加入的
+		var new_data = [];
+		for (var i in image_filenames)
+			new_data.push({image: image_filenames[i], text: ''});
+		// 舊的加新的
+		var all_data = new_data.concat( old_data );
+		document.getElementById(dom_id).value = JSON.stringify( all_data );
+		
+		// 顯示照片
 		for (var i in image_filenames)
 			add_img(dom_id , image_filenames[i]);
+		console.log('all_data = ');
+		console.log(all_data);
+		for (var i in image_filenames)
+			for (var j in all_data)
+				if (all_data[j].image === image_filenames[i]) {
+					document.getElementById(image_filenames[i] + '-text').value = all_data[j].text;
+				}
 	}
 }
 
@@ -492,7 +527,6 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 							console.error(err);
 							return alert(err);
 						}
-
 						return onDone(null, result, dom_id);
 						//window.location.reload();
 					});
@@ -1168,7 +1202,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '</div>';	
 					}
 					break;
-				case 'upload':
+				case 'upload': // 照片
 					if (write) {
 						var image_id = '<%= UTIL.createToken() %>';
 						
