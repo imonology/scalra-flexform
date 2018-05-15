@@ -129,12 +129,20 @@ var open_new_tab = function(url){
 }
 
 var remove_img = function(dom_id, id, type) {
-
+	console.log('remove ' + id);
 	document.getElementById(id).remove();
 	if (!type) {
+		// 舊的:無說明文字
+		/*
 		var files = document.getElementById(dom_id).value.split(",");
 		files.splice(files.indexOf(id), 1);
-		document.getElementById(dom_id).value = files;
+		*/
+		var files = JSON.parse( document.getElementById(dom_id).value );
+		for (var i in files) 
+			if (files[i].image === id)
+				files.splice(i, 1);
+		
+		document.getElementById(dom_id).value = JSON.stringify(files);
 	} else if (type === 'record') {
 		console.log(document.getElementById(dom_id).value)
 		// var new_value = save_value.replace(/\"/g, "'");
@@ -166,24 +174,25 @@ var add_record = function(dom_id, record, original_name) {
 }
 
 
-var show_imgs = function(imgs) {
+var show_imgs = function(img) {
 	var html = '';
-	console.log(imgs)
-	var imgs = imgs.split(",");
-	console.log('show imgs');
-	console.log(imgs);
+// 	console.log(imgs)
+// 	var imgs = imgs.split(",");
+// 	console.log('show imgs');
+// 	console.log(imgs);
 
-	for(var i in imgs) {
-		if (imgs[i].length === 0)
-			continue;
+// 	for(var i in imgs) {
+		// if (imgs[i].length === 0)
+		// 	continue;
 		html += '<div class="thumbnail-item">';
-		html += '<a href="#"><img class="fix-img" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" /></a>';
+		html += '<a href="#"><img class="fix-img" src="/web/images/'+img.image+'"  onclick="open_new_tab(\'/web/images/'+img.image+'\')" /></a>';
 		html += '<div class="tooltip">';
-		html += '<img class="big-fix-img" src="/web/images/'+imgs[i]+'" alt=""/>';
+		html += '<img class="big-fix-img" src="/web/images/'+img.image+'" alt=""/>';
 		html += '<span class="overlay"></span>';
 		html += '</div>';
+		html += '<p align="center">'+img.text+'</p>';
 		html += '</div>';
-	}
+	// }
 	return html;
 	// show_upload_img
 }
@@ -298,11 +307,10 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 			add_img(dom_id , image_filenames[i]);
 		console.log('all_data = ');
 		console.log(all_data);
-		for (var i in image_filenames)
-			for (var j in all_data)
-				if (all_data[j].image === image_filenames[i]) {
-					document.getElementById(image_filenames[i] + '-text').value = all_data[j].text;
-				}
+		for (var j in all_data) 
+			document.getElementById(all_data[j].image + '-text').value = all_data[j].text;
+			
+		
 	}
 }
 
@@ -1227,8 +1235,16 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '</form>';				
 					} else {
 						html += '<div id="uploaded_photo">';
+						// 舊的顯示:無文字說明
+						/*
 						if (value[fields[i].id])
 							html += show_imgs(value[fields[i].id]);
+						*/
+						if (value[fields[i].id].length !== 0) {
+							var data = JSON.parse( value[fields[i].id] );
+							for (var i in data)
+								html += show_imgs(data[i]);
+						}
 						html += '</div>';						
 					}
 					break;
