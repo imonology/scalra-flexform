@@ -283,8 +283,8 @@ SR.API.add('QUERY_ALL_LIST', {
 	form_name: 'string',
 	field: 'string',
 }, function (args, onDone, extra) {
-	if (extra && extra.session._user.account !== 'admin')
-		return onDone(null, {result:0, desc: '你沒有權限這麼做'});
+	// if (extra && extra.session._user.account !== 'admin')
+	// 	return onDone(null, {result:0, desc: '你沒有權限這麼做'});
 	var list = [];
 
 	SR.API.QUERY_FORM({name: args.form_name}, function (err, form) {
