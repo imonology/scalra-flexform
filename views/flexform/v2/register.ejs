@@ -69,7 +69,7 @@ function onCreateAccount(err, result) {
 	if (err) {
 		switch (err) {				
 			case 'ACCOUNT_EXISTS':
-				alert('帳密不符或帳號不存在');
+				alert('帳密不符或帳號已經存在');
 				return;
 			default:
 				alert(err);

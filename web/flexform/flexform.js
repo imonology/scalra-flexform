@@ -91,8 +91,20 @@ var create_img_dev = function(dom_id, img){
 	html += '<div class="imgDiv" id="'+img+'">';
 	html += '<img class="fix-img" src="/web/images/'+img+'"  onclick="open_new_tab(\'/web/images/'+img+'\')" />';
 	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
+	// 照片說明
+	var old_data = JSON.parse( document.getElementById(dom_id).value );
+	html += '<input type="text" id="'+img+'-text" onchange="img_text_onchange(this, \''+dom_id+'\', \''+img+'\')">';
 	html += '</div>';
 	return html;
+}
+
+function img_text_onchange(this_text, dom_id, img){
+	var old_data = JSON.parse( document.getElementById(dom_id).value );
+	for (var i in old_data)
+		if (old_data[i].image === img) {
+			old_data[i].text = this_text.value;
+			document.getElementById(dom_id).value = JSON.stringify( old_data );
+		}
 }
 
 var create_record_dev = function(dom_id, record, original_name){
@@ -117,12 +129,20 @@ var open_new_tab = function(url){
 }
 
 var remove_img = function(dom_id, id, type) {
-
+	console.log('remove ' + id);
 	document.getElementById(id).remove();
 	if (!type) {
+		// 舊的:無說明文字
+		/*
 		var files = document.getElementById(dom_id).value.split(",");
 		files.splice(files.indexOf(id), 1);
-		document.getElementById(dom_id).value = files;
+		*/
+		var files = JSON.parse( document.getElementById(dom_id).value );
+		for (var i in files) 
+			if (files[i].image === id)
+				files.splice(i, 1);
+		
+		document.getElementById(dom_id).value = JSON.stringify(files);
 	} else if (type === 'record') {
 		console.log(document.getElementById(dom_id).value)
 		// var new_value = save_value.replace(/\"/g, "'");
@@ -154,24 +174,25 @@ var add_record = function(dom_id, record, original_name) {
 }
 
 
-var show_imgs = function(imgs) {
+var show_imgs = function(img) {
 	var html = '';
-	console.log(imgs)
-	var imgs = imgs.split(",");
-	console.log('show imgs');
-	console.log(imgs);
+// 	console.log(imgs)
+// 	var imgs = imgs.split(",");
+// 	console.log('show imgs');
+// 	console.log(imgs);
 
-	for(var i in imgs) {
-		if (imgs[i].length === 0)
-			continue;
+// 	for(var i in imgs) {
+		// if (imgs[i].length === 0)
+		// 	continue;
 		html += '<div class="thumbnail-item">';
-		html += '<a href="#"><img class="fix-img" src="/web/images/'+imgs[i]+'"  onclick="open_new_tab(\'/web/images/'+imgs[i]+'\')" /></a>';
+		html += '<a href="#"><img class="fix-img" src="/web/images/'+img.image+'"  onclick="open_new_tab(\'/web/images/'+img.image+'\')" /></a>';
 		html += '<div class="tooltip">';
-		html += '<img class="big-fix-img" src="/web/images/'+imgs[i]+'" alt=""/>';
+		html += '<img class="big-fix-img" src="/web/images/'+img.image+'" alt=""/>';
 		html += '<span class="overlay"></span>';
 		html += '</div>';
+		html += '<p align="center">'+img.text+'</p>';
 		html += '</div>';
-	}
+	// }
 	return html;
 	// show_upload_img
 }
@@ -262,10 +283,34 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 
 var onPhotoUploaded = function (err, image_filenames, dom_id) {
 	if (!err) {
+		/*
+		// 之前已經新增的
 		var files = document.getElementById(dom_id).value.split(",");
+		// 新加入的
 		document.getElementById(dom_id).value = image_filenames.concat(files);
+		*/
+		// 之前已經新增的
+		if (document.getElementById(dom_id).value.length !== 0)
+			var old_data = JSON.parse( document.getElementById(dom_id).value );
+		else 
+			var old_data = [];
+		// 新加入的
+		var new_data = [];
+		for (var i in image_filenames)
+			new_data.push({image: image_filenames[i], text: ''});
+		// 舊的加新的
+		var all_data = new_data.concat( old_data );
+		document.getElementById(dom_id).value = JSON.stringify( all_data );
+		
+		// 顯示照片
 		for (var i in image_filenames)
 			add_img(dom_id , image_filenames[i]);
+		console.log('all_data = ');
+		console.log(all_data);
+		for (var j in all_data) 
+			document.getElementById(all_data[j].image + '-text').value = all_data[j].text;
+			
+		
 	}
 }
 
@@ -490,7 +535,6 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 							console.error(err);
 							return alert(err);
 						}
-
 						return onDone(null, result, dom_id);
 						//window.location.reload();
 					});
@@ -1166,7 +1210,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '</div>';	
 					}
 					break;
-				case 'upload':
+				case 'upload': // 照片
 					if (write) {
 						var image_id = '<%= UTIL.createToken() %>';
 						
@@ -1191,8 +1235,16 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '</form>';				
 					} else {
 						html += '<div id="uploaded_photo">';
+						// 舊的顯示:無文字說明
+						/*
 						if (value[fields[i].id])
 							html += show_imgs(value[fields[i].id]);
+						*/
+						if (value[fields[i].id].length !== 0) {
+							var data = JSON.parse( value[fields[i].id] );
+							for (var i in data)
+								html += show_imgs(data[i]);
+						}
 						html += '</div>';						
 					}
 					break;
@@ -1650,7 +1702,13 @@ function get_upload_excel(para) {
 	
 	html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' id="frmUploadFile">';
 	html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
-	html += '<input type="file" name="upload" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
+	html += '<input type="file" name="upload" id="uploader" multiple="multiple" ';
+	html += 'onchange="upload_excel(';
+	html += '\'' + id + '\' ';
+	// 刪除mode
+	if (typeof para === 'object' && typeof para.del_mode !== 'undefined' && para.del_mode)
+		html += ', true'
+	html += ')">';
 	//html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
 	//html += '<input type="hidden" value="" id="' + fields[i].id + '">';
 	//html += '<div id="show_upload_img"></div>';
@@ -1666,9 +1724,9 @@ function get_upload_excel(para) {
 	return html;
 }
 
-function upload_excel(upload_id) {
+function upload_excel(upload_id, del_mode) {
 	console.log('call upload_excel');
-	
+
 	var f = document.getElementById('uploader');
 	if (!f.files) {
 		alert('no valid files!');
@@ -1739,7 +1797,7 @@ function upload_excel(upload_id) {
 				result.filelist = list;
 				
 				// perform local display
-				showExcel(result, upload_id, f);
+				showExcel(result, upload_id, f, del_mode);
 			});
 		},
 		error: function (jqXHR) {
@@ -1749,22 +1807,47 @@ function upload_excel(upload_id) {
 }
 
 
-function showExcel(xlsx, id, f) {
-	
+function showExcel(xlsx, id, f, del_mode) {
+	// 刪除mode實作
+	if (typeof del_mode === 'boolean' && del_mode) {
+		xlsx.data.field.push({key: '刪除'});
+		for (var i in xlsx.data.data){
+			xlsx.data.data[i]['刪除'] = '<input type="button" value="刪除" onclick="del_excel_form(\''+ i +'\')">';
+			xlsx.data.data[i].record_id = i;
+		}
+	}
 	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx.data);
+	
+	excel_form_dom = document.getElementById('show_table');
 	
 	// TOFIX: what does this do?
 	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
 
 	// keep refernece to be uploaded later
 	l_xlsx = xlsx;
-	
 	if (xlsx.errlist.length > 0) {
 		alert(xlsx.errlist);		
 	}
 	else {
-		document.getElementById('show_table').innerHTML += '<input type="button" value="Continue Upload" onclick="submit_excel_import(\''+ id +'\')">';
+		var button_value = 'Continue Upload';
+		if (typeof(language) !== 'undefined' && language === 'chinese')
+			button_value = '確定新增';
+		document.getElementById('show_table').innerHTML += '<input type="button" value="'+button_value+'" onclick="submit_excel_import(\''+ id +'\')">';
 	}
+}
+
+var excel_form_dom;
+
+function del_excel_form(record_id) {
+	var tr_list = excel_form_dom.childNodes[0].childNodes[0].childNodes;
+	for (var i in tr_list) 
+		if (typeof tr_list[i].getAttribute !== 'undefined') 
+			if ( tr_list[i].getAttribute('data-recordid') === record_id ) {
+				tr_list[i].style.visibility = 'collapse';
+				for (var j in l_xlsx.data.data)
+					if (l_xlsx.data.data[j].record_id === record_id)
+						l_xlsx.data.data.splice(j,1);
+			}
 }
 
 function submit_excel_import(id) {

@@ -77,7 +77,7 @@ l_module.start = function (config, onDone) {
 					form_name = 'FlexForm:' + l_form[form_id].name;
 					l_form_values[form_id] = ref[form_name];
 
-					LOG.warn( l_form_values[form_id]);
+					// LOG.warn( l_form_values[form_id]);
 
 					l_form[form_id].data.values = {};
 					l_form[form_id].add = l_form_values[form_id].add;
@@ -92,7 +92,7 @@ l_module.start = function (config, onDone) {
 					}
 
 					LOG.warn('form: ' + l_form[form_id].name );
-					LOG.warn(l_form[form_id].data.values);
+					// LOG.warn(l_form[form_id].data.values);
 
 					// l_form[form_id].data.values = ref[form_name];
 
@@ -442,7 +442,7 @@ SR.API.add('QUERY_GROUP_BY_PARTIAL',{
 		}
 		
 		LOG.warn('查詢部分符合之群組');
-		LOG.warn(form);
+		// LOG.warn(form);
 		onDone(null, form.data.values);
 	});
 });
@@ -492,7 +492,7 @@ SR.API.add('CREATE_FORM', {
 			}
 			LOG.warn('INIT FORM成功');
 			LOG.warn('l_form[form.id]');
-			LOG.warn(l_form[form.id]);
+			// LOG.warn(l_form[form.id]);
 			
 			
 			l_form[form.id].data.values = {};
@@ -606,10 +606,10 @@ SR.API.add('QUERY_FORM', {
 			
 			for (var key in args.select_time) {
 				if (fields[key] && fields[key].type === 'date') {
-					LOG.warn('key: ' + key);
-					LOG.warn('compare record: ' + record[key] + ' with query: ' + args.select_time[key]); 
+					// LOG.warn('key: ' + key);
+					// LOG.warn('compare record: ' + record[key] + ' with query: ' + args.select_time[key]); 
 					if (args.select_time[key].start && args.select_time[key].end) {
-						LOG.warn('compare '+ record[key]+ ' start: ' + args.select_time[key].start + ' end: ' + args.select_time[key].end );
+						// LOG.warn('compare '+ record[key]+ ' start: ' + args.select_time[key].start + ' end: ' + args.select_time[key].end );
 						if (record[key] < args.select_time[key].start || record[key] > args.select_time[key].end) {
 							matched = false;
 							break;
@@ -919,11 +919,11 @@ SR.API.add('UPDATE_FIELD', {
 	LOG.warn(args.values);
 	// var values_map = form.data.values;
 	var values_map = {};
-	if (args.record_id) {
+	if (args.record_id) { // 修改資料
 		if (form.data.values.hasOwnProperty(args.record_id) === false)
 			return onDone('values not found for record id [' + args.record_id + ']');	
 		values_map = form.data.values[args.record_id];
-	} else {
+	} else { // 新增資料
 		if (extra && extra.session && extra.session._user && extra.session._user.account) 
 			if (typeof(args.values['account']) === 'undefined') 
 				args.values['account'] = extra.session._user.account;
@@ -1085,8 +1085,8 @@ var l_add_form = function (para, onDone) {
 			return onDone('values not found for record id [' + para.para.record_id + ']');
 		
 		for (key in para.values_map){
-			LOG.warn('存的key ' + key);
-			LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
+			// LOG.warn('存的key ' + key);
+			// LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
 			l_form_values[para.form.id][para.para.record_id].values[key] = para.values_map[key];
 		}
 
@@ -1187,7 +1187,7 @@ SR.API.add('UPDATE_FORM', {
 				for (var temp_record_id in form.data.values) 
 					for (var i=0; i < value_array.length; i++) {
 						if (form.data.values[temp_record_id][id] === value_array[i][id] && (typeof(value_array[i]['_record_id']) === 'undefined' || value_array[i]['_record_id'] !== temp_record_id))
-							return onDone(id + ' is unit value');
+							return onDone({error_type: 'unique', message: id });
 					}
 			}
 		}
@@ -1737,7 +1737,7 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 		// check if we've found all fields
 		if (Object.keys(field_index).length === import_fields.length) {
 			LOG.warn('field row found at: ' + i, l_name);
-			LOG.warn(arr_data[i], l_name);
+			// LOG.warn(arr_data[i], l_name);
 			break;
 		}
 	}
