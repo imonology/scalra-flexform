@@ -1423,6 +1423,16 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += value[fields[i].id];
 					}
 					break;
+				case 'boolean':
+					if (write) {
+						html += `<input id=${save_id} type="checkbox" class="checkbox-billable" checked=${save_value} /><label> </label>`
+					} else {
+						html += value[fields[i].id] ? '是' : '否'
+					}
+					break;
+				case 'timestamp':
+					html += moment(value[fields[i].id]).format('YYYY-MM-DD HH:mm');
+					break;
 				default:
 					if (write) {
 						html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
