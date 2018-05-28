@@ -2032,3 +2032,80 @@ function flexform_register(input, onDone){
 	SR.API._ACCOUNT_REGISTER(input, onDone);
 }
 
+// 產生list的查詢表格
+function list_query(para, onDone) {
+	if (typeof(para.form_name) === 'undefined')
+		return onDone('form_name is required!');
+	else if (typeof(para.use_field) === 'undefined')
+		return onDone('use_field is required!');
+	var form_name = para.form_name;
+	var use_field = para.use_field;				// 用到的欄位
+	var n_of_line = (para.n_of_line || 2); 		// 一行的數量
+	if (n_of_line < 2)
+		return onDone('The input n_of_line must be greater than 1.')
+	var html = '';
+	SR.API.GET_FORM_FIELDS({name: form_name}, function (err, rf) {
+		if (err)
+			return onDone(err);
+		console.log('result_field');
+		console.log(rf);
+		// 檢查輸入的錯誤
+		if (typeof(use_field) !== 'object')
+			return onDone('Input use_field must a array');
+		if (use_field.length ===0)
+			return onDone('The input use_field length must be greater than 0.');
+		for (var i in use_field) {
+			var have = false;
+			for (var j in rf.fields) 
+				if (rf.fields[j].id === use_field[i]) 
+					have = true;
+			if (!have)
+				return onDone('Do not have ' + use_field[i] + ' field!');
+		}
+		// 外層的table產生框線
+		html += '<table style="border:2px;"><tr><td>';
+		// 這邊開始產生html
+		var count = 0; // 紀錄該行目前有幾個欄位
+		html += '<table>';
+		for (var i in use_field) {
+			for (var j in rf.fields)
+				if (rf.fields[j].id === use_field[i])
+					var field = rf.fields[j];
+			console.log(field);
+			if (count === 0)
+				html += '<tr>';
+			// 強制date為一行
+			if (field.type === 'date') {
+				if (count !== 0) {
+					html += '</tr>';
+					html += '<tr>';
+					count = 0;
+				}
+			}
+			html += '<td>' + field.name + '</td>';
+			if (field.type === 'string') {
+				html += '<td>' + '<input type="text" id="ql_'+field.id+'" style="text-align: center;">' + '</td>';
+			} else if (field.type === 'choice') {
+				html += '<td>';
+				html += '<select id="ql_'+field.id+'">';
+				for (var k in field.option)
+					html += '<option value="'+field.option[k]+'">'+field.option[k]+'</option>';
+				
+				html += '</select>'
+				html += '</td>';
+			} else if (field.type === 'date') {
+				html += '<td>' + '<input type="text" id="ql_start_'+field.id+'" placeholder="年/月/日" style="text-align: center;">' + '</td>';
+				html += '<td>－</td>';
+				html += '<td>' + '<input type="text" id="ql_end_'+field.id+'" placeholder="年/月/日" style="text-align: center;">' + '</td>';
+			}
+			count++;
+			if (count === n_of_line) {
+				html += '</tr>';
+				count = 0;
+			}
+		}
+		html += '</table>';
+		html += '</td></tr></table>';
+		return onDone(null, html);
+	});
+}
