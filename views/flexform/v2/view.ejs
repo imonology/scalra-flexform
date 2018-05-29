@@ -126,11 +126,19 @@ function success() {
 }
 
 </script>
-			
-<section id="three" class="wrapper style2 special">
-	<h2 id='sub_title'></h2>
-	<div id="data"></div>
-</section>
-<div class="wrapper style2 special" style="text-align: center; padding-top: 0">
-	<a class="button alt" href="javascript: history.back()">Back</a>
+
+<div id="container">
+	<%	if (typeof nav !== 'undefined') { %>
+		<% include nav %>
+	<% } %>
+
+	<div id="mainContent">
+		<section id="three" class="wrapper style2 special">
+			<h2 id='sub_title'></h2>
+			<div id="data"></div>
+		</section>
+		<div class="wrapper style2 special" style="text-align: center; padding-top: 0">
+			<a class="button alt" href="javascript: history.back()">Back</a>
+		</div>
+	</div>
 </div>
