@@ -83,15 +83,30 @@ var init_html = function() {
 	var html = '';
 	console.log(flextable_data)
 	html += flexform_show_table( flextable_data ) ;
-	<% if (typeof(para) !== 'undefined' && typeof(para.add_btn) !== 'undefined') { %>
-		html = '<input type="button" value="<%=para.add_btn.btn_value%>" onclick="<%=para.add_btn.func_name%>()">' + html; 
-	<% } 
-		
-	if (typeof(s_title)!=='undefined') {
+	<% 
+		if (typeof(s_title)!=='undefined') {
 		%> sub_title = '<%=s_title%>'; <%
 	}
-	%> 
+		if (typeof(para) !== 'undefined' && typeof(para.add_btn) !== 'undefined') { %>
+		html = '<input type="button" value="<%=para.add_btn.btn_value%>" onclick="<%=para.add_btn.func_name%>()">' + html; 
+	<% } 
 	
+	if (typeof(para) !== 'undefined' && typeof(para.query_list) !== 'undefined') { %>
+		var list_query_para = JSON.parse('<%=JSON.stringify(para.query_list)%>'.replace(/&quot;/g, '"'));
+		list_query(list_query_para, function(err, h){
+			if (err) {
+				console.log(err);
+				return;
+			}
+			html = h + html;
+			do_init(sub_title, html);
+		});
+	<% } else { %> 
+		do_init(sub_title, html);
+	<% } %>
+}
+																				   
+function do_init(sub_title, html){
 	document.getElementById('sub_title').innerHTML = sub_title;
 	document.getElementById('table_area').innerHTML = html;
 }

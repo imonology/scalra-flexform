@@ -2038,8 +2038,11 @@ function list_query(para, onDone) {
 		return onDone('form_name is required!');
 	else if (typeof(para.use_field) === 'undefined')
 		return onDone('use_field is required!');
+	else if (typeof(para.query_func_name) === 'undefined')
+		return onDone('query_func_name is required!');
 	var form_name = para.form_name;
 	var use_field = para.use_field;				// 用到的欄位
+	var query_func_name = para.query_func_name;
 	var n_of_line = (para.n_of_line || 2); 		// 一行的數量
 	if (n_of_line < 2)
 		return onDone('The input n_of_line must be greater than 1.')
@@ -2106,6 +2109,7 @@ function list_query(para, onDone) {
 		}
 		html += '</table>';
 		html += '</td></tr></table>';
+		html += '<button onclick="'+query_func_name+'(\''+use_field+'\')">查詢</button>'
 		return onDone(null, html);
 	});
 }
