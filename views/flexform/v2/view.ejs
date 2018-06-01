@@ -8,6 +8,7 @@
 <%
 	var show_form = function(form) {
 		form = JSON.parse(JSON.stringify(form));
+		
 		SR.API.TRANSLATE_FORM_FIELDS({field_data: form.data}, function (err, field_data) {
 			if (err) {
 				return console.error(err);	
@@ -19,6 +20,18 @@
 				var hide = para.hide;
 			else
 				var hide = [];
+			LOG.warn('default_value = ');
+
+			// LOG.warn(form.data);
+			var default_keys = Object.keys(default_value);
+			
+			for (var i in form.data.fields)
+				for (var j in default_keys)
+					if (form.data.fields[i].id === default_keys[j]) 
+						form.data.fields[i].default_value = default_value[default_keys[j]];
+
+			LOG.warn(form.data.fields);
+			
 			var f2 = encodeURIComponent(JSON.stringify(hide));
 			if (mode === 'new') 
 				form.data.values = {};
@@ -134,8 +147,10 @@ function success() {
 
 	<div id="mainContent">
 		<section id="three" class="wrapper style2 special">
-			<h2 id='sub_title'></h2>
-			<div id="data"></div>
+			<div class="inner">
+				<h2 id='sub_title'></h2>
+				<div id="data"></div>
+			</div>
 		</section>
 		<div class="wrapper style2 special" style="text-align: center; padding-top: 0">
 			<a class="button alt" href="javascript: history.back()">Back</a>

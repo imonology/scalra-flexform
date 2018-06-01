@@ -1147,7 +1147,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 				var save_value = value[fields[i].id];
 			} else
 				var save_value = '';
-			
+			if (fields[i].default_value)
+				save_value = fields[i].default_value;
+				// console.log('有default_value' + fields[i].default_value)
 			// check if the field is hidden or specified as 'hide'
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
 				continue;				
@@ -1250,7 +1252,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 					break;
 
 				case 'textarea':
-					if (write) {
+					if (write ) {
 						html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
 						html += '<input type="hidden" id="'+save_id+'-encode" value="">';
 						html += '<input type="file" id="inputTxt-'+save_id+'">';
@@ -1262,17 +1264,17 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += save_value;
 					} else {
 						html += '<textarea rows="3" cols="20" readonly="readonly">';
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					html += '</textarea>';					
 					break;
 					
 				case 'date':
-					if (write) {
+					if (write && ! fields[i].default_value) {
 						html += '<input type="text" id="'+save_id+'" value="'+save_value+'">';
 						date_pickers.push(save_id);	
 					} else {
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					break;
 					
@@ -1359,14 +1361,14 @@ var create_table = function (form, hide, write, td_style, show, del) {
 							});	
 						});							
 					} else {
-						html += value[fields[i].id];
+						html += save_value;
 					}				
 					break;
 				case 'tag': 
 					if (write) {
 						html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
 					} else {
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					break;
 				case 'choice':
@@ -1385,7 +1387,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						}
 						html += '</select>';
 					} else {
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					break;
 				case 'lock':
@@ -1413,31 +1415,31 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '</select>';
 					} else {
 						
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					break;
 				case 'password':
 					if (write) {
 						html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';					
 					} else {
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					break;
 				case 'boolean':
 					if (write) {
 						html += `<input id=${save_id} type="checkbox" class="checkbox-billable" checked=${save_value} /><label> </label>`
 					} else {
-						html += value[fields[i].id] ? '是' : '否'
+						html += save_value ? '是' : '否'
 					}
 					break;
 				case 'timestamp':
-					html += moment(value[fields[i].id]).format('YYYY-MM-DD HH:mm');
+					html += moment(save_value).format('YYYY-MM-DD HH:mm');
 					break;
 				default:
-					if (write) {
+					if (write && ! fields[i].default_value) {
 						html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
 					} else {
-						html += value[fields[i].id];
+						html += save_value;
 					}
 					break;
 			}
