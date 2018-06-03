@@ -1,10 +1,38 @@
 <% layout('template/common') %>
 <% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
-	
+<link rel="stylesheet" href="/web/flexform/bootstrap.min.css" />
+
 <script>
 var sub_title = '';
+var do_init_tab = false;
+var choice_tab = '';
+var init_tab = function(point_tab) {
+	var html = '';
+	var tab = '<%=tab%>'.split(',');
+	
+	html += '<ul class="pagination pagination-lg">';
+	for (var i in tab) {
+		html += '<li '+(point_tab === ''?(i==='0'?'class="active"':''):(tab[i]===point_tab)?'class="active"':'')+'>';
+		html += '<a onclick="switch_tab(this)" style="z-index:2" ';
+		html += 'class="top_hoo"' ;
+		html += ' >'+tab[i];
+		html += '</a>';
+		html += '</li>';
+	}
+	html += '</ul>';
+	document.getElementById('tab_area').innerHTML = html;
+}
+
+var switch_tab = function(obj) {
+	console.log(obj.innerHTML);
+	console.log(location.pathname);
+	document.location = location.pathname + '?tab=' + obj.innerHTML;
+}
+
 <%
-function do_add_field_and_hide(flextable_data) {
+function do_add_field_and_hide(flextable_data, para) {
+	if (typeof(para)=== 'undefined')
+		return flextable_data;
 	var substitute_data = [];
 	for (var i in para.add_field) {
 		var position = (typeof(para.add_field[i].position) !== 'undefined' ? para.add_field[i].position : flextable_data.field.length);
@@ -50,36 +78,60 @@ function do_add_field_and_hide(flextable_data) {
 var input_error = false;
 if (typeof(form)!== 'undefined') {
 	%> sub_title = '<%=form.name%>'; <%
-	var flextable_data = SR.API.flexform_to_flexform_table({form: form});
-	if (typeof(para)!== 'undefined')
-		flextable_data = do_add_field_and_hide( flextable_data );
-	var f = encodeURIComponent(JSON.stringify(flextable_data));
-	%> var flextable_data = JSON.parse(decodeURIComponent("<%-f %>")); <% 
+	create_flextable_data(form, para);
 } else if (typeof(para)!== 'undefined'){
+	if (typeof(tab)!== 'undefined') {
+		if (typeof(tab_choice) === 'undefined')
+			tab_choice = tab[0];
+		var have = false; // 檢查tab_choice是否存在
+		for (var i in tab)
+			if (tab[i] === tab_choice)
+				have = true;
+		if (!have) // tab錯誤的話自動帶入第一個
+			tab_choice = tab[0];
+		%> 
+			do_init_tab = true;
+			choice_tab = '<%=tab_choice%>';
+			<%
+		init_tab_data(para[tab_choice]);
+	} else
+		init_tab_data(para);
+	
+	
+} else 
+	input_error = true;
+function init_tab_data(para) {
 	%> sub_title = '<%=para.form_query.name%>'; <%
-	SR.API.QUERY_FORM(para.form_query, function (err, data) {
+	SR.API.QUERY_FORM(para.form_query, function (err, form) {
 		if (err) {
 			LOG.warn(err);
 			return ;
 		}
-		var flextable_data = SR.API.flexform_to_flexform_table({form: data});
-		flextable_data = do_add_field_and_hide( flextable_data );
-		var f = encodeURIComponent(JSON.stringify(flextable_data));
-		%> var flextable_data = JSON.parse(decodeURIComponent("<%-f %>")); <% 
+		create_flextable_data(form, para);
 	}); 
-} else 
-	input_error = true;
+}
+
+function create_flextable_data(form, para) {
+	var flextable_data = SR.API.flexform_to_flexform_table({form: form});
+	flextable_data = do_add_field_and_hide( flextable_data, para );
+	var f = encodeURIComponent(JSON.stringify(flextable_data));
+	%> var flextable_data = JSON.parse(decodeURIComponent("<%-f %>")); <% 
+}
 %>
+	
+
 	
 var onConnect = function () {
 	<% if (input_error) { %>
-		alert('router端需傳入flexform_table或para');
+		alert('router缺少flexform_table或para');
 	<% } else { %>
 		init_html();
 	<% } %>	   
 }
 
 var init_html = function() {
+	if (do_init_tab)
+		init_tab(choice_tab);
 	var html = '';
 	console.log(flextable_data)
 	html += flexform_show_table( flextable_data ) ;
@@ -122,6 +174,7 @@ function do_init(sub_title, html){
 		<section id="four" class="wrapper style2 special" style="display: flex; justify-content: center;">
 			<div class="inner">
 				<h2 id='sub_title'></h2>
+				<div id="tab_area"></div>
 				<div id="table_area"></div>
 
 			</div>
