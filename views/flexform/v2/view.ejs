@@ -20,16 +20,16 @@
 				var hide = para.hide;
 			else
 				var hide = [];
-			LOG.warn('default_value = ');
+			if (typeof(default_value) !== 'undefined') {
+				LOG.warn('default_value = ');
+				// LOG.warn(form.data);
+				var default_keys = Object.keys(default_value);
 
-			// LOG.warn(form.data);
-			var default_keys = Object.keys(default_value);
-			
-			for (var i in form.data.fields)
-				for (var j in default_keys)
-					if (form.data.fields[i].id === default_keys[j]) 
-						form.data.fields[i].default_value = default_value[default_keys[j]];
-
+				for (var i in form.data.fields)
+					for (var j in default_keys)
+						if (form.data.fields[i].id === default_keys[j]) 
+							form.data.fields[i].default_value = default_value[default_keys[j]];
+			}
 			LOG.warn(form.data.fields);
 			
 			var f2 = encodeURIComponent(JSON.stringify(hide));
