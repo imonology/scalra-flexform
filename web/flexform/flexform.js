@@ -2034,17 +2034,35 @@ function flexform_register(input, onDone){
 	SR.API._ACCOUNT_REGISTER(input, onDone);
 }
 
+function default_query_function() {
+	// public use_field_data
+	// console.log(use_field_data);
+	var url = location.pathname + '?';
+	for (var key in use_field_data) {
+		if (use_field_data[key] !== 'date') {
+			if (document.getElementById('ql_' + key).value.length !==0)
+				url += key + '=' + document.getElementById('ql_' + key).value + '&';
+		} else {
+			if (document.getElementById('ql_start_' + key).value.length !== 0 && document.getElementById('ql_end_' + key).value.length !== 0) {
+				url += key + '=' + [document.getElementById('ql_start_' + key).value, document.getElementById('ql_end_' + key).value] + '&';
+			}
+		}
+	}
+	window.location = url;
+}
+var use_field_data; // 要傳遞給查詢btn的資料
 // 產生list的查詢表格
 function list_query(para, onDone) {
 	if (typeof(para.form_name) === 'undefined')
 		return onDone('form_name is required!');
 	else if (typeof(para.use_field) === 'undefined')
 		return onDone('use_field is required!');
-	else if (typeof(para.query_func_name) === 'undefined')
-		return onDone('query_func_name is required!');
+
 	var form_name = para.form_name;
 	var use_field = para.use_field;				// 用到的欄位
 	var query_func_name = para.query_func_name;
+	if (typeof(para.query_func_name) === 'undefined') 
+		query_func_name = 'default_query_function';
 	var n_of_line = (para.n_of_line || 2); 		// 一行的數量
 	if (n_of_line < 2)
 		return onDone('The input n_of_line must be greater than 1.')
@@ -2059,6 +2077,7 @@ function list_query(para, onDone) {
 			return onDone('Input use_field must a array');
 		if (use_field.length ===0)
 			return onDone('The input use_field length must be greater than 0.');
+		use_field_data = {}; 
 		for (var i in use_field) {
 			var have = false;
 			for (var j in rf.fields) 
@@ -2076,6 +2095,7 @@ function list_query(para, onDone) {
 			for (var j in rf.fields)
 				if (rf.fields[j].id === use_field[i])
 					var field = rf.fields[j];
+			
 			console.log(field);
 			if (count === 0)
 				html += '<tr>';
@@ -2087,21 +2107,39 @@ function list_query(para, onDone) {
 					count = 0;
 				}
 			}
+			var value = '';
+			if (getParameterByName(field.id))
+				value = getParameterByName(field.id);
+
+			
 			html += '<td>' + field.name + '</td>';
+			use_field_data[field.id] = field.type;
 			if (field.type === 'string') {
-				html += '<td>' + '<input type="text" id="ql_'+field.id+'" style="text-align: center;">' + '</td>';
+				html += '<td>' + '<input type="text" id="ql_'+field.id+'" style="text-align: center;" value="'+value+'">' + '</td>';
+				
 			} else if (field.type === 'choice') {
 				html += '<td>';
 				html += '<select id="ql_'+field.id+'">';
-				for (var k in field.option)
-					html += '<option value="'+field.option[k]+'">'+field.option[k]+'</option>';
-				
+				for (var k in field.option) {
+					if (value === field.option[k])
+						html += '<option value="'+field.option[k]+'" selected="true">'+field.option[k]+'</option>';
+					else
+						html += '<option value="'+field.option[k]+'">'+field.option[k]+'</option>';
+				}
 				html += '</select>'
 				html += '</td>';
 			} else if (field.type === 'date') {
-				html += '<td>' + '<input type="text" id="ql_start_'+field.id+'" placeholder="年/月/日" style="text-align: center;">' + '</td>';
+				var start_date = '';
+				var end_date = '';
+				if (value) {
+					start_date = value.split(',')[0];
+					end_date = value.split(',')[1];
+				}
+				date_pickers.push('ql_start_' + field.id);	
+				date_pickers.push('ql_end_' + field.id);	
+				html += '<td>' + '<input type="text" id="ql_start_'+field.id+'" placeholder="年/月/日" style="text-align: center;" value="'+start_date+'" readonly="readonly">' + '</td>';
 				html += '<td>－</td>';
-				html += '<td>' + '<input type="text" id="ql_end_'+field.id+'" placeholder="年/月/日" style="text-align: center;">' + '</td>';
+				html += '<td>' + '<input type="text" id="ql_end_'+field.id+'" placeholder="年/月/日" style="text-align: center;" value="'+end_date+'" readonly="readonly">' + '</td>';
 			}
 			count++;
 			if (count === n_of_line) {
@@ -2111,7 +2149,7 @@ function list_query(para, onDone) {
 		}
 		html += '</table>';
 		html += '</td></tr></table>';
-		html += '<button onclick="'+query_func_name+'(\''+use_field+'\')">查詢</button>'
+		html += '<button onclick="'+query_func_name+'()">查詢</button>'
 		return onDone(null, html);
 	});
 }

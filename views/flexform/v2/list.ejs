@@ -105,7 +105,24 @@ if (typeof(form)!== 'undefined') {
 	input_error = true;
 function init_tab_data(para) {
 	%> sub_title = '<%=para.form_query.name%>'; <%
-	SR.API.QUERY_FORM(para.form_query, function (err, form) {
+	var form_query = para.form_query
+	form_query.query = {};
+
+	if (typeof(para.query_list) !== 'undefined') {
+		var use_field = para.query_list.use_field;
+		var query = para.query_list.query;
+		for (var i in use_field) {
+			if (typeof(query[use_field[i]]) !== 'undefined') {
+				form_query.query[use_field[i]] = query[use_field[i]];
+				if (query[use_field[i]].indexOf(',') !== -1) {
+					form_query.start_date = query[use_field[i]].split(',')[0];
+					form_query.end_date = query[use_field[i]].split(',')[1];
+				}
+			}
+		}
+	}
+	// form_query.query.application_date = 'true';
+	SR.API.QUERY_FORM(form_query, function (err, form) {
 		if (err) {
 			LOG.warn(err);
 			return ;
@@ -164,6 +181,13 @@ var init_html = function() {
 function do_init(sub_title, html){
 	document.getElementById('sub_title').innerHTML = sub_title;
 	document.getElementById('table_area').innerHTML = html;
+	if (typeof(date_pickers) !== 'undefined') {
+		for (var i=0; i < date_pickers.length; i++) {
+			$(function() {
+				$("#" + date_pickers[i]).datepicker(datepicker_setting);
+			});
+		}
+	}
 }
 
 </script>
