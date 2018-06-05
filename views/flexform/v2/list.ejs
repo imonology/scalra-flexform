@@ -8,8 +8,11 @@ var do_init_tab = false;
 var choice_tab = '';
 var init_tab = function(point_tab) {
 	var html = '';
-	var tab = '<%=tab%>'.split(',');
-	
+	<% if (typeof(tab) !== 'undefined') { %>
+		var tab = '<%=tab%>'.split(',');
+	<% } else { %>
+		var tab = [];
+	<% } %>
 	html += '<ul class="pagination pagination-lg">';
 	for (var i in tab) {
 		html += '<li '+(point_tab === ''?(i==='0'?'class="active"':''):(tab[i]===point_tab)?'class="active"':'')+'>';
