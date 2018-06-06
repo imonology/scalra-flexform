@@ -1143,7 +1143,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 				var save_id = record_id + '-' + fields[i].id;
 			else
 				var save_id = fields[i].id;
-			if (value) {
+			if (value && value[fields[i].id]) {
 				var save_value = value[fields[i].id];
 			} else
 				var save_value = '';

@@ -80,6 +80,10 @@ function init_html(onDone) {
 	<% if (mode !== 'new' && mode !== 'modify') { %>
 		// html += create_table(form, []);
 		for(var record in form.data.values) {
+			<% if ( typeof(para) !== 'undefined' && typeof(para.record_id) !== 'undefined' ) { %>
+				if (record !== '<%=para.record_id%>')
+					continue;
+			<% } %>
 			var f = SR.clone(form);
 			f.data.values = {};
 			f.data.values[record] = form.data.values[record];
@@ -97,7 +101,24 @@ function init_html(onDone) {
 		console.log('')
 		html += create_table(form, hide, true);   
 	<% } %>
-	return onDone(null, html);
+		
+	<% if ( typeof(additional_area) !== 'undefined' ) { %>
+		if(Object.keys(window).indexOf('<%=additional_area%>') !== -1) {
+			var do_func = window['<%=additional_area%>'];
+			do_func(html, function(err, result){
+				if (err) {
+					console.log(err);
+					return ;
+				}
+				console.log('已修改')
+				console.log(result);
+				return onDone(null, result);
+			});
+		} else 
+			return onDone(null, html);
+	<% } else { %>
+		return onDone(null, html);
+	<% } %>
 }
 														
 function flexform_custom_upload(field, record_id, values) {
