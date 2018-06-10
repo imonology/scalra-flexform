@@ -96,11 +96,12 @@ function onCreateAccount(err, result) {
 				alert(err);
 				return;
 			}
-			if(Object.keys(window).indexOf('<%=add_onDone_func%>') !== -1) {
+			<% if(typeof(add_onDone_func)!== 'undefined') { %>
 				var do_func = window['<%=add_onDone_func%>'];
 				do_func(getInput());
-			} else 
+			<% } else { %>
 				onSuccess();
+			<% } %>
 		});
 	});
 	<% } else { %>
