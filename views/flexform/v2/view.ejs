@@ -77,6 +77,10 @@ function init_html(onDone) {
 	var html = '';	
 	console.log('form = ');
 	console.log(form);
+	var create_table_para = {hide: hide};
+	<% if (typeof(para) !== 'undefined' && typeof(para.customized) !== 'undefined' && para.customized ) { %>
+		create_table_para.customized = true;
+	<% } %>
 	<% if (mode !== 'new' && mode !== 'modify') { %>
 		// html += create_table(form, []);
 		for(var record in form.data.values) {
@@ -91,15 +95,19 @@ function init_html(onDone) {
 			html += '<div id="show" style="border-width:1px;border-style:dashed;border-color:white;padding:3px;">';
 			
 			<% if (typeof(del) !== 'undefined' && del) { %>
-				html += create_table(f, hide, false, null, null, true);
+				// html += create_table2(f, {hide: hide, write: false, del: true});
+				create_table_para.write = false;
+				create_table_para.del = true;
 			<% } else { %>
-				html += create_table(f, hide);
+				// html += create_table2(f, {hide: hide} );
 			<% } %>
+			html += create_table2(f, create_table_para );
 			html += '</div>';
 		}
 	<% } else { %>
 		console.log('')
-		html += create_table(form, hide, true);   
+		create_table_para.write = true;
+		html += create_table2(form, create_table_para );   
 	<% } %>
 		
 	<% if ( typeof(additional_area) !== 'undefined' ) { %>
