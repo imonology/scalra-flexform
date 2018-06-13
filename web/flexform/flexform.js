@@ -1527,7 +1527,7 @@ var create_table2 = function (form, para) {
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
 				continue;				
 			}
-
+			
 			if (customized) {
 				var col_f = fields[i].col_f;
 				var col_v = fields[i].col_v;
