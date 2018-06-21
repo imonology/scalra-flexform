@@ -1105,10 +1105,11 @@ var l_add_form = function (para, onDone) {
 			if (err) {
 				return onDone(err);	
 			}
-			
-			para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
-			para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
-			
+			if (typeof(l_form_values[para.para.form_id][para.para.new_record_id]) !== 'undefined') {
+				para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
+				para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
+			}
+
 			//LOG.warn(para.form.data.values);
 			return onDone(null);
 
