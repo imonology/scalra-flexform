@@ -80,7 +80,7 @@ function do_add_field_and_hide(flextable_data, para) {
 }
 	
 var input_error = false;
-if (typeof(form)!== 'undefined') {
+if (typeof(form)!== 'undefined' && typeof(para) !== 'undefined') {
 	%> sub_title = '<%=form.name%>'; <%
 	create_flextable_data(form, para);
 } else if (typeof(para)!== 'undefined'){
