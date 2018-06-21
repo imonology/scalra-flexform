@@ -1108,11 +1108,14 @@ var l_add_form = function (para, onDone) {
 			if (typeof(l_form_values[para.para.form_id][para.para.new_record_id]) !== 'undefined') {
 				para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
 				para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
+				//LOG.warn(para.form.data.values);
+				return onDone(null);
+			} else {
+				LOG.warn(l_form_values);
+				LOG.warn(para.para.form_id);
+				LOG.warn(para.para.new_record_id);
+				return onDone('l_form_values[para.para.form_id][para.para.new_record_id] undefined');
 			}
-
-			//LOG.warn(para.form.data.values);
-			return onDone(null);
-
 		});
 	}
 }
