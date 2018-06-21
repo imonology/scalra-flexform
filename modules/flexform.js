@@ -1,11 +1,11 @@
 /*
 	flexform module - a module to support flexible, variable field size/type system
-	
+
 	history:
 		2016-10-01		refactored from /handler.js of BW-TC project
 		2016-12-29		convert into a scalra module
 
-	
+
 */
 var moment = require('moment');
 var isUtf8 = require('is-utf8');
@@ -41,17 +41,17 @@ var l_checkers = exports.checkers = {};
 // module init
 l_module.start = function (config, onDone) {
 	LOG.warn('FlexForm module started...', l_name);
-	
+
 	SR.DS.init({models: l_models}, function (err, ref) {
 		if (err) {
-			LOG.error(err, l_name);	
+			LOG.error(err, l_name);
 		}
-		
+
 		l_form = ref[l_dbForm];
-		
+
 		// 以下為 flexform 2.0 的記憶體配置
 		var fome_models = {};
-		
+
 		var count = 0;
 		for (record_id in l_form) {
 			if (l_form[record_id].name === '' || !l_form[record_id].flexform_version || l_form[record_id].flexform_version !== '2.0')
@@ -63,13 +63,13 @@ l_module.start = function (config, onDone) {
 				values:			'object' 	// 欄位資料
 			}
 		}
-		
-		
+
+
 		LOG.warn('目前DB內有 ' + count + ' 個form');
 		if (count !== 0 ) {
 			SR.DS.init({models: fome_models}, function (err, ref) {
 				if (err) {
-					LOG.error(err, l_name);	
+					LOG.error(err, l_name);
 				}
 				for (form_id in l_form) {
 					if (l_form[form_id].name === '' || !l_form[form_id].flexform_version || l_form[form_id].flexform_version !== '2.0')
@@ -134,16 +134,16 @@ String.prototype.startsWith = function (needle) {
 
 // get a form content based on name or id
 var l_get = function (id, name) {
-	
+
 	// check para availability
 	if (typeof id !== 'string' && typeof name !== 'string') {
 		return undefined;
 	}
-	
+
 	var form = undefined;
-	
+
 	if (id && l_form.hasOwnProperty(id)) {
-		form = l_form[args.id];	
+		form = l_form[args.id];
 	} else if (name) {
 		// search via name
 		for (var id in l_form) {
@@ -152,8 +152,8 @@ var l_get = function (id, name) {
 				break;
 			}
 		}
-	}	
-	
+	}
+
 	return form;
 }
 
@@ -163,15 +163,15 @@ SR.API.add('GET_FORM_FIELDS', {
 	name:	'+string',			// form name
 }, function (args, onDone) {
 
-	var form = l_get(args.id, args.name);	
+	var form = l_get(args.id, args.name);
 
 	// no valid form found
 	if (!form) {
 		return onDone('no form can be found by id [' + args.id + '] or name [' + args.name + ']');
 	}
 
-	onDone(null, {id: form.id, name: form.name, fields: form.data.fields});	
-});	
+	onDone(null, {id: form.id, name: form.name, fields: form.data.fields});
+});
 
 SR.API.add('CHECK_UPLOAD_LIMIT_NUM', {
 	form_name:		'string',
@@ -180,11 +180,11 @@ SR.API.add('CHECK_UPLOAD_LIMIT_NUM', {
 	SR.API.GET_FORM_FIELDS({name: args.form_name}, function (err, result_field) {
 		if (err)
 			return onDone(err);
-		
+
 		for (var i in result_field.fields)
 			if (result_field.fields[i].id === args.field_id)
 				return onDone(null, result_field.fields[i].num);
-		
+
 		return onDone('查無資訊');
 	});
 });
@@ -197,7 +197,7 @@ SR.API.add('TRANSLATE_FORM_FIELDS', {
 	var count = 0;
 	for (var i in data.fields) {
 		var field = data.fields[i];
-		if (data.fields[i].setting) 
+		if (data.fields[i].setting)
 			count ++;
 	}
 	if (count === 0)
@@ -213,28 +213,28 @@ SR.API.add('TRANSLATE_FORM_FIELDS', {
 				LOG.warn(count);
 				LOG.warn(done_count);
 				if (done_count === count)
-					onDone(null, data);	
+					onDone(null, data);
 			});
 
 		}
 	}
-});	
+});
 
 // get only the fields and values of a queried form
 SR.API.add('GET_FORM', {
 	id:		'+string',			// form id
 	name:	'+string',			// form name
 	query:	'+object',			// optional query finding exact matches
-	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval  
+	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval
 	show:	'+array',			// only show specific fields
 	show_unchecked: '+object'	// only show if specified checkboxes are unchecked
 }, function (args, onDone) {
-	
+
 	SR.API.QUERY_FORM(args, function (err, form) {
 		if (err) {
-			return onDone(err);	
+			return onDone(err);
 		}
-		
+
 		// return only the form's client returnable info
 		onDone(null, {id: form.id, name: form.name, key_field: form.key_field, data: form.data});
 	});
@@ -247,14 +247,14 @@ SR.API.add('IS_UTF8', {
 	path:			'+string',
 	return_data:	'+boolean'		// whether to return the read data
 }, function (args, onDone) {
-	
+
 	var filepath = "";
 	if(args.path)
 		filepath = args.path;
 	else
 		filepath = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
 	SR.fs.exists(filepath, function (exists) {
-		
+
 		if (!exists) {
 			return onDone('file not exist!');
 		}
@@ -272,7 +272,7 @@ SR.API.add('IS_UTF8', {
 		} else {
 			data = undefined;
 		}
-		
+
 		return onDone(null, {utf8:utf8, data:data});
 	});
 });
@@ -296,8 +296,8 @@ SR.API.add('QUERY_ALL_LIST', {
 			if (!have)
 				return onDone(null, 'no this field');
 		}
-		
-		for (record_id in form.data.values) 
+
+		for (record_id in form.data.values)
 			if (typeof(form.data.values[record_id]) === 'object') {
 				var temp = {key_field: form.data.values[record_id][form.key_field]};
 				if (args.field)
@@ -328,17 +328,17 @@ SR.API.add('QUERY_GROUP_MEMBER_LIST', {
 	var para = {name: form_name};
 	para.query = {name: args.group_name};
 	// para.show = ['account', 'name', 'address', 'sex', 'tel', 'intro'];
-	
+
 	SR.API.QUERY_FORM(para, function (err, form) {
 		if (err) {
 			LOG.error('no form can be found');
 			return onDone(err);
 		}
-		
+
 		if (Object.keys(form.data.values).length === 0)
 			return onDone(null, {result:0, desc: 'no this group'});
 		var gm_list = form.data.values[Object.keys(form.data.values)[0]].gm_list;
-		
+
 		onDone(null, {result:1, gm_list: gm_list});
 	});
 });
@@ -350,10 +350,10 @@ SR.API.add('createOrModifyGroup', {//新增Group內容
 	group:		'string',
 	users:		'array'
 }, function (args, onDone, extra) {
-	
+
 	SR.API.INIT_FORM({
 		name: args.group_id,
-		fields: [		
+		fields: [
 			{id: '*name', name: 'Name', type: 'string', desc: 'Your group name', must: true, show: true, option: undefined},
 			{id: 'gm_list', name: 'Group Member List', type: 'string', desc: '', must: false, show: true, option: undefined},
 		]
@@ -361,7 +361,7 @@ SR.API.add('createOrModifyGroup', {//新增Group內容
 		if (err) {
 			return onDone('init form error');
 		}
-	
+
 		var para = {
 			name: args.group_id,
 			query:{ name: args.group }
@@ -387,7 +387,7 @@ SR.API.add('createOrModifyGroup', {//新增Group內容
 						SR.API.UPDATE_FIELD({
 							form_name: args.group_id,
 							record_id:	old_record_id,
-							values: value 
+							values: value
 						}, function (err, result) {
 							if (err) {
 								LOG.warn(err);
@@ -404,7 +404,7 @@ SR.API.add('createOrModifyGroup', {//新增Group內容
 					value.gm_list = args.users;
 					SR.API.UPDATE_FIELD({
 						form_name: args.group_id,
-						values: value 
+						values: value
 					}, function (err, result) {
 						if (err) {
 							LOG.warn(err);
@@ -413,7 +413,7 @@ SR.API.add('createOrModifyGroup', {//新增Group內容
 						return onDone(null, {result:1, desc: '創建成功' });
 					})
 				}
-			}	
+			}
 		});
 
 		return onDone();
@@ -433,14 +433,14 @@ SR.API.add('QUERY_GROUP_BY_PARTIAL',{
 	para = {name: form_name};
 	para.query_partial = {name: args.value};
 	// para.show = ['account', 'name', 'address', 'sex', 'tel', 'intro'];
-	
+
 	SR.API.QUERY_FORM(para, function (err, form) {
 		if (err) {
 			LOG.error('no form can be found');
 
 			return onDone(err);
 		}
-		
+
 		LOG.warn('查詢部分符合之群組');
 		// LOG.warn(form);
 		onDone(null, form.data.values);
@@ -470,13 +470,13 @@ SR.API.add('CREATE_FORM', {
 	if (!l_form) {
 		return onDone('l_form not init, cannot add');
 	}
-		
+
 	l_form.add(form, function (err, result) {
 		if (err) {
-			return onDone(err);	
+			return onDone(err);
 		}
 		LOG.warn('CREATE_FORM [' + args.name + '] success');
-		
+
 		LOG.warn('create new DB');
 
 		var form_name = 'FlexForm:' + args.name;
@@ -488,23 +488,23 @@ SR.API.add('CREATE_FORM', {
 
 		SR.DS.init({models: form_models}, function (err, ref) {
 			if (err) {
-				LOG.error(err, form_name);	
+				LOG.error(err, form_name);
 			}
 			LOG.warn('INIT FORM成功');
 			LOG.warn('l_form[form.id]');
 			// LOG.warn(l_form[form.id]);
-			
-			
+
+
 			l_form[form.id].data.values = {};
 			l_form[form.id].add = ref[form_name].add;
 			l_form[form.id].remove = ref[form_name].remove;
 			l_form[form.id].size = ref[form_name].size;
-			
+
 			l_form_values[form.id] = ref[form_name];
-			
+
 			onDone(null, {id: form.id});
 		});
-		
+
 	});
 
 });
@@ -512,10 +512,10 @@ SR.API.add('CREATE_FORM', {
 SR.API.add('QUERY_FORM', {
 	id:		'+string',			// form id
 	name:	'+string',			// form name
-	already_form:	'+object',	// 
+	already_form:	'+object',	//
 	query:	'+object',			// optional query finding exact matches
 	query_partial: '+object',	// query for any value partially matching the specified query keys' values
-	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval  
+	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval
 	show:	'+array',			// only show specific fields
 	show_unchecked: '+object',	// only show if specified checkboxes are unchecked
 	start_date:	'+string',		// 當query裡面有date，且需要設定搜尋範圍時。此時query只能使用一個date key
@@ -523,40 +523,45 @@ SR.API.add('QUERY_FORM', {
 	record_id:	'+string',		// query for specific record_id
 	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
 }, function (args, onDone) {
-	if (args.already_form)
+	LOG.warn('QUERY_FORM');
+
+	if (args.already_form) {
 		var form = args.already_form;
-	else
-		var form = l_get(args.id, args.name);	
-	
+	} else {
+		var form = l_get(args.id, args.name);
+	}
+
 	// no valid form found
 	if (!form) {
 		return onDone('no form can be found by id [' + args.id + '] or name [' + args.name + ']');
 	}
-	
+
 	delete args['id'];
 	delete args['name'];
-		
+
 	// check whether to perform conditional query or limit fields to display
 	if (Object.keys(args).length === 0) {
 		return onDone(null, form);
 	}
 
-	// produce custom form content	
+	// produce custom form content
 	var full_form = form;
 	form = {};
-	
+
 	// copy string fields first
 	for (var name in full_form) {
-		if (typeof full_form[name] === 'string')
+		if (typeof full_form[name] === 'string') {
 			form[name] = full_form[name];
+		}
 	}
 	form.data = {
 		fields: [],
 		values: {}
 	};
+
 	var full_fields = full_form.data.fields;
 	var full_values = full_form.data.values;
-	
+
 	// check which fields will be shown (if 'show' parameter is supplied)
 	if (args.show) {
 		// preserve to-show fields, also in that order
@@ -564,50 +569,51 @@ SR.API.add('QUERY_FORM', {
 		for (var i=0; i < full_fields.length; i++) {
 			var idx = args.show.indexOf(full_fields[i].id);
 			if (idx !== (-1)) {
-				form.data.fields[idx] = full_fields[i];	
+				form.data.fields[idx] = full_fields[i];
 			}
 		}
 
 		delete args['show'];
-		
+
 	} else {
-		form.data.fields = full_fields;	
+		form.data.fields = full_fields;
 	}
-	
-	// if no query conditions are specified, simply return current data 
+
+	// if no query conditions are specified, simply return current data
 	//LOG.warn('check for query conditions:');
 	//LOG.warn(args);
-	
+
 	if (Object.keys(args).length === 0) {
 		form.data.values = full_values;
 		return onDone(null, form);
 	}
-		
+
 	// build mapping from field_id to info
 	var fields = {};
 	for (var i=0; i < full_fields.length; i++) {
-		fields[full_fields[i].id] = full_fields[i];			
+		fields[full_fields[i].id] = full_fields[i];
 	}
 	// TODO: need to fix these logic (seems too complicated)
 	// go over each row of data, and copy only matching values
 	for (var id in full_values) {
-		if (typeof(full_values[id]) !== 'object')
+		if (typeof(full_values[id]) !== 'object') {
 			continue;
+		}
 
 		var record = full_values[id];
 		var matched = true;
-		
+
 		if (args.record_id && args.record_id != id) {
 			continue;
 		}
 		// ignore rows where the fields do not match
 		if (args.query || args.select_time) {
-			
-			
+
+
 			for (var key in args.select_time) {
 				if (fields[key] && fields[key].type === 'date') {
 					// LOG.warn('key: ' + key);
-					// LOG.warn('compare record: ' + record[key] + ' with query: ' + args.select_time[key]); 
+					// LOG.warn('compare record: ' + record[key] + ' with query: ' + args.select_time[key]);
 					if (args.select_time[key].start && args.select_time[key].end) {
 						// LOG.warn('compare '+ record[key]+ ' start: ' + args.select_time[key].start + ' end: ' + args.select_time[key].end );
 						if (record[key] < args.select_time[key].start || record[key] > args.select_time[key].end) {
@@ -617,8 +623,7 @@ SR.API.add('QUERY_FORM', {
 					}
 				}
 			}
-			
-			
+
 			var nonmatch_count = 0;
 			var match_count = 0;
 			for (var key in args.query) {
@@ -628,51 +633,50 @@ SR.API.add('QUERY_FORM', {
 					LOG.warn('key [' + key + '] does not exist in fields records');
 					continue;
 				}
-						
+
 				// partial match for 'date' type
 				if (fields[key].type === 'date') {
 					LOG.warn('key: ' + key);
-					LOG.warn('compare record: ' + record[key] + ' with query: ' + compare); 
-					
+					LOG.warn('compare record: ' + record[key] + ' with query: ' + compare);
+
 					if (args.start_date && args.end_date) {
 						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );
 						if (record[key] < args.start_date || record[key] > args.end_date) {
 							matched = false;
 							break;
 						}
-					}
-					else if (record[key].startsWith(compare) === false) {
+					} else if (record[key].startsWith(compare) === false) {
 						matched = false;
 						break;
 					}
-					
+
 					LOG.warn('match: ' + matched);
-				}
+				} else if (typeof compare === 'string' && compare.charAt(0) === '-') {
 				// exact match check for other data types
-				else if (typeof compare === 'string' && compare.charAt(0) === '-') {
 					nonmatch_count++;
-					
+
 					var query_value = compare.substring(1);
 					//LOG.warn('query_value:' + query_value);
-					
+
 					if (record[key] === query_value) {
 						match_count++;
 					}
-				}
-				else {
+				} else {
 					if (typeof(compare) === 'object') {
 						LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);
 						var have_matched = false;
-						for (var temp in compare)
+						for (var temp in compare) {
 							if (record[key] === compare[temp]) {
 								have_matched = true;
 								break;
 							}
+						}
+
 						if (!have_matched) {
 							matched = false;
 							break;
 						}
-							
+
 					} else {
 						LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);
 						if (record[key] !== compare) {
@@ -682,12 +686,12 @@ SR.API.add('QUERY_FORM', {
 					}
 				}
 			}
-			
+
 			if (nonmatch_count > 0 && nonmatch_count === match_count) {
-				matched = false;	
+				matched = false;
 			}
 		}
-		
+
 		// query for any value partially matching the specified query keys' values
 		if (args.query_partial) {
 
@@ -697,14 +701,18 @@ SR.API.add('QUERY_FORM', {
 					if (fields.hasOwnProperty(key) === true && fields[key].type === 'tag') {
 						var temp = record[key].split(",");
 						var have = false;
-						for (var t in temp)
-							if (temp[t] === args.query_partial[key])
-								have = true; 
-						if (!have)
-							non_matched++; 
+						for (var t in temp) {
+							if (temp[t] === args.query_partial[key]) {
+								have = true;
+							}
+						}
+
+						if (!have) {
+							non_matched++;
+						}
 					} else {
 						if (record[key].indexOf(args.query_partial[key]) === (-1)) {
-							non_matched++; 
+							non_matched++;
 						}
 					}
 				}
@@ -714,60 +722,60 @@ SR.API.add('QUERY_FORM', {
 				matched = false;
 			}
 		}
-		
+
 		// also ignore rows for specified checkboxes already checked
 		if (args.show_unchecked) {
 			//LOG.warn('checking if these fields are yet checked: ');
 			//LOG.warn(args.show_unchecked);
-			
+
 			var checked_count = 0;
-			
+
 			for (var i=0; i < args.show_unchecked.length; i++) {
 				if (record[args.show_unchecked[i]] === true) {
 					checked_count++;
 				}
 			}
-			
+
 			if (matched === true && checked_count === args.show_unchecked.length) {
 				matched = false;
 			}
 		}
-		
+
 		// check if specified period overlaps a period in record
 		// overlap example: {start: start, end: end, period: ['depart_time', 'return_time']};
 		// see: http://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
 		if (args.overlap) {
 			LOG.warn('args.overlap:', l_name);
 			LOG.warn(args.overlap, l_name);
-			
+
 			try {
 				var startA = moment(record[args.overlap.period[0]]).toDate().getTime();
 				var endA = moment(record[args.overlap.period[1]]).toDate().getTime();
 				var startB = moment(args.overlap.start).toDate().getTime();
 				var endB = moment(args.overlap.end).toDate().getTime();
-								
+
 				// do not show if there's no overlap
 				if (!((startA <= endB) && (endA >= startB))) {
 					matched = false;
 				} else {
-					//LOG.warn('period overlaps');					
+					//LOG.warn('period overlaps');
 					//LOG.warn('periodA: ' + startA + '~' + endA);
-					//LOG.warn('periodB: ' + startB + '~' + endB);										
+					//LOG.warn('periodB: ' + startB + '~' + endB);
 				}
-				
+
 			} catch (e) {
-				LOG.error(e);	
+				LOG.error(e);
 			}
 		}
-	
+
 		// LOG.warn('最後判斷match')
 		// LOG.warn(matched)
 		// will keep/return this row only if fully matched
 		if (matched) {
-			form.data.values[id] = record;	
+			form.data.values[id] = record;
 		}
-	}		
-	
+	}
+
 	// not used?
 	for (i in form.data.fields){
 		if (form.data.fields[i].sorting) {
@@ -800,7 +808,7 @@ SR.API.add('JOIN_FORM', {
 			}
 			if (args.joint_form_key)
 				para.joint_form_key = args.joint_form_key;
-			
+
 			SR.API.JOIN_FORM_FUNCTION(para, function (err, r_form) {
 				if (err)
 					return onDone(err);
@@ -821,7 +829,7 @@ SR.API.add('JOIN_FORM_FUNCTION', {
 	// form2 = UTIL.clone(args.joint_form);
 	var o_form = JSON.parse(JSON.stringify(args.original_form));
 	var form2 = JSON.parse(JSON.stringify(args.joint_form));
-	
+
 	// var o_form = Object.assign({}, args.original_form);
 	// var form2 = Object.assign({}, args.joint_form);
 	if (args.joint_form_key)
@@ -858,18 +866,18 @@ SR.API.add('DELETE_FIELD', {
 	record_id: 	'string'		// 要刪除的資料的record_id
 }, function (args, onDone) {
 	var form = l_get(args.form_id, args.form_name);
-	
+
 	if (!form.data.values[args.record_id])
 		return onDone(null, ('沒有record_id為 ' + args.record_id + ' 的資料'));
-	
+
 	LOG.warn('清掉 記憶體內的 data');
 	delete form.data.values[args.record_id];
 	LOG.warn('清除完畢');
 	form.remove({id:args.record_id}, function(err, result){
 		if (err) {
-			return onDone(err); 
+			return onDone(err);
 		}
-		
+
 		onDone(null, '從 form ' + form.name + ' 中刪除 record_id = ' + args.record_id + ' test' );
 	});
 });
@@ -893,7 +901,7 @@ SR.API.add('UPDATE_FIELD', {
 
 	if (!args.form_id && !args.form_name)
 		return onDone('values not found for form_id or form_name ');
-	
+
 	var form = undefined;
 
 	// get form
@@ -921,47 +929,47 @@ SR.API.add('UPDATE_FIELD', {
 	var values_map = {};
 	if (args.record_id) { // 修改資料
 		if (form.data.values.hasOwnProperty(args.record_id) === false)
-			return onDone('values not found for record id [' + args.record_id + ']');	
+			return onDone('values not found for record id [' + args.record_id + ']');
 		values_map = form.data.values[args.record_id];
 	} else { // 新增資料
-		if (extra && extra.session && extra.session._user && extra.session._user.account) 
-			if (typeof(args.values['account']) === 'undefined') 
+		if (extra && extra.session && extra.session._user && extra.session._user.account)
+			if (typeof(args.values['account']) === 'undefined')
 				args.values['account'] = extra.session._user.account;
 	}
-		
-	
+
+
 	// check if this is new record
 	if (!args.record_id) {
 		new_record_id = UTIL.createToken();
 		// values_map[args.record_id] = {};
 	}
-	
 
-	
+
+
 	// if (values_map.hasOwnProperty(args.record_id) === false) {
-	// 	return onDone('values not found for record id [' + args.record_id + ']');	
+	// 	return onDone('values not found for record id [' + args.record_id + ']');
 	// }
 
 	var err_msg = [];
 
-	// perform type check for numbers (make sure 'number' type are all numbers and not 'strings')			
+	// perform type check for numbers (make sure 'number' type are all numbers and not 'strings')
 	var fields = form.data.fields;
 	for (var j=0; j < fields.length; j++) {
 		if (fields[j].type === 'number' && args.values.hasOwnProperty(fields[j].id)) {
 			LOG.warn(fields[j].id + ' try convert to number...');
 			try {
 				var num = parseFloat(args.values[fields[j].id]);
-				
+
 				if (isFloat(num) || isInt(num)) {
-					args.values[fields[j].id] = num;						
+					args.values[fields[j].id] = num;
 				} else {
 					LOG.warn(num + ' is not a number, ignore it');
-					args.values[fields[j].id] = undefined;					
+					args.values[fields[j].id] = undefined;
 				}
 				LOG.warn(num + ' type: ' + typeof num);
-				
+
 			} catch (e) {
-				err_msg.push(e);	
+				err_msg.push(e);
 			}
 		}
 	}
@@ -970,7 +978,7 @@ SR.API.add('UPDATE_FIELD', {
 	if (err_msg.length > 0) {
 		return onDone('input data number type cannot be converted', err_msg);
 	}
-	
+
 	// LOG.warn('找BUG 1');
 	// override all data for fields with same key (but leave others)
 	for (var key in args.values) {
@@ -984,22 +992,22 @@ SR.API.add('UPDATE_FIELD', {
 	/*
 	if (typeof form.key_field === 'string' && form.key_field !== '') {
 		var keymap = SR.State.get(form.name + 'Map');
-		// keymap[values_map[args.record_id][form.key_field]] = values_map[args.record_id];	
-		keymap[values_map[form.key_field]] = values_map;	
+		// keymap[values_map[args.record_id][form.key_field]] = values_map[args.record_id];
+		keymap[values_map[form.key_field]] = values_map;
 	}
 	*/
 	// LOG.warn('找BUG 3');
 	//LOG.warn('final data to sync:');
 	//LOG.warn(values_map[args.record_id]);
-	
+
 	// LOG.warn('values_map = ');
 	// LOG.warn(values_map);
-	
+
 	if (!args.record_id) {
 		LOG.warn('使用new_record_id');
 		args.new_record_id = new_record_id;
 	}
-	
+
 	for (var j in form.data.fields) {
 		if (typeof(form.data.fields[j].default)!=='undefined') {
 			// LOG.warn(form.data.fields[j].id + '為default');
@@ -1020,7 +1028,7 @@ SR.API.add('UPDATE_FIELD', {
 				values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
 				// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
 		}
-		
+
 		if (form.data.fields[j].type === 'email') {
 			// LOG.warn('印出email');
 			// LOG.warn(values_map[form.data.fields[j].id])
@@ -1033,10 +1041,10 @@ SR.API.add('UPDATE_FIELD', {
 				LOG.warn('set 成功');
 			});
 		}
-		
-		
+
+
 	}
-	
+
 	l_add_form({form: form, values_map: values_map, para: args}, function (err, result) {
 		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
 	});
@@ -1080,10 +1088,10 @@ var l_add = function (para) {
 
 var l_add_form = function (para, onDone) {
 	if (para.para.record_id) {
-		LOG.warn('使用record_id');                           
+		LOG.warn('使用record_id');
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
 			return onDone('values not found for record id [' + para.para.record_id + ']');
-		
+
 		for (key in para.values_map){
 			// LOG.warn('存的key ' + key);
 			// LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
@@ -1100,10 +1108,10 @@ var l_add_form = function (para, onDone) {
 	} else {
 		LOG.warn('使用new_record_id');
 		//LOG.warn(para.form.data.values);
-		
+
 		para.form.add({id: para.para.new_record_id, values: para.values_map}, function (err, result) {
 			if (err) {
-				return onDone(err);	
+				return onDone(err);
 			}
 			if (typeof(l_form_values[para.para.form_id][para.para.new_record_id]) !== 'undefined') {
 				para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
@@ -1122,7 +1130,7 @@ var l_add_form = function (para, onDone) {
 
 var clone = function(obj) {
 	var new_obj = {};
-	for (key in obj) 
+	for (key in obj)
 		new_obj[key] = obj[key];
 	return new_obj;
 } // clone()
@@ -1138,9 +1146,9 @@ SR.API.add('UPDATE_FORM', {
 
 	if (!args.form_id && !args.form_name)
 		return onDone('values not found for form_id or form_name ');
-	
+
 	var form = undefined;
-	
+
 	// get form
 	if (args.form_name) { // by name
 		for (var form_id in l_form) {
@@ -1160,17 +1168,17 @@ SR.API.add('UPDATE_FORM', {
 
 		form = l_form[args.form_id];
 	}
-	
+
 	var values = form.data.values;
-	
+
 	// set of record_id stored, to be returned
 	var record_ids = [];
-	
+
 	// check if just one set of values or multiples
 	var value_array = args.value_array || [];
 	if (args.values)
 		value_array.push(args.values);
-	
+
 	//LOG.warn('value_array:');
 	//LOG.warn(value_array);
 
@@ -1178,17 +1186,17 @@ SR.API.add('UPDATE_FORM', {
 	if (typeof form.key_field === 'string' && form.key_field !== '') {
 		keymap = SR.State.get(form.name + 'Map');
 	}
-	
+
 	var parent_record_id = args.record_id;
 	delete args['record_id'];
 	var jq = SR.JobQueue.createQueue();
-	
-	
+
+
 	for (var j in form.data.fields) {
 		var id = form.data.fields[j].id;
 		if (typeof(form.data.fields[j].unit)!=='undefined' ) {
 			if (form.data.fields[j].unit) {
-				for (var temp_record_id in form.data.values) 
+				for (var temp_record_id in form.data.values)
 					for (var i=0; i < value_array.length; i++) {
 						if (form.data.values[temp_record_id][id] === value_array[i][id] && (typeof(value_array[i]['_record_id']) === 'undefined' || value_array[i]['_record_id'] !== temp_record_id))
 							return onDone({error_type: 'unique', message: id });
@@ -1196,8 +1204,8 @@ SR.API.add('UPDATE_FORM', {
 			}
 		}
 	}
-	
-	
+
+
 	// store each with unique record_id
 	for (var i=0; i < value_array.length; i++) {
 
@@ -1212,7 +1220,7 @@ SR.API.add('UPDATE_FORM', {
 			LOG.warn('updateing existing record [' + record_id + ']');
 			have_record_id = true;
 		}
-		
+
 		// if (!values[record_id]) {
 		// 	values[record_id] = {};
 		// }
@@ -1221,26 +1229,26 @@ SR.API.add('UPDATE_FORM', {
 		// for (var key in value_array[i]) {
 		// 	values[record_id][key] = value_array[i][key];
 		// }
-		
+
 		// add new record to key-value map
 		// if (keymap) {
 		// 	keymap[values[record_id][form.key_field]] = value_array[i];
-		// }	
-		
+		// }
+
 		// check whether to store optional associated record_id
 		if (parent_record_id) {
 			value_array[i]['record_id'] = parent_record_id;
 			LOG.warn('values after storing record_id:');
 			LOG.warn(value_array[i]);
-		} 
-		
+		}
+
 		var new_para = clone(args);
 		if (have_record_id)
 			new_para.record_id = record_id;
 		else
 			new_para.new_record_id = record_id;
-		
-		
+
+
 		// LOG.warn('測試default用');
 		// LOG.warn(value_array[i]);
 		// LOG.warn(form.data.fields);
@@ -1281,23 +1289,23 @@ SR.API.add('UPDATE_FORM', {
 		if (have_record_id)
 			for (var key in value_array[i])
 				form.data.values[record_id][key] = value_array[i][key];
-		
+
 		jq.add(l_add({form:form, values_map:value_array[i], para:new_para}));
-		
+
 		record_ids.push(record_id);
 	}
 
 	jq.run(function (err) {
 		onDone(null, {form_id: args.form_id, record_ids: record_ids});
 	});
-	
+
 // 	form.sync(function (err) {
 // 		if (err) {
-// 			return onDone('save to DB error: ' + err);	
+// 			return onDone('save to DB error: ' + err);
 // 		}
 
 // 		onDone(null, {form_id: args.form_id, record_ids: record_ids});
-// 	});	
+// 	});
 });
 
 SR.API.add('INIT_FORM', {
@@ -1315,35 +1323,35 @@ SR.API.add('INIT_FORM', {
 			key_field = args.fields[i].id = args.fields[i].id.substring(1);
 			LOG.warn('[' + args.name + '] form has key_field: ' + key_field);
 		}
-	}	
-	
+	}
+
 	SR.API.QUERY_FORM({name: args.name}, function (err, form) {
 		if (!err) {
-			
+
 			LOG.warn('existing form [' + args.name + '] found, loading it...', l_name);
-			
+
 			// update field info
 			// form.data.fields = args.fields;
 			// do not update lock_para
 			for (var i in args.fields) {
 				if (args.fields[i].lock_para) {
-					for (var key in args.fields[i]) 
-						if (args.fields[i].lock_para.indexOf(key) === -1) 
+					for (var key in args.fields[i])
+						if (args.fields[i].lock_para.indexOf(key) === -1)
 							form.data.fields[i][key] = args.fields[i][key];
 				} else
 					form.data.fields[i] = args.fields[i];
 			}
-			
-			
-			
-			form.key_field = key_field;			
-			
+
+
+
+			form.key_field = key_field;
+
 			var temp_values = form.data.values;
-			
+
 			// 避免修改到lobby: FlexForm內的資料，沒有這處理會新增values
 			form.data.values = null;
 			delete form.data.values;
-			
+
 			form.sync(function (err) {
 				if (err) {
 					return onDone(err);
@@ -1359,15 +1367,15 @@ SR.API.add('INIT_FORM', {
 					}
 				}
 				ref[args.name] = map;
-				
+
 				return onDone(null, ref);
 			})
 			// NOTE: return here in needed as sync above won't return immediately
 			return;
 		}
-		
+
 		LOG.warn('form [' + args.name + '] does not exist, create one...');
-				
+
 		SR.API.CREATE_FORM({
 			name:		args.name,
 			fields: 	args.fields,
@@ -1377,10 +1385,10 @@ SR.API.add('INIT_FORM', {
 				LOG.error(err);
 				return onDone(err);
 			}
-			ref[args.name] = map;	
+			ref[args.name] = map;
 			onDone(null, ref);
 		});
-	});	
+	});
 });
 
 // helper
@@ -1404,26 +1412,26 @@ var l_do_rename = function( para, onDone ) {
 				return onDone(err);
 			}
 			LOG.warn('rename success: ' + para.new_file);
-			
+
 			// copy to downloadable public path
 			var source = SR.fs.createReadStream(new_name_path);
 			var dest = SR.fs.createWriteStream(pdb_new_path);
 			source.pipe(dest);
 
-			source.on('end', function() { 
-				/* copied */ 
+			source.on('end', function() {
+				/* copied */
 				onDone(null);
 			});
 
-			source.on('error', function(err) { 
-				/* error */ 
+			source.on('error', function(err) {
+				/* error */
 				LOG.error(err);
 				onDone(err);
 			});
-			
+
 		});
 	});
-	
+
 }
 
 
@@ -1437,7 +1445,7 @@ SR.API.add('UPLOAD_IMAGE', {
 	}
 
 	// find file extension
-	
+
 	var jq = SR.JobQueue.createQueue();
 	var new_file_names = [];
 	for (var i in args.filename) {
@@ -1447,28 +1455,28 @@ SR.API.add('UPLOAD_IMAGE', {
 		new_file_names.push(new_file);
 		jq.add(l_rename({new_file: new_file, file_name: args.filename[i]}));
 	}
-	
+
 	jq.run(function (err) {
 		return onDone(null, new_file_names);
 	});
-	
+
 // 	// for (var i in )
 // 	var arr = args.filename.split(".");
 // 	var file_ext = arr[arr.length-1]; // 副檔名
-		
+
 // 	// var new_file = (args.new_filename ? args.new_filename : extra.session._user.account) + '.' + file_ext.toLowerCase();
 // 	var new_file = UTIL.createToken() + '.' + file_ext.toLowerCase();
 // //	if (!args.new_filename)
 // //		var account = extra.session._user.account;
 // //	else
 // //		var account = args.new_filename;
-	
+
 // 	var pdb_path = SR.path.join(SR.Settings.UPLOAD_PATH, args.filename);
 // 	var new_name_path = SR.path.join(SR.Settings.UPLOAD_PATH, new_file);
 // 	var pdb_new_path = SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images', new_file);
-	
+
 // 	LOG.warn(pdb_path);
-	
+
 // 	// rename uploaded file name
 // 	SR.fs.rename(pdb_path, new_name_path, (err) => {
 // 		if (err) {
@@ -1481,23 +1489,23 @@ SR.API.add('UPLOAD_IMAGE', {
 // 			LOG.warn('rename success: ' + new_file);
 // 		});
 // 	});
-	
+
 // 	// copy to downloadable public path
 // 	var source = SR.fs.createReadStream(new_name_path);
 // 	var dest = SR.fs.createWriteStream(pdb_new_path);
 // 	source.pipe(dest);
-	
-// 	source.on('end', function() { 
-// 		/* copied */ 
+
+// 	source.on('end', function() {
+// 		/* copied */
 // 		onDone(null, new_file);
 // 	});
-	
-// 	source.on('error', function(err) { 
-// 		/* error */ 
+
+// 	source.on('error', function(err) {
+// 		/* error */
 // 		LOG.error(err);
 // 		onDone(err);
 // 	});
-	
+
 });
 
 //
@@ -1597,7 +1605,7 @@ SR.API.add('Array_To_Flexform_Table', {
 }, function (args, onDone) {
 	var arr_data = args.arr_data;
 	var para = args.para;
-	
+
 	var flexform_table = {};
 	flexform_table.field = [];
 	flexform_table.data = [];
@@ -1657,7 +1665,7 @@ SR.API.add('Array_To_Flexform_Table', {
 	}
 
 	return onDone(null, flexform_table);
-	
+
 });
 
 function array_to_flexform_table(arr_data, para) {
@@ -1723,21 +1731,21 @@ function array_to_flexform_table(arr_data, para) {
 }
 
 function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
-	
+
 	var import_fields = para.import_fields;
-	
+
 	LOG.warn('how many rows starts: ' + arr_data.length, l_name);
-	
+
 	var field_index = {};
-	
+
 	// find field row
 	for (var i=0; i < arr_data.length; i++){
-		
+
 		for (var j in import_fields)
 			if (has_str(arr_data[i], import_fields[j])) {
-				field_index[import_fields[j]] = i;				
+				field_index[import_fields[j]] = i;
 			}
-		
+
 		// check if we've found all fields
 		if (Object.keys(field_index).length === import_fields.length) {
 			LOG.warn('field row found at: ' + i, l_name);
@@ -1745,7 +1753,7 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 			break;
 		}
 	}
-	
+
 	// check if did not find field row
 	if (i === arr_data.length) {
 		return onDone('field row cannot be found! ' + import_fields);
@@ -1753,7 +1761,7 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 
 	// remove irrelevant top rows
 	arr_data = arr_data.slice(i);
-	
+
 	// remove empty bottom rows
 	for (var i=0; i < arr_data.length - 1; i++) {
 		if (!arr_data[i]) {
@@ -1762,12 +1770,12 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 		}
 	}
 
-	// convert to flexform format	
+	// convert to flexform format
 	SR.API.Array_To_Flexform_Table({
 		arr_data:		arr_data,
 		para:			para
 	}, function (err, xlsx_data) {
-	
+
 		// remove unused fields
 		/*
 		for (var i = xlsx_data.field.length - 1; i >= 0 ; i -- ) {
@@ -1776,7 +1784,7 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 			for (var j in import_fields)
 				if (xlsx_data.field[i].value === import_fields[j])
 					have = true;
-			if (!have) 
+			if (!have)
 				delete xlsx_data.field[i];
 		}
 		*/
@@ -1807,15 +1815,15 @@ function extract_excel_fields(arr_data, para, onDone, warn_empty, key_field) {
 			for (var j in selected.data) {
 				if (!selected.data[j][selected.field[i].key] && warn_empty === true) {
 					errlist.push('Record #' + (parseInt(j)+1) + ' has empty field [' + selected.field[i].key + ']');
-				}			
-			}		
-		} 
+				}
+			}
+		}
 
 		// check for redundent keys
 		if (typeof key_field === 'string') {
 			for (var j in selected.data) {
 				for (var i in selected.data) {
-					if (j === i) 
+					if (j === i)
 						continue;
 
 					if (selected.data[i][key_field] === selected.data[j][key_field]) {
@@ -1837,18 +1845,18 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 	list:	'array',		// list of uploaded file names
 	para:	'object'
 }, function (args, onDone) {
-		
-	// process a single file	
+
+	// process a single file
 	var processFile = function (file_name, onD) {
-		
+
 		// perform file conversion first
 		SR.API.IS_UTF8({
 			filename:		file_name,
 			return_data:	true
 		}, function (err, result) {
-					   
+
 			if (err) {
-				return onD(err); 
+				return onD(err);
 			}
 
 			var is_utf8 = result.is_utf8;
@@ -1860,11 +1868,11 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 			if (ext === 'csv') {
 				// for CSV text
 				var array = CSVToArray(data);
-				
+
 				// what does this do?
 				if (array[array.length-1] == "")
 					array.splice(array.length-1, 1);
-				
+
 				onD(null, array);
 			} else {
 				// for excel files
@@ -1873,15 +1881,15 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 					//data:			data
 				}, function (err, parsed) {
 					if (err) {
-						return onD(err); 
+						return onD(err);
 					}
 					//LOG.warn(parsed);
 					onD(null, parsed[0].data);
 				});
 			};
-		});			
+		});
 	}
-	
+
 	var processed_count = 0;
 	var errlist = [];
 	var combined_xlsx = {
@@ -1893,25 +1901,25 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 		// check done
 		if (processed_count === args.list.length) {
 			onDone(null, {data: combined_xlsx, errlist: errlist})
-		}		
+		}
 	}
-	
+
 	for (var i=0; i < args.list.length; i++) {
-			
+
 		var filename = args.list[i];
 		processFile(filename, function (err, array) {
 
 			processed_count++;
-		
+
 			if (err) {
 				LOG.error(err, l_name);
 				checkDone();
 				return;
 			}
-			
+
 			// process to extract field name and data
 			extract_excel_fields(array, args.para, function (err, result) {
-				
+
 				if (err) {
 					LOG.error(err, l_name);
 					errlist.push(err);
@@ -1924,12 +1932,12 @@ SR.API.add('PROCESS_UPLOADED_EXCEL', {
 					}
 
 					combined_xlsx.data = combined_xlsx.data.concat(result.data);
-					errlist = errlist.concat(result.errlist);					
+					errlist = errlist.concat(result.errlist);
 				}
-				
+
 				checkDone();
 			});
-		});	
+		});
 	}
 })
 
@@ -1978,7 +1986,7 @@ SR.API.add('flexform_to_flexform_table', {
 	}
 	for (var record_id in form.data.values) {
 		var temp_data = {};
-		for (var i in flexform_table.field) 
+		for (var i in flexform_table.field)
 			temp_data[flexform_table.field[i].key] = form.data.values[record_id][flexform_table.field[i].key];
 		temp_data['record_id'] = record_id;
 		flexform_table.data.push(temp_data);
@@ -2018,7 +2026,7 @@ SR.API.add('flexform_table_add_field', { // flexform_table_add_field(0, flex_for
 	return flexform_table;
 });
 
-SR.API.add('substitute_value', { 
+SR.API.add('substitute_value', {
 	_direct: 			true,
 	target_form:		'string',
 	target:				'string',
@@ -2028,7 +2036,7 @@ SR.API.add('substitute_value', {
 	var form = l_get(args.id, args.target_form);
 	var new_value = []
 	for (var i in args.value)
-		for (var record_id in form.data.values) 
+		for (var record_id in form.data.values)
 			if (args.value[i] === form.data.values[record_id][args.target]) {
 				args.value[i] = form.data.values[record_id][args.target_value];
 				new_value.push(form.data.values[record_id][args.target_value]);
