@@ -84,16 +84,21 @@ function get_record_num() {
 	return records.length;
 }
 
-var create_img_dev = function(dom_id, img){
+var create_img_dev = function(dom_id, img, text){
 	var html = '';
+	if (!text)
+		text = '';
 	if (img.length === 0)
 		return html;
 	html += '<div class="imgDiv" id="'+img+'">';
 	html += '<img class="fix-img" src="/web/images/'+img+'"  onclick="open_new_tab(\'/web/images/'+img+'\')" />';
 	html += '<i class="fa fa-times" aria-hidden="true" onclick="remove_img( \''+dom_id+'\' ,\''+img+'\')"></i>';
 	// 照片說明
-	var old_data = JSON.parse( document.getElementById(dom_id).value );
-	html += '<input type="text" id="'+img+'-text" onchange="img_text_onchange(this, \''+dom_id+'\', \''+img+'\')">';
+	console.log('照片說明，修改')
+	console.log(img)
+	// console.log(document.getElementById(dom_id).value);
+	// var old_data = JSON.parse( document.getElementById(dom_id).value );
+	html += '<input type="text" id="'+img+'-text" onchange="img_text_onchange(this, \''+dom_id+'\', \''+img+'\')" value="'+text+'">';
 	html += '</div>';
 	return html;
 }
@@ -1229,9 +1234,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '<div id="'+save_id+'-show_upload_img">';
 						console.log(save_value);
 						if (save_value.length !== 0) {
-							var files = save_value.split(',');
+							var files = JSON.parse( save_value );
 							for (var i in files) 
-								html += create_img_dev(save_id, files[i])
+								html += create_img_dev(save_id, files[i].image, files[i].text);
 						}
 						html += '</div>';
 						
@@ -1613,9 +1618,9 @@ var create_table2 = function (form, para) {
 							html += '<div id="'+save_id+'-show_upload_img">';
 							console.log(save_value);
 							if (save_value.length !== 0) {
-								var files = save_value.split(',');
+								var files = JSON.parse( save_value );
 								for (var i in files) 
-									html += create_img_dev(save_id, files[i])
+									html += create_img_dev(save_id, files[i].image, files[i].text);
 							}
 							html += '</div>';
 
