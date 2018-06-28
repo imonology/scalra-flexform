@@ -80,10 +80,12 @@ function do_add_field_and_hide(flextable_data, para) {
 }
 	
 var input_error = false;
+
 if (typeof(form)!== 'undefined' && typeof(para) !== 'undefined') {
 	%> sub_title = '<%=form.name%>'; <%
 	create_flextable_data(form, para);
 } else if (typeof(para)!== 'undefined'){
+	LOG.warn('用這個')
 	if (typeof(tab)!== 'undefined') {
 		if (typeof(tab_choice) === 'undefined')
 			tab_choice = tab[0];
@@ -98,12 +100,15 @@ if (typeof(form)!== 'undefined' && typeof(para) !== 'undefined') {
 			choice_tab = '<%=tab_choice%>';
 			<%
 		init_tab_data(para[tab_choice]);
-	} else
+	} else {
 		init_tab_data(para);
-	
-	
-} else 
+	}
+} else if (typeof(form)!== 'undefined') {
+	%> sub_title = '<%=form.name%>'; <%
+	create_flextable_data(form);
+} else {
 	input_error = true;
+}
 function init_tab_data(para) {
 	%> sub_title = '<%=para.form_query.name%>'; <%
 	var form_query = para.form_query
