@@ -6,62 +6,51 @@
 
 <script>
 <%
-	var show_form = function(form) {
-		form = JSON.parse(JSON.stringify(form));
-		
-		SR.API.TRANSLATE_FORM_FIELDS({field_data: form.data}, function (err, field_data) {
-			if (err) {
-				return console.error(err);	
-			}	
-			// LOG.warn('form = ');
-			// LOG.warn(form.data.field );
-			form.data.field = field_data.field;
-			if (typeof(para) !== 'undefined' && typeof(para.hide) !== 'undefined' )
-				var hide = para.hide;
-			else
-				var hide = [];
-			if (typeof(default_value) !== 'undefined') {
-				LOG.warn('default_value = ');
-				// LOG.warn(form.data);
-				var default_keys = Object.keys(default_value);
-
-				for (var i in form.data.fields)
-					for (var j in default_keys)
-						if (form.data.fields[i].id === default_keys[j]) 
-							form.data.fields[i].default_value = default_value[default_keys[j]];
-			}
-			LOG.warn(form.data.fields);
-			
-			var f2 = encodeURIComponent(JSON.stringify(hide));
-			if (mode === 'new') 
-				form.data.values = {};
-			var f = encodeURIComponent(JSON.stringify(form));
-			%> 
-				var form = JSON.parse(decodeURIComponent("<%-f %>")); 
-				var hide = JSON.parse(decodeURIComponent("<%-f2 %>")); 
-				var sub_title = '<%=(typeof(s_title)!=='undefined')?s_title:form.name%>';
-			<% 
-		});
-	}
-	if (typeof(form) !== 'undefined') {
-		show_form(form);
-	} else if (typeof(para) !== 'undefined' && typeof(para.form_query) !== 'undefined' ) {
-		SR.API.QUERY_FORM( para.form_query, function (err, form) {
-			if (err) {
-				LOG.warn(err);
-				return ;
-			}
-			show_form(form);
-		});
-	}
+var f1 = encodeURIComponent(JSON.stringify(para));
+var forms = [];
+var error = false;
+var error_message = '';
+for (var i in para)	{
+	SR.API.QUERY_FORM( para[i].form_query, function (err, form) {
+		if (err) {
+			error = true;
+			error_message = err;
+			return err;
+		}
+		forms.push(form);
+		var related_form_count = 0;
+		for (var j in para[i].related_form){
+			SR.API.QUERY_FORM( para[i].related_form[j].form_query, function (err, form) {
+				if (err) {
+					error = true;
+					error_message = err;
+					return err;
+				}
+				forms.push(form);
+				related_form_count++;
+				if (related_form_count === para[i].related_form.length) {
+					var f2 = encodeURIComponent(JSON.stringify(forms));
+					%> 
+						var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
+						var forms = JSON.parse(decodeURIComponent("<%-f2 %>")); 
+						var use_page = 0;
+					<%
+				}
+			});
+		}
+	});
+}
 %>
-
+	
 var onConnect = function () {
+	console.log('para = ');
+	console.log(para);
+	console.log('forms = ');
+	console.log(forms);
+	
 	init_html(function(err, html){
-		console.log('hide = ');
-		console.log(hide);
-		document.getElementById('sub_title').innerHTML = sub_title;
-		document.getElementById('data').innerHTML = html;	
+		document.getElementById('sub_title').innerHTML = para[use_page].s_title;
+		document.getElementById('form_area').innerHTML = html;	
 		if (typeof(date_pickers) !== 'undefined') {
 			for (var i=0; i < date_pickers.length; i++) {
 				$(function() {
@@ -70,99 +59,33 @@ var onConnect = function () {
 			}
 		}
 		$('.tags').tagsInput();
+		init_submit_btn();
 	});
 }
 
 function init_html(onDone) {
 	var html = '';	
-	console.log('form = ');
-	console.log(form);
-	var create_table_para = {hide: hide};
-	<% if (typeof(para) !== 'undefined' && typeof(para.customized) !== 'undefined' && para.customized ) { %>
-		create_table_para.customized = true;
-	<% } %>
-	<% if (mode !== 'new' && mode !== 'modify') { %>
-		// html += create_table(form, []);
-		for(var record in form.data.values) {
-			<% if ( typeof(para) !== 'undefined' && typeof(para.record_id) !== 'undefined' ) { %>
-				if (record !== '<%=para.record_id%>')
-					continue;
-			<% } %>
-			var f = SR.clone(form);
-			f.data.values = {};
-			f.data.values[record] = form.data.values[record];
-			
-			html += '<div id="show" style="border-width:1px;border-style:dashed;border-color:white;padding:3px;">';
-			
-			<% if (typeof(del) !== 'undefined' && del) { %>
-				// html += create_table_v3(f, {hide: hide, write: false, del: true});
-				create_table_para.write = false;
-				create_table_para.del = true;
-			<% } else { %>
-				// html += create_table_v3(f, {hide: hide} );
-			<% } %>
-			html += create_table_v3(f, create_table_para );
-			html += '</div>';
+	for (var i in forms) {
+		if (i !== '0'){
+			html += '<hr>'
 		}
-	<% } else { %>
-		console.log('')
-		create_table_para.write = true;
-		html += create_table_v3(form, create_table_para );   
-	<% } %>
-		
-	<% if ( typeof(additional_area) !== 'undefined' ) { %>
-		if(Object.keys(window).indexOf('<%=additional_area%>') !== -1) {
-			var do_func = window['<%=additional_area%>'];
-			do_func(html, function(err, result){
-				if (err) {
-					console.log(err);
-					return ;
-				}
-				return onDone(null, result);
-			});
-		} else 
-			return onDone(null, html);
-	<% } else { %>
-		return onDone(null, html);
-	<% } %>
-}
-														
-function flexform_custom_upload(field, record_id, values) {
-	<% if (typeof(onBeforeUpload_name)!== 'undefined' ) {  %>
-		if(Object.keys(window).indexOf('<%=onBeforeUpload_name%>') !== -1) {
-			var do_func = window['<%=onBeforeUpload_name%>'];
-			do_func(field, record_id, values, function(err, datas){
-				if (err) {
-					console.log(err);
-					return ;
-				}
-				if (typeof(datas) === 'undefined')
-					default_upload(field, record_id, values);
-				else
-					default_upload(datas.field, datas.record_id, datas.values);
-			});
-		} else
-			default_upload(field, record_id, values);
-	<% } else { %>
-		default_upload(field, record_id, values);
-	<% } %>
+		var form_para = {};
+		if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
+			form_para.customized = para[use_page].customized;
+		}
+		if (para[use_page].mode === 'show') {
+			form_para.write = false;
+		} else {
+			form_para.write = true;
+		}
+		html += create_table_v3(forms[i], form_para);
+	}
 	
-}													
-
-function upload_callback(result, values) {
-	<% if (typeof(onDone_name)!== 'undefined' ) {  %>
-		if(Object.keys(window).indexOf('<%=onDone_name%>') !== -1) {
-			var do_func = window['<%=onDone_name%>'];
-			do_func(result, values);
-		} else
-			success();
-	<% } else { %>
-		success();
-	<% } %>
+	return onDone(null, html);
 }
-function success() {
-	alert('填寫已完成!!');
-	window.history.back();
+		
+function init_submit_btn() {
+	document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="">送出</button>';
 }
 
 </script>
@@ -176,11 +99,9 @@ function success() {
 		<section id="three" class="wrapper style2 special">
 			<div class="inner">
 				<h2 id='sub_title'></h2>
-				<div id="data"></div>
+				<div id="form_area"></div>
+				<div id="button_area"></div>
 			</div>
 		</section>
-		<div class="wrapper style2 special" style="text-align: center; padding-top: 0">
-			<a class="button alt" href="javascript: history.back()">Back</a>
-		</div>
 	</div>
 </div>
