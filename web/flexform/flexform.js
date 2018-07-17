@@ -1632,11 +1632,18 @@ var create_table2 = function (form, para) {
 							if (value[fields[i].id])
 								html += show_imgs(value[fields[i].id]);
 							*/
+
 							if (value[fields[i].id].length !== 0) {
-								var data = JSON.parse( value[fields[i].id] );
-								for (var i in data)
-									html += show_imgs(data[i]);
+								let data = value[fields[i].id].split(',');
+								for (var index in data) {
+									const tmp_img = {};
+									tmp_img.image = data[index];
+									tmp_img.text = '';
+									console.log(data[index]);
+									html += show_imgs(tmp_img);
+								}
 							}
+
 							html += '</div>';						
 						}
 						break;
@@ -2019,11 +2026,18 @@ var create_table_v3 = function (form, para) {
 							if (value[fields[i].id])
 								html += show_imgs(value[fields[i].id]);
 							*/
+
 							if (value[fields[i].id].length !== 0) {
-								var data = JSON.parse( value[fields[i].id] );
-								for (var i in data)
-									html += show_imgs(data[i]);
+								let data = value[fields[i].id].split(',');
+								for (var index in data) {
+									const tmp_img = {};
+									tmp_img.image = data[index];
+									tmp_img.text = '';
+									console.log(data[index]);
+									html += show_imgs(tmp_img);
+								}
 							}
+
 							html += '</div>';						
 						}
 						break;
