@@ -64,10 +64,16 @@ var onConnect = function () {
 }
 
 function init_html(onDone) {
-	var html = '';	
+	var html = '';
 	for (var i in forms) {
 		if (i !== '0'){
 			html += '<hr>'
+			html += '<p class="form_title">' + para[use_page].related_form[(parseInt(i)-1)].form_title + '</p>';
+		} 
+		if (i === '0') {
+			html += '<div id="main_form">';
+		} else {
+			html += '<div id="expansion_form_'+(parseInt(i)-1)+'">';
 		}
 		var form_para = {};
 		if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
@@ -79,6 +85,9 @@ function init_html(onDone) {
 			form_para.write = true;
 		}
 		html += create_table_v3(forms[i], form_para);
+
+		html += '</div>';
+
 	}
 	
 	return onDone(null, html);
