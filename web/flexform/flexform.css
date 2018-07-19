@@ -140,3 +140,40 @@ div.tagsinput input { width:80px; margin:0px; font-family: helvetica; font-size:
 div.tagsinput div { display:block; float: left; } 
 .tags_clear { clear: both; width: 100%; height: 0px; }
 .not_valid {background: #FBD8DB !important; color: #90111A !important;}
+
+.expansion_form_id {
+	float: left;
+}
+.add_expansion_form {
+	float: left;
+	width: 23px;
+    height: 22px;
+    background: inherit;
+    background-color: rgba(22, 155, 213, 1);
+	border-radius: 5px;
+	margin-left: 3px;
+	text-align: center;
+}						  
+.add_expansion_form:hover {
+    background-color: rgba(0, 204, 255, 1);
+}
+.minus_expansion_form {
+	float: left;
+	width: 23px;
+    height: 22px;
+    background: inherit;
+    background-color: rgba(255, 0, 0, 1);
+	border-radius: 5px;
+	margin-left: 3px;
+	text-align: center;
+}						  
+.minus_expansion_form:hover {
+    background-color: rgba(255, 102, 0, 1);
+}		
+			
+.plus_btn {
+	color: #fff;
+    font-family: '微軟正黑體 Bold', '微軟正黑體 Regular', '微軟正黑體';
+    font-weight: 700;
+    font-size: 18px;
+}

@@ -41,13 +41,9 @@ for (var i in para)	{
 	});
 }
 %>
-	
+
+var add_forms = {};
 var onConnect = function () {
-	console.log('para = ');
-	console.log(para);
-	console.log('forms = ');
-	console.log(forms);
-	
 	init_html(function(err, html){
 		document.getElementById('sub_title').innerHTML = para[use_page].s_title;
 		document.getElementById('form_area').innerHTML = html;	
@@ -63,28 +59,37 @@ var onConnect = function () {
 	});
 }
 
+function get_form_para() {
+	var form_para = {};
+	if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
+		form_para.customized = para[use_page].customized;
+	}
+	if (para[use_page].mode === 'show') {
+		form_para.write = false;
+	} else {
+		form_para.write = true;
+	}
+	return form_para;
+}
+
 function init_html(onDone) {
 	var html = '';
 	for (var i in forms) {
-		if (i !== '0'){
+		if (i !== '0') {
+			add_forms[(parseInt(i)-1)] = [];
 			html += '<hr>'
-			html += '<p class="form_title">' + para[use_page].related_form[(parseInt(i)-1)].form_title + '</p>';
-		} 
+			html += '<div class="add_expansion_title">';
+			html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[(parseInt(i)-1)].form_title + '</p></div>';
+			html += '<div class="add_expansion_form" onclick="add_expansion_form('+(parseInt(i)-1)+')"><span class="plus_btn">+</span></div>';
+			html += '</div>';
+		}
 		if (i === '0') {
 			html += '<div id="main_form">';
 		} else {
 			html += '<div id="expansion_form_'+(parseInt(i)-1)+'">';
 		}
-		var form_para = {};
-		if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
-			form_para.customized = para[use_page].customized;
-		}
-		if (para[use_page].mode === 'show') {
-			form_para.write = false;
-		} else {
-			form_para.write = true;
-		}
-		html += create_table_v3(forms[i], form_para);
+		
+		html += create_table_v3(forms[i], get_form_para());
 
 		html += '</div>';
 
@@ -95,6 +100,33 @@ function init_html(onDone) {
 		
 function init_submit_btn() {
 	document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="">送出</button>';
+}
+
+function get_new_expansion_form_number(n) { // 取得第n個expansion_form的新號碼
+	for (var i = 0 ; i <= add_forms[n].length ; i++) {
+		if (add_forms[n].indexOf(i) === -1) {
+			return i;
+		}
+	}
+}
+		
+function add_expansion_form(n) {
+	var expansion_form_number = get_new_expansion_form_number(n);
+	var html = '<div id="expansion_form_'+n+'-'+expansion_form_number+'">';
+	html += '<hr>';
+	html += '<div class="add_expansion_title">';
+	html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[n].form_title + '</p></div>';
+	html += '<div class="minus_expansion_form" onclick="minus_expansion_form('+n+', '+expansion_form_number+')"><span class="plus_btn">-</span></div>';
+	html += create_table_v3(forms[(n+1).toString()], get_form_para());
+	html += '</div>';
+	add_forms[n].push(expansion_form_number);
+	document.getElementById("expansion_form_"+n).innerHTML += html;
+}
+		
+function minus_expansion_form(n, expansion_form_number) {
+	
+	$("#expansion_form_"+n+"-"+expansion_form_number).remove();
+	add_forms[n].splice(add_forms[n].indexOf(expansion_form_number), 1);
 }
 
 </script>

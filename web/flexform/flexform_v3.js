@@ -331,6 +331,31 @@ var create_table_v3 = function (form, para) {
 						break;
 					case 'print': // 單純印出
 						break;
+					case 'address':
+						if (write && ! fields[i].default_value) {
+							// html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
+							html += '<input type="text" id="'+save_id+'_postal_code" style="float: left;width: 10%;margin-left: 9px;" placeholder="郵遞區號">';
+							html += '<input type="text" id="'+save_id+'_address" style="float: left;width: 85%;margin-left: 9px;">';
+						} else {
+							// 待修改
+							html += save_value;
+						}
+						break;
+					case 'radio':
+						if (write && ! fields[i].default_value) {	
+							if (typeof(fields[i].option) === 'object')
+								var options = fields[i].option;
+							else if (typeof(fields[i].option) !== 'undefined')
+								var options = fields[i].option.split(',');
+							for (var j in options) {
+								html += '<label><input name="'+save_id+'" type="radio" value="'+options[j]+'" >'+options[j]+'</label>';
+							}
+
+						} else {
+							// 待修改
+							html += save_value;
+						}
+						break;
 					default:
 						if (write && ! fields[i].default_value) {
 							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
