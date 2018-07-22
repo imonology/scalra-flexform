@@ -44,6 +44,7 @@ for (var i in para)	{
 
 var add_forms = {};
 var onConnect = function () {
+	init_tab();
 	init_html(function(err, html){
 		document.getElementById('sub_title').innerHTML = para[use_page].s_title;
 		document.getElementById('form_area').innerHTML = html;	
@@ -56,20 +57,20 @@ var onConnect = function () {
 		}
 		$('.tags').tagsInput();
 		init_submit_btn();
+		enable_js();
 	});
 }
 
-function get_form_para() {
-	var form_para = {};
-	if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
-		form_para.customized = para[use_page].customized;
-	}
-	if (para[use_page].mode === 'show') {
-		form_para.write = false;
-	} else {
-		form_para.write = true;
-	}
-	return form_para;
+function init_tab() {
+	var html = '';
+	html += '<ul class="tabs">';
+	html += '<li class="active">個案建立</li>';
+	html += '<li>派案管理</li>';
+	html += '<li>案件管理</li>';
+	html += '</ul>';
+	html += '<div style="clear:both;"></div>';
+	// html += '<p>123</p>';
+	document.getElementById('tab_area').innerHTML = html;	
 }
 
 function init_html(onDone) {
@@ -101,7 +102,27 @@ function init_html(onDone) {
 function init_submit_btn() {
 	document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="">送出</button>';
 }
+		
+function enable_js() {
+	$('ul.tabs li').click(function() {
+		var $this = $(this), _clickTab = $this.find('a').attr('href');
+		$this.addClass('active').siblings('.active').removeClass('active');
+	});
+}
 
+function get_form_para() {
+	var form_para = {};
+	if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
+		form_para.customized = para[use_page].customized;
+	}
+	if (para[use_page].mode === 'show') {
+		form_para.write = false;
+	} else {
+		form_para.write = true;
+	}
+	return form_para;
+}
+		
 function get_new_expansion_form_number(n) { // 取得第n個expansion_form的新號碼
 	for (var i = 0 ; i <= add_forms[n].length ; i++) {
 		if (add_forms[n].indexOf(i) === -1) {
@@ -139,6 +160,7 @@ function minus_expansion_form(n, expansion_form_number) {
 	<div id="mainContent">
 		<section id="three" class="wrapper style2 special">
 			<div class="inner">
+				<div id="tab_area"></div>
 				<h2 id='sub_title'></h2>
 				<div id="form_area"></div>
 				<div id="button_area"></div>
