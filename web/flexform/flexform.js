@@ -1,12 +1,12 @@
 
 
 $(function(){
-  
+
 /* Attach login handler */
 $('.contactUs').on('click', function(e){
-	
+
 	e.preventDefault();
-	
+
 	/* Popup an alert with the form */
 	$.jAlert({
 		'title': '<i class="fa fa-envelope"></i> Contact Us',
@@ -23,25 +23,25 @@ $('.contactUs').on('click', function(e){
           var alert = btn.parents('.jAlert'),
               form = alert.find('form'),
               error = false;
-          
+
           form.find('.required').each(function(){
             var field = $(this),
                 val = field.val();
-            
+
             if( typeof val == 'undefined' || val == '' )
             {
               error = field.prev('label').text() + ' is required.';
             }
-          }); 
-          
+          });
+
           if( error )
           {
             errorAlert(error);
             return false;
           }
-          
+
           //send form.serialize() to server and send message
-          
+
           successAlert('Successfully sent!');
           alert.closeAlert();
         }
@@ -56,9 +56,9 @@ $('.contactUs').on('click', function(e){
           return false;
       });
     }
-	});	
+	});
 });
-  	
+
 // test button
 //$('.contactUs').click();
 });
@@ -143,10 +143,10 @@ var remove_img = function(dom_id, id, type) {
 		files.splice(files.indexOf(id), 1);
 		*/
 		var files = JSON.parse( document.getElementById(dom_id).value );
-		for (var i in files) 
+		for (var i in files)
 			if (files[i].image === id)
 				files.splice(i, 1);
-		
+
 		document.getElementById(dom_id).value = JSON.stringify(files);
 	} else if (type === 'record') {
 		console.log(document.getElementById(dom_id).value)
@@ -164,7 +164,7 @@ var remove_img = function(dom_id, id, type) {
 	} else {
 		console.log('error');
 	}
-	
+
 	get_img_num();
 }
 
@@ -209,17 +209,17 @@ var show_record = function(records) {
 	// var records = records.split(",");
 
 	var records = JSON.parse(records);
-	
+
 	// for(var i in records) {
 	for(var i = 0 ; i < records.length ; i++) {
 		html += '<div >';
 		// html += '<audio src="/web/images/'+records[i]+'" controls="controls"></audio>';
-		
+
 		html += '<table style="margin:0;"><tr><td colspan="2">' + records[i].filetitle + '</td></tr><tr><td>'
 		html += '<audio src="/web/images/'+records[i].filename+'" controls="controls"></audio>';
 		html += '</td>';
 		html += '</tr></table>';
-		
+
 		html += '</div>';
 	}
 	return html;
@@ -228,40 +228,40 @@ var show_record = function(records) {
 
 var do_tooltip = function() {
 	console.log('執行do_tooltip');
-    $(document).ready(function () {   
-           
-        // Get all the thumbnail   
-        $('div.thumbnail-item').mouseenter(function(e) {   
-   
-            // Calculate the position of the image tooltip   
-            x = e.pageX - $(this).offset().left;   
-            y = e.pageY - $(this).offset().top;   
-   
-            // Set the z-index of the current item,    
-            // make sure it's greater than the rest of thumbnail items   
-            // Set the position and display the image tooltip   
-            $(this).css('z-index','15')  
-            .children("div.tooltip")  
-            .css({'top': y + 10,'left': x + 20,'display':'block'});  
-              
-        }).mousemove(function(e) {  
-              
-            // Calculate the position of the image tooltip            
-            x = e.pageX - $(this).offset().left;  
-            y = e.pageY - $(this).offset().top;  
-              
-            // This line causes the tooltip will follow the mouse pointer  
-            $(this).children("div.tooltip").css({'top': y + 10,'left': x + 20});  
-              
-        }).mouseleave(function() {  
-              
-            // Reset the z-index and hide the image tooltip   
-            $(this).css('z-index','1')   
-            .children("div.tooltip")   
-            .animate({"opacity": "hide"}, "fast");   
-        });   
-   
-    }); 
+    $(document).ready(function () {
+
+        // Get all the thumbnail
+        $('div.thumbnail-item').mouseenter(function(e) {
+
+            // Calculate the position of the image tooltip
+            x = e.pageX - $(this).offset().left;
+            y = e.pageY - $(this).offset().top;
+
+            // Set the z-index of the current item,
+            // make sure it's greater than the rest of thumbnail items
+            // Set the position and display the image tooltip
+            $(this).css('z-index','15')
+            .children("div.tooltip")
+            .css({'top': y + 10,'left': x + 20,'display':'block'});
+
+        }).mousemove(function(e) {
+
+            // Calculate the position of the image tooltip
+            x = e.pageX - $(this).offset().left;
+            y = e.pageY - $(this).offset().top;
+
+            // This line causes the tooltip will follow the mouse pointer
+            $(this).children("div.tooltip").css({'top': y + 10,'left': x + 20});
+
+        }).mouseleave(function() {
+
+            // Reset the z-index and hide the image tooltip
+            $(this).css('z-index','1')
+            .children("div.tooltip")
+            .animate({"opacity": "hide"}, "fast");
+        });
+
+    });
 }
 
 function read_txt(file_type_id, button_id, onDone, dom_id) {
@@ -281,7 +281,7 @@ function read_txt(file_type_id, button_id, onDone, dom_id) {
 		// 	reader.readAsText(document.querySelector('#' + file_type_id).files[0], 'big5');
 		// else
 		// 	reader.readAsText(document.querySelector('#' + file_type_id).files[0]);
-		
+
 	});
 }
 
@@ -297,7 +297,7 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 		// 之前已經新增的
 		if (document.getElementById(dom_id).value.length !== 0)
 			var old_data = JSON.parse( document.getElementById(dom_id).value );
-		else 
+		else
 			var old_data = [];
 		// 新加入的
 		var new_data = [];
@@ -306,16 +306,16 @@ var onPhotoUploaded = function (err, image_filenames, dom_id) {
 		// 舊的加新的
 		var all_data = new_data.concat( old_data );
 		document.getElementById(dom_id).value = JSON.stringify( all_data );
-		
+
 		// 顯示照片
 		for (var i in image_filenames)
 			add_img(dom_id , image_filenames[i]);
 		console.log('all_data = ');
 		console.log(all_data);
-		for (var j in all_data) 
+		for (var j in all_data)
 			document.getElementById(all_data[j].image + '-text').value = all_data[j].text;
-			
-		
+
+
 	}
 }
 
@@ -373,7 +373,7 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id, form_na
 			}
 			doUploadFile(result, dom_id, onDone, accepted_extensions, upload_id);
 		});
-	} else 
+	} else
 		doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id);
 
 } // function uploadFile()
@@ -382,7 +382,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	var type = '';
 	if (!accepted_extensions) {
 		type = 'img';
-		var formData = new FormData($("#frmUploadFile")[0]);	
+		var formData = new FormData($("#frmUploadFile")[0]);
 	} else if (accepted_extensions.indexOf('txt') !== -1) {
 		type = 'txt';
 		var formData = new FormData();
@@ -391,10 +391,10 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 		formData.append('upload', document.getElementById(upload_id).files[0]);
 	} else if (accepted_extensions.indexOf('mp3') !== -1) {
 		type = 'record';
-		var formData = new FormData($("#frmUploadRecord")[0]);	
+		var formData = new FormData($("#frmUploadRecord")[0]);
 	}
 	var upload_url = (window.location.protocol + '//' + window.location.hostname + ':' + basePort);
-	
+
 	console.log('formData = ');
 	console.log(formData);
 	formData['__proto__']['test'] = 'ssss';
@@ -412,18 +412,18 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 		var fullPath = document.getElementById('upload_file').value;
 		var upload_num = $("#upload_file")[0].files.length;
 	}
-	
+
 	if (type === 'img')
 		var plus_num = get_img_num();
 	else if (type === 'record')
 		var plus_num = get_record_num();
-	else 
+	else
 		var plus_num = 0;
 	if (plus_num + upload_num > num ){
 		alert('Over file upload limit: ' + num + '!');
 		return;
 	}
-	
+
 	// if (!accepted_extensions)
 	// 	var check = false;
 	// else if (accepted_extensions[0] === 'wma')
@@ -432,7 +432,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	// 	var check = true;
 	if (accepted_extensions)
 		accepted_extensions = accepted_extensions.split(",");
-	
+
 	if (accepted_extensions)
 		console.log(typeof(accepted_extensions) + '  ' + accepted_extensions);
 	// set default accepted file extensions
@@ -440,7 +440,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 		accepted_extensions = ['jpg', 'png', 'gif'];
 	}
 	console.log('fullPath = ' + fullPath);
-	
+
 	if (fullPath) {
 		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
 		filename = fullPath.substring(startIndex);
@@ -450,7 +450,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 		console.log(filename);
 	}
 	console.log('filename = ' + filename);
-	
+
 	if (!filename || typeof(filename) !== 'string' || filename.length < 6) {
 		console.log('test invalid');
 		console.log(filename);
@@ -460,12 +460,12 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 
 	var arr = filename.split(".");
 	var filename_extension = arr[arr.length-1].toLowerCase();
-	
+
 	if (accepted_extensions.indexOf(filename_extension) === (-1)) {
 		alert("allowed files types are: " + accepted_extensions);
 		return;
 	}
-	
+
 	var xProgressID = SR.getGUID();
 	// console.log(upload_url + '/do_upload?X-Progress-ID=' + xProgressID);
 	// console.log(upload_url + '/new_upload')
@@ -481,7 +481,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 		contentType: false,
 		processData: false,
 		success: function (data) {
-			
+
 			// console.log('數量');
 			// console.log(data.upload.length);
 			var filenames = [];
@@ -508,7 +508,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 							document.getElementById(dom_id+'-encode').value = 'utf-8';
 						else
 							document.getElementById(dom_id+'-encode').value = 'big5';
-						
+
 						var reader = new FileReader();
 						reader.addEventListener('load', function() {
 							document.getElementById(dom_id).value = this.result;
@@ -521,12 +521,12 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 							var encode = 'utf-8';
 						else
 							var encode = 'big5';
-						
+
 						console.log('encode = ' + encode);
-						
+
 						reader.readAsText(document.querySelector('#inputTxt-' + dom_id).files[0], encode);
-						
-						
+
+
 						return onDone(null, filename);
 					});
 				} else if (type === 'img') {
@@ -576,7 +576,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 // 				// calculate the percentage of upload completed
 // 				var percentComplete = evt.loaded / evt.total;
 // 				percentComplete = parseInt(percentComplete * 100);
-				  
+
 // 				console.log(percentComplete)
 // // 				// update the Bootstrap progress bar with the new percentage
 // // 				$('.progress-bar').text(percentComplete + '%');
@@ -606,7 +606,7 @@ function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
 	// 		updateViewUploadStatus(data);
 	// 	}).error(function(){clearInterval(uploadIntervalID)});
 	// }, 250);
-	
+
 }
 //有進度條的上傳
 function doUploadProgress(btnId, onDone, onProgress) {
@@ -623,7 +623,7 @@ function doUploadProgress(btnId, onDone, onProgress) {
 			// add the files to formData object for the data payload
 			formData.append('upload', file, file.name);
 		}
-		
+
 		$.ajax({
 			url: '/upload',
 			type: 'POST',
@@ -682,7 +682,7 @@ function flexform_to_flexform_table(form, opt) {
 	}
 	for (var record_id in form.data.values) {
 		var temp_data = {};
-		for (var i in flexform_table.field) 
+		for (var i in flexform_table.field)
 			temp_data[flexform_table.field[i].key] = form.data.values[record_id][flexform_table.field[i].key];
 		temp_data['record_id'] = record_id;
 		flexform_table.data.push(temp_data);
@@ -781,7 +781,7 @@ function switch_sort_up_down(table_num, cell_num, obj) {
 			f_table.rows[0].cells[i].children[0].value = -1;
 		f_table.rows[0].cells[i].children[0].children[0].className = '';
 	}
-	
+
 	if (obj.value === -1)
 		obj.value = 0
 	if (obj.value ===1) {
@@ -816,7 +816,7 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 	} else {
 		html += '<tr>';
 	}
-	// for (var i in flexform_values.field) 
+	// for (var i in flexform_values.field)
 	// 	html += '<th  onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\')" >' + flexform_values.field[i].value + '</th>';
 	var count = 0;
 	var width = 1.0 / flexform_values.field.length * 100;
@@ -852,7 +852,7 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 		count ++;
 	}
 	html += '</tr>';
-	
+
 	for (var i in flexform_values.data) {
 		if (show_lines) {
 			// html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
@@ -862,13 +862,13 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 			html += '<tr data-recordid="' + flexform_values.data[i].record_id + '">';
 		}
 
-		for (var j in flexform_values.field) 
+		for (var j in flexform_values.field)
 			html += '<td style="' + obj2inlineCSS(para.colStyle[j]) + '">' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
 			// html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
 		html += '</tr>';
 	}
-	
-	
+
+
 	html += '</table>';
 	if (show_lines) {
 		table_para.show_lines = show_lines
@@ -901,7 +901,7 @@ function flexform_create_table(flexform_values, extra_data) {
 			html += '</tr>';
 		}
 		html += '</table>';
-		
+
 		//附掛資料(單格只有內容無標題)
 		html += '<table id="flexform-table-extra' + count + '" class="customTable" ' + '>';
 		if (extra_data) {
@@ -916,7 +916,7 @@ function flexform_create_table(flexform_values, extra_data) {
 		html += '</div>';
 		++count;
 	}
-	
+
 	return html;
 }
 
@@ -945,7 +945,7 @@ function flexform_show_vertical_table(data, opt) {
 	option['deletable'] = option['deletable'] || true;
 	option['reverse'] = option['reverse'] || false;
 	option['customRow'] = option['customRow'] || [];
-	
+
 	table_para.option = option;
 	let result = '';
 	let loopData = JSON.parse(JSON.stringify(data.data));
@@ -981,14 +981,14 @@ function flexform_show_vertical_table(data, opt) {
 			// 		</td>
 			// 	</tr>
 			// `
-			result += 
-				'<tr>' + 
+			result +=
+				'<tr>' +
 					'<td colspan="2">' +
 						'<button class="btn-editFlexform" data-recordid="' + loopData[i].record_id + '">修改</button> ' +
 						( option.deletable ? '<button class="btn-delFlexform" data-recordid="' + loopData[i].record_id + '">刪除</button>' : '') +
 					'</td>' +
 				'</tr>'
-			
+
 		}
 
 		option.customRow.forEach(function(val, j) {
@@ -1028,7 +1028,7 @@ function formatValue(data, fieldData, editable) {
 		switch (fieldData.type) {
 			case 'boolean':
 				return !!data[fieldData.key] ? '是' : '否';
-			case 'timestamp': 
+			case 'timestamp':
 				return moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm');
 			case 'textarea':
 				return '<pre>' + data[fieldData.key] + '</pre>';
@@ -1041,7 +1041,7 @@ function formatValue(data, fieldData, editable) {
 			case 'boolean':
 				return '<input class="input-' + fieldData.key + '" type="checkbox" ' + (!!data[fieldData.key] === true ? 'checked' : '' )+' /><label>　</label>';
 				// return `<input class="input-${fieldData.key}" type="checkbox" ${!!data[fieldData.key] === true ? 'checked' : ''} /><label>　</label>`;
-			case 'timestamp': 
+			case 'timestamp':
 				return '<input class="input-' + fieldData.key + '" type="text" value="' + moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm') + '">';
 				// return `<input class="input-${fieldData.key}" type="text" value="${moment(data[fieldData.key]).format('YYYY/MM/DD HH:mm')}">`;
 			case 'textarea':
@@ -1066,7 +1066,7 @@ function flexform_table_show_more(btn, table_num) {
 		for ( var i = show_lines+1 ; i < f_table.rows.length ; i++)
 			f_table.rows[i].style.display = 'none';
 	}
-	
+
 } // flexform_table_show_more()
 
 function flexform_sort_table(table_num, cell_num, type) {
@@ -1084,18 +1084,18 @@ function flexform_sort_table(table_num, cell_num, type) {
 	for (var i = 1 ; i < f_table.rows.length ; i++)
 		for (var j = i+1 ; j < f_table.rows.length ; j++) {
 			if (type === 'SmallToBig') {
-				if (is_num && parseInt(f_table.rows[j].cells[cell_num].innerHTML) < parseInt(f_table.rows[i].cells[cell_num].innerHTML) ) 
+				if (is_num && parseInt(f_table.rows[j].cells[cell_num].innerHTML) < parseInt(f_table.rows[i].cells[cell_num].innerHTML) )
 					flexform_change_row(f_table, i, j);
 				else if (!is_num && f_table.rows[j].cells[cell_num].innerHTML < f_table.rows[i].cells[cell_num].innerHTML)
-					flexform_change_row(f_table, i, j);	
+					flexform_change_row(f_table, i, j);
 			} else {
-				if (is_num && parseInt(f_table.rows[j].cells[cell_num].innerHTML) > parseInt(f_table.rows[i].cells[cell_num].innerHTML) ) 
+				if (is_num && parseInt(f_table.rows[j].cells[cell_num].innerHTML) > parseInt(f_table.rows[i].cells[cell_num].innerHTML) )
 					flexform_change_row(f_table, i, j);
 				else if (!is_num && f_table.rows[j].cells[cell_num].innerHTML > f_table.rows[i].cells[cell_num].innerHTML)
-					flexform_change_row(f_table, i, j);	
+					flexform_change_row(f_table, i, j);
 			}
 		}
-			
+
 	// console.log( document.getElementById('flexform-table' + flexform_table_num).rows[1].cells[0].innerHTML);
 } // flexform_sort_table()
 
@@ -1126,7 +1126,7 @@ var datepicker_setting = {
 
 // create a table with upload form
 // 'form': form field & data to be displayed
-// 
+//
 // td_style: can custom set td style(可以客製化設定每個td的style)
 var form_data = undefined;
 
@@ -1135,7 +1135,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 	if (!td_style)
 		td_style =  ['width:20%;','text-align:left;'];
 	var html = '';
-	
+
 	var fields = form.data.fields;
 
 	function c_table(fields, value, record_id) {
@@ -1144,7 +1144,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 		var html = '';
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
-			
+
 			if (record_id)
 				var save_id = record_id + '-' + fields[i].id;
 			else
@@ -1158,9 +1158,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 				// console.log('有default_value' + fields[i].default_value)
 			// check if the field is hidden or specified as 'hide'
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
-				continue;				
+				continue;
 			}
-			
+
 			// begin a row of data
 			if (show) {
 				html += '<tr '+ (show.indexOf(fields[i].id)!== -1 && !fields[i].show_partial ? ' style="" data-can-hide="n" ' : 'style="display: none;"  data-can-hide="y" ') ;
@@ -1170,14 +1170,14 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			}
 			else
 				html += '<tr>';
-			
+
 			// display field name
-			
+
 			html += '<td style="'+(td_style?td_style[0]:'')+' ; vertical-align:middle;">' + fields[i].name + (fields[i].must ? '*' : '') +  '</td>';
-			
+
 			// show field content
 			html += '<td style="'+(td_style?td_style[1]:'')+'">';
-			
+
 			switch (fields[i].type) {
 				// FIXME: should make 'upload' not just for pics but files in general
 				case 'record':
@@ -1196,32 +1196,32 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						} else{
 							var new_value = '';
 						}
-						
+
 						console.log('new_value')
 						console.log(new_value);
-						
+
 						html += '<input type="hidden" value="'+new_value+'" id="' + save_id + '">';
 						console.log('save_value = ')
 						console.log(save_value )
 						html += '<div id="'+save_id+'-show_upload_record">';
 						if (save_value.length !== 0) {
 							var files = JSON.parse(save_value);
-							for (var i in files) 
+							for (var i in files)
 								html += create_record_dev(save_id , files[i].filename, files[i].filetitle);
 						}
 						html += '</div>';
-							
+
 						html += '</form>';
 					} else {
 						html += '<div id="uploaded_record">';
 						html += show_record(value[fields[i].id]);
-						html += '</div>';	
+						html += '</div>';
 					}
 					break;
 				case 'upload': // 照片
 					if (write) {
 						var image_id = '<%= UTIL.createToken() %>';
-						
+
 						// set upload item limit
 						var num = (fields[i].num ? fields[i].num : 5);
 
@@ -1235,12 +1235,12 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						console.log(save_value);
 						if (save_value.length !== 0) {
 							var files = JSON.parse( save_value );
-							for (var i in files) 
+							for (var i in files)
 								html += create_img_dev(save_id, files[i].image, files[i].text);
 						}
 						html += '</div>';
-						
-						html += '</form>';				
+
+						html += '</form>';
 					} else {
 						html += '<div id="uploaded_photo">';
 						// 舊的顯示:無文字說明
@@ -1268,7 +1268,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '<input type="hidden" id="'+save_id+'-encode" value="">';
 						html += '<input type="file" id="inputTxt-'+save_id+'">';
 						html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+save_id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+save_id+'\')">上傳文字檔</button>';
-						html += '</form>';					
+						html += '</form>';
 						html += '<br>';
 						textarea_id.push(save_id);
 						html += '<textarea rows="3" cols="20" id="'+save_id+'">';
@@ -1277,23 +1277,23 @@ var create_table = function (form, hide, write, td_style, show, del) {
 						html += '<textarea rows="3" cols="20" readonly="readonly">';
 						html += save_value;
 					}
-					html += '</textarea>';					
+					html += '</textarea>';
 					break;
-					
+
 				case 'date':
 					if (write && ! fields[i].default_value) {
 						html += '<input type="text" id="'+save_id+'" value="'+save_value+'">';
-						date_pickers.push(save_id);	
+						date_pickers.push(save_id);
 					} else {
 						html += save_value;
 					}
 					break;
-					
-				case 'autocomplete': 
+
+				case 'autocomplete':
 					if (write) {
 						html += '<input type="text" id="' + save_id + '" value="'+save_value+'">';
 						$( function() {
-							
+
 							if (fields[i].autocomplete_setting) {
 								var form_name = fields[i].autocomplete_setting.form_name;
 								var key_id = fields[i].autocomplete_setting.key_id;
@@ -1312,7 +1312,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 								para.value_id = value_id;
 							SR.API.QUERY_AUTOCOMPLETE(para, function (err, result) {
 								if (err) {
-									console.log(err);	
+									console.log(err);
 								}
 								var ans = [];
 								// console.log('找到的r_form');
@@ -1330,7 +1330,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 									if (!haveSame(ans, r_form.data.values[r_id][result.key_id])) {
 										ans.push(r_form.data.values[r_id][result.key_id] + (result.value_id?'('+r_form.data.values[r_id][result.value_id]+')': ''  ) );
 									}
-								
+
 								if (result.multiple) {
 									function split( val ) {
 										return val.split( /,\s*/ );
@@ -1338,7 +1338,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 									function extractLast( term ) {
 										return split( term ).pop();
 									}
-									
+
 									$( "#" + result.field_id ).autocomplete({
 										source: function( request, response ) {
 										  // delegate back to autocomplete, but extract the last term
@@ -1369,13 +1369,13 @@ var create_table = function (form, hide, write, td_style, show, del) {
 										source: ans
 									});
 								}
-							});	
-						});							
+							});
+						});
 					} else {
 						html += save_value;
-					}				
+					}
 					break;
-				case 'tag': 
+				case 'tag':
 					if (write) {
 						html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
 					} else {
@@ -1420,18 +1420,18 @@ var create_table = function (form, hide, write, td_style, show, del) {
 							lock_show = value_list;
 
 						// var lock_show = lock_show.split(',');
-						for (var j=0; j < value_list.length; j++) {	
+						for (var j=0; j < value_list.length; j++) {
 							html += '<option value="' + value_list[j] + '" >' + lock_show[j] + '</option>';
 						}
 						html += '</select>';
 					} else {
-						
+
 						html += save_value;
 					}
 					break;
 				case 'password':
 					if (write) {
-						html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';					
+						html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';
 					} else {
 						html += save_value;
 					}
@@ -1448,25 +1448,25 @@ var create_table = function (form, hide, write, td_style, show, del) {
 					break;
 				default:
 					if (write && ! fields[i].default_value) {
-						html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
+						html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';
 					} else {
 						html += save_value;
 					}
 					break;
 			}
-			
+
 			html += '</td>'
 			html += '</tr>';
-			
-			
-			
+
+
+
 			if (show && !write && fields[i].show_partial) {
 				html += '<tr data-partial="y">';
 				html += '<td style="'+(td_style?td_style[0]:'')+' ; vertical-align:middle;" >' + fields[i].name + (fields[i].must ? '*' : '') +  ' </td>';
 
 				// show field content
 				html += '<td style="'+(td_style?td_style[1]:'')+'">';
-				
+
 				html += value[fields[i].id].substring(0, 12);
 				if (value[fields[i].id].length > 12)
 					html += '...';
@@ -1485,7 +1485,7 @@ var create_table = function (form, hide, write, td_style, show, del) {
 			html += '<button class="btn btn-primary" onClick="delete_field(\''+form.name+'\', \''+record_id+'\')" >刪除</button>';
 		return html;
 	}
-	
+
 	// show all valid records in the form.data.values
 	for (var record_id in form.data.values) {
 		var value = form.data.values[record_id];
@@ -1493,9 +1493,9 @@ var create_table = function (form, hide, write, td_style, show, del) {
 	}
 
 	if (Object.keys(form.data.values).length === 0)
-		html += c_table(fields);	
+		html += c_table(fields);
 
-	
+
 	return html;
 }
 
@@ -1512,7 +1512,7 @@ var create_table2 = function (form, para) {
 	if (!td_style)
 		td_style =  ['width:20%;','text-align:left;'];
 	var html = '';
-	
+
 	var fields = form.data.fields;
 
 	function c_table(fields, value, record_id) {
@@ -1521,7 +1521,7 @@ var create_table2 = function (form, para) {
 		var html = '';
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
-			
+
 			if (record_id)
 				var save_id = record_id + '-' + fields[i].id;
 			else
@@ -1535,9 +1535,9 @@ var create_table2 = function (form, para) {
 				// console.log('有default_value' + fields[i].default_value)
 			// check if the field is hidden or specified as 'hide'
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
-				continue;				
+				continue;
 			}
-			
+
 			if (customized) {
 				var col_f = fields[i].col_f;
 				var col_v = fields[i].col_v;
@@ -1547,7 +1547,7 @@ var create_table2 = function (form, para) {
 				var col_v = 1;
 				var br = true;
 			}
-			
+
 			// console.log(fields[i].name + ' col_f = ' + col_f + ' col_v = ' + col_v + ' br = ' + br);
 			// begin a row of data
 			if (show) {
@@ -1558,7 +1558,7 @@ var create_table2 = function (form, para) {
 			}
 			// else
 				// html += '<tr>';
-			
+
 			if (fields[i].type === 'line') {
 				html += '<tr><td colspan="'+(col_f + col_v)+'"><hr></td>';
 			} else {
@@ -1595,7 +1595,7 @@ var create_table2 = function (form, para) {
 							html += '<div id="'+save_id+'-show_upload_record">';
 							if (save_value.length !== 0) {
 								var files = JSON.parse(save_value);
-								for (var i in files) 
+								for (var i in files)
 									html += create_record_dev(save_id , files[i].filename, files[i].filetitle);
 							}
 							html += '</div>';
@@ -1604,7 +1604,7 @@ var create_table2 = function (form, para) {
 						} else {
 							html += '<div id="uploaded_record">';
 							html += show_record(value[fields[i].id]);
-							html += '</div>';	
+							html += '</div>';
 						}
 						break;
 					case 'upload': // 照片
@@ -1624,12 +1624,12 @@ var create_table2 = function (form, para) {
 							console.log(save_value);
 							if (save_value.length !== 0) {
 								var files = JSON.parse( save_value );
-								for (var i in files) 
+								for (var i in files)
 									html += create_img_dev(save_id, files[i].image, files[i].text);
 							}
 							html += '</div>';
 
-							html += '</form>';				
+							html += '</form>';
 						} else {
 							html += '<div id="uploaded_photo">';
 							// 舊的顯示:無文字說明
@@ -1649,7 +1649,7 @@ var create_table2 = function (form, para) {
 								}
 							}
 
-							html += '</div>';						
+							html += '</div>';
 						}
 						break;
 
@@ -1659,7 +1659,7 @@ var create_table2 = function (form, para) {
 							html += '<input type="hidden" id="'+save_id+'-encode" value="">';
 							html += '<input type="file" id="inputTxt-'+save_id+'">';
 							html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+save_id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+save_id+'\')">上傳文字檔</button>';
-							html += '</form>';					
+							html += '</form>';
 							html += '<br>';
 							textarea_id.push(save_id);
 							html += '<textarea rows="3" cols="20" id="'+save_id+'">';
@@ -1668,19 +1668,19 @@ var create_table2 = function (form, para) {
 							html += '<textarea rows="3" cols="20" readonly="readonly">';
 							html += save_value;
 						}
-						html += '</textarea>';					
+						html += '</textarea>';
 						break;
 
 					case 'date':
 						if (write && ! fields[i].default_value) {
 							html += '<input type="text" id="'+save_id+'" value="'+save_value+'">';
-							date_pickers.push(save_id);	
+							date_pickers.push(save_id);
 						} else {
 							html += save_value;
 						}
 						break;
 
-					case 'autocomplete': 
+					case 'autocomplete':
 						if (write) {
 							html += '<input type="text" id="' + save_id + '" value="'+save_value+'">';
 							$( function() {
@@ -1703,7 +1703,7 @@ var create_table2 = function (form, para) {
 									para.value_id = value_id;
 								SR.API.QUERY_AUTOCOMPLETE(para, function (err, result) {
 									if (err) {
-										console.log(err);	
+										console.log(err);
 									}
 									var ans = [];
 									// console.log('找到的r_form');
@@ -1760,13 +1760,13 @@ var create_table2 = function (form, para) {
 											source: ans
 										});
 									}
-								});	
-							});							
+								});
+							});
 						} else {
 							html += save_value;
-						}				
+						}
 						break;
-					case 'tag': 
+					case 'tag':
 						if (write) {
 							html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
 						} else {
@@ -1811,7 +1811,7 @@ var create_table2 = function (form, para) {
 								lock_show = value_list;
 
 							// var lock_show = lock_show.split(',');
-							for (var j=0; j < value_list.length; j++) {	
+							for (var j=0; j < value_list.length; j++) {
 								html += '<option value="' + value_list[j] + '" >' + lock_show[j] + '</option>';
 							}
 							html += '</select>';
@@ -1822,7 +1822,7 @@ var create_table2 = function (form, para) {
 						break;
 					case 'password':
 						if (write) {
-							html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';					
+							html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';
 						} else {
 							html += save_value;
 						}
@@ -1841,7 +1841,7 @@ var create_table2 = function (form, para) {
 						break;
 					default:
 						if (write && ! fields[i].default_value) {
-							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
+							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';
 						} else {
 							html += save_value;
 						}
@@ -1850,7 +1850,7 @@ var create_table2 = function (form, para) {
 
 				html += '</td>'
 			}
-			
+
 			if (br) {
 				html += '</tr>';
 			}
@@ -1867,7 +1867,7 @@ var create_table2 = function (form, para) {
 				html += '</td></tr>';
 				continue;
 			}
-			
+
 		}
 		if (show)
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
@@ -1880,7 +1880,7 @@ var create_table2 = function (form, para) {
 			html += '<button class="btn btn-primary" onClick="delete_field(\''+form.name+'\', \''+record_id+'\')" >刪除</button>';
 		return html;
 	}
-	
+
 	// show all valid records in the form.data.values
 	for (var record_id in form.data.values) {
 		var value = form.data.values[record_id];
@@ -1888,9 +1888,9 @@ var create_table2 = function (form, para) {
 	}
 
 	if (Object.keys(form.data.values).length === 0)
-		html += c_table(fields);	
+		html += c_table(fields);
 
-	
+
 	return html;
 }
 
@@ -1906,7 +1906,7 @@ var create_table_v3 = function (form, para) {
 	if (!td_style)
 		td_style =  ['width:20%;','text-align:left;'];
 	var html = '';
-	
+
 	var fields = form.data.fields;
 
 	function c_table(fields, value, record_id) {
@@ -1915,7 +1915,7 @@ var create_table_v3 = function (form, para) {
 		var html = '';
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
-			
+
 			if (record_id)
 				var save_id = record_id + '-' + fields[i].id;
 			else
@@ -1929,9 +1929,9 @@ var create_table_v3 = function (form, para) {
 				// console.log('有default_value' + fields[i].default_value)
 			// check if the field is hidden or specified as 'hide'
 			if (!fields[i].show || hide.indexOf(fields[i].id) !== (-1)) {
-				continue;				
+				continue;
 			}
-			
+
 			if (customized) {
 				var col_f = fields[i].col_f;
 				var col_v = fields[i].col_v;
@@ -1941,7 +1941,7 @@ var create_table_v3 = function (form, para) {
 				var col_v = 1;
 				var br = true;
 			}
-			
+
 			// console.log(fields[i].name + ' col_f = ' + col_f + ' col_v = ' + col_v + ' br = ' + br);
 			// begin a row of data
 			if (show) {
@@ -1952,7 +1952,7 @@ var create_table_v3 = function (form, para) {
 			}
 			// else
 				// html += '<tr>';
-			
+
 			if (fields[i].type === 'line') {
 				html += '<tr><td colspan="'+(col_f + col_v)+'"><hr></td>';
 			} else {
@@ -1989,7 +1989,7 @@ var create_table_v3 = function (form, para) {
 							html += '<div id="'+save_id+'-show_upload_record">';
 							if (save_value.length !== 0) {
 								var files = JSON.parse(save_value);
-								for (var i in files) 
+								for (var i in files)
 									html += create_record_dev(save_id , files[i].filename, files[i].filetitle);
 							}
 							html += '</div>';
@@ -1998,7 +1998,7 @@ var create_table_v3 = function (form, para) {
 						} else {
 							html += '<div id="uploaded_record">';
 							html += show_record(value[fields[i].id]);
-							html += '</div>';	
+							html += '</div>';
 						}
 						break;
 					case 'upload': // 照片
@@ -2018,12 +2018,12 @@ var create_table_v3 = function (form, para) {
 							console.log(save_value);
 							if (save_value.length !== 0) {
 								var files = JSON.parse( save_value );
-								for (var i in files) 
+								for (var i in files)
 									html += create_img_dev(save_id, files[i].image, files[i].text);
 							}
 							html += '</div>';
 
-							html += '</form>';				
+							html += '</form>';
 						} else {
 							html += '<div id="uploaded_photo">';
 							// 舊的顯示:無文字說明
@@ -2043,7 +2043,7 @@ var create_table_v3 = function (form, para) {
 								}
 							}
 
-							html += '</div>';						
+							html += '</div>';
 						}
 						break;
 
@@ -2053,7 +2053,7 @@ var create_table_v3 = function (form, para) {
 							html += '<input type="hidden" id="'+save_id+'-encode" value="">';
 							html += '<input type="file" id="inputTxt-'+save_id+'">';
 							html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+save_id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+save_id+'\')">上傳文字檔</button>';
-							html += '</form>';					
+							html += '</form>';
 							html += '<br>';
 							textarea_id.push(save_id);
 							html += '<textarea rows="3" cols="20" id="'+save_id+'">';
@@ -2062,19 +2062,19 @@ var create_table_v3 = function (form, para) {
 							html += '<textarea rows="3" cols="20" readonly="readonly">';
 							html += save_value;
 						}
-						html += '</textarea>';					
+						html += '</textarea>';
 						break;
 
 					case 'date':
 						if (write && ! fields[i].default_value) {
 							html += '<input type="text" id="'+save_id+'" value="'+save_value+'" placeholder="年-月-日">';
-							date_pickers.push(save_id);	
+							date_pickers.push(save_id);
 						} else {
 							html += save_value;
 						}
 						break;
 
-					case 'autocomplete': 
+					case 'autocomplete':
 						if (write) {
 							html += '<input type="text" id="' + save_id + '" value="'+save_value+'">';
 							$( function() {
@@ -2097,7 +2097,7 @@ var create_table_v3 = function (form, para) {
 									para.value_id = value_id;
 								SR.API.QUERY_AUTOCOMPLETE(para, function (err, result) {
 									if (err) {
-										console.log(err);	
+										console.log(err);
 									}
 									var ans = [];
 									// console.log('找到的r_form');
@@ -2154,13 +2154,13 @@ var create_table_v3 = function (form, para) {
 											source: ans
 										});
 									}
-								});	
-							});							
+								});
+							});
 						} else {
 							html += save_value;
-						}				
+						}
 						break;
-					case 'tag': 
+					case 'tag':
 						if (write) {
 							html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
 						} else {
@@ -2205,7 +2205,7 @@ var create_table_v3 = function (form, para) {
 								lock_show = value_list;
 
 							// var lock_show = lock_show.split(',');
-							for (var j=0; j < value_list.length; j++) {	
+							for (var j=0; j < value_list.length; j++) {
 								html += '<option value="' + value_list[j] + '" >' + lock_show[j] + '</option>';
 							}
 							html += '</select>';
@@ -2216,7 +2216,7 @@ var create_table_v3 = function (form, para) {
 						break;
 					case 'password':
 						if (write) {
-							html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';					
+							html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';
 						} else {
 							html += save_value;
 						}
@@ -2235,7 +2235,7 @@ var create_table_v3 = function (form, para) {
 						break;
 					default:
 						if (write && ! fields[i].default_value) {
-							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
+							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';
 						} else {
 							html += save_value;
 						}
@@ -2244,7 +2244,7 @@ var create_table_v3 = function (form, para) {
 
 				html += '</td>'
 			}
-			
+
 			if (br) {
 				html += '</tr>';
 			}
@@ -2261,7 +2261,7 @@ var create_table_v3 = function (form, para) {
 				html += '</td></tr>';
 				continue;
 			}
-			
+
 		}
 		if (show)
 			html += '<tr  ><td colspan="2"><button class="btn btn-primary" onClick="show_detail(this)">檢視細節</button></td></tr>';
@@ -2274,7 +2274,7 @@ var create_table_v3 = function (form, para) {
 			html += '<button class="btn btn-primary" onClick="delete_field(\''+form.name+'\', \''+record_id+'\')" >刪除</button>';
 		return html;
 	}
-	
+
 	// show all valid records in the form.data.values
 	for (var record_id in form.data.values) {
 		var value = form.data.values[record_id];
@@ -2282,9 +2282,9 @@ var create_table_v3 = function (form, para) {
 	}
 
 	if (Object.keys(form.data.values).length === 0)
-		html += c_table(fields);	
+		html += c_table(fields);
 
-	
+
 	return html;
 }
 
@@ -2299,11 +2299,11 @@ function show_detail(btn){
 	} else {
 		lock = true;
 		btn.innerHTML = '檢視細節';
-	} 
-    var parent = btn.parentNode.parentNode.parentNode; 
-	
+	}
+    var parent = btn.parentNode.parentNode.parentNode;
+
 	var all_tr = parent.childNodes; // Find all other <tr>
-	
+
 	for (var i = 0 ; i < all_tr.length ; i++) {
 		if (all_tr[i].getAttribute('data-can-hide') === 'y')
 			if (lock)
@@ -2329,7 +2329,7 @@ function delete_field(form_name, record_id){
 		alert('刪除成功!');
 		window.location.reload();
 	});
-	
+
 }
 
 var l_validateEmail = function (email) {
@@ -2356,7 +2356,7 @@ function check_upload(hide, upload_record_id) {
 		else
 			var dom = document.getElementById(result_field.fields[i].id);
 		var is_hide = false;
-		for (var t in hide) 
+		for (var t in hide)
 			if (hide[t] === result_field.fields[i].id) is_hide = true;
 		if (is_hide)
 			continue;
@@ -2374,7 +2374,7 @@ function check_upload(hide, upload_record_id) {
 			}
 			console.log(is_hide)
 			values[result_field.fields[i].id] = dom.value;
-		} else if (result_field.fields[i].show === true) 
+		} else if (result_field.fields[i].show === true)
 			values[result_field.fields[i].id] = dom.value;
 		if (result_field.fields[i].type === 'email' && dom.value !== '') {
 			if (!l_validateEmail(dom.value)){
@@ -2382,7 +2382,7 @@ function check_upload(hide, upload_record_id) {
 				if (!f_dom)
 					f_dom = dom;
 			}
-		} 
+		}
 		if (result_field.fields[i].type === 'account' && dom.value !== '') {
 			if (!l_validateAccount(dom.value)) {
 				err_message += result_field.fields[i].name + ' 格式錯誤\n';
@@ -2427,20 +2427,20 @@ function default_upload(field, record_id, values) {
 	var para = {form_name: field.name, values: values};
 	if (record_id)
 		para.record_id = record_id;
-	
-	// NOTE: should not use GET_ACCOUNT on client-side 
+
+	// NOTE: should not use GET_ACCOUNT on client-side
 	/*
 	SR.API.GET_ACCOUNT({}, function (err, account_result) {
-		
+
 		if (err) {
 			console.error(err);
 		} else {
 			for (var i in field.fields)
 				if (field.fields[i].id === 'account' && !para.values.account)
-					para.values['account'] = account_result.account;			
+					para.values['account'] = account_result.account;
 		}
-	*/	
-	
+	*/
+
 		SR.API.UPDATE_FIELD(para, function (err, result) {
 			if (err) {
 				console.error(err);
@@ -2456,12 +2456,12 @@ function default_upload(field, record_id, values) {
 
 
 function upload_table2(form_name, fields, onDone) {
-	
+
 	var values = {};
-	for ( var i in fields) 
+	for ( var i in fields)
 		if (document.getElementById(fields[i].id))
 			values[fields[i].id] = document.getElementById(fields[i].id).value;
-	
+
 	values.p_record_id = Object.keys(form.data.values)[0];
 	values.account = '<%=login.account%>';
 	values.class_id = class_id;
@@ -2475,7 +2475,7 @@ function upload_table2(form_name, fields, onDone) {
 			return onDone(err );
 		return onDone(null);
 	});
-	
+
 }
 
 //
@@ -2485,7 +2485,7 @@ function upload_table2(form_name, fields, onDone) {
 // parameters for excel upload
 /* sample:
 	do_upload_excel({
-		id: 				0, 
+		id: 				0,
 		hint: 				'上傳 Excel 匯入資料，需有 "VOC"、"VOC分類-1"、"VOC分類-2"、"VOC分類-3" 等欄位',
 		required_fields: 	['VOC', 'VOC分類-1'],
 		import_fields:		['VOC', 'VOC分類-1', 'VOC分類-2', 'VOC分類-3']
@@ -2501,22 +2501,22 @@ function do_upload_excel(para) {
 }
 
 function get_upload_excel(para) {
-	
+
 	if (typeof para === 'object')
 		l_excel_upload_para = para;
-	else 
+	else
 		l_excel_upload_para.id = para;
-	
+
 	console.log('para');
 	console.log(l_excel_upload_para);
-	
+
 	var id = l_excel_upload_para.id;
 	var hint = l_excel_upload_para.hint;
-	
-	var html = '';	
+
+	var html = '';
 	if (typeof hint === 'string')
 		html += '<p>' + hint + '</p>';
-	
+
 	html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' id="frmUploadFile">';
 	html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 	html += '<input type="file" name="upload" id="uploader" multiple="multiple" ';
@@ -2529,7 +2529,7 @@ function get_upload_excel(para) {
 	//html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+fields[i].id+'\', onPhotoUploaded)">Upload</button>';
 	//html += '<input type="hidden" value="" id="' + fields[i].id + '">';
 	//html += '<div id="show_upload_img"></div>';
-	html += '</form>';				
+	html += '</form>';
 
 	// original one-liner
 	//html += '<input type="file" id="uploader" multiple="multiple" onchange="upload_excel(\'' + id + '\')">';
@@ -2570,11 +2570,11 @@ function upload_excel(upload_id, del_mode) {
 			alert('unsupported file extension: ' + ext);
 			return;
 		}
-		
+
 		// store for later
 		fileInfo[filename] = {
 			type:	type,
-			ext: 	ext 
+			ext: 	ext
 		}
 	}
 
@@ -2584,10 +2584,10 @@ function upload_excel(upload_id, del_mode) {
 	//formData.append('toPreserveFileName', "true");
 	//formData.append('firstOption', "file");
 	//formData.append('upload', f.files);
-	
+
 	// for multiple files
-	var formData = new FormData($("#frmUploadFile")[0]);	
-	
+	var formData = new FormData($("#frmUploadFile")[0]);
+
 	$.ajax({
 		url: upload_url + '/upload',
 		type: 'POST',
@@ -2605,14 +2605,14 @@ function upload_excel(upload_id, del_mode) {
 			for (var i=0; i < data.upload.length; i++) {
 				list.push(data.upload[i].name);
 			}
-				
+
 			SR.API.PROCESS_UPLOADED_EXCEL({list: list, para: l_excel_upload_para}, function (err, result) {
 				if (err) {
 					return alert(err);
 				}
 				console.log(result);
 				result.filelist = list;
-				
+
 				// perform local display
 				showExcel(result, upload_id, f, del_mode);
 			});
@@ -2634,16 +2634,16 @@ function showExcel(xlsx, id, f, del_mode) {
 		}
 	}
 	document.getElementById('show_table').innerHTML = flexform_show_table(xlsx.data);
-	
+
 	excel_form_dom = document.getElementById('show_table');
-	
+
 	// TOFIX: what does this do?
 	//f.outerHTML=f.outerHTML.replace(/value=\w/g,'');
 
 	// keep refernece to be uploaded later
 	l_xlsx = xlsx;
 	if (xlsx.errlist.length > 0) {
-		alert(xlsx.errlist);		
+		alert(xlsx.errlist);
 	}
 	else {
 		var button_value = 'Continue Upload';
@@ -2657,8 +2657,8 @@ var excel_form_dom;
 
 function del_excel_form(record_id) {
 	var tr_list = excel_form_dom.childNodes[0].childNodes[0].childNodes;
-	for (var i in tr_list) 
-		if (typeof tr_list[i].getAttribute !== 'undefined') 
+	for (var i in tr_list)
+		if (typeof tr_list[i].getAttribute !== 'undefined')
 			if ( tr_list[i].getAttribute('data-recordid') === record_id ) {
 				tr_list[i].style.visibility = 'collapse';
 				for (var j in l_xlsx.data.data)
@@ -2694,12 +2694,12 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 	// del: 是否開啟刪除btn
 	var html = '';
 	var search = '';
-	
+
 	if (getParameterByName('search'))
 		search = getParameterByName('search');
 
 	var para = {already_form: form};
-	
+
 	if (search.length !== 0) {
 		var partial = {};
 		for (var i in filter)
@@ -2710,7 +2710,7 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 	console.log(para);
 	SR.API.QUERY_FORM(para, function (err, o_form) {
 		if (err) {
-			return console.log('joint form error!');		
+			return console.log('joint form error!');
 		}
 		// console.log('印出form')
 		// console.log(form)
@@ -2719,13 +2719,13 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 		// 左邊
 		html += '<div style="float: left;width: 20%;">';
 
-		for (var i in category) 
-			for (var j in o_form.data.fields) 
+		for (var i in category)
+			for (var j in o_form.data.fields)
 				if (o_form.data.fields[j].id === category[i]) {
 					html += '<h1 style="text-align:left;">'+o_form.data.fields[j].name+'</h1>'
-					
-						
-						
+
+
+
 					html += '<ul class="nostyle">';
 					html += '<li style="text-align:left;" class="nostyle" onclick="statistics_choice_category()"   >';
 					html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
@@ -2739,14 +2739,14 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 							options.push(values[record_id][category[i]]);
 						options = Array.from( new Set(options) );
 					}
-						
+
 					for (var k in options){
 						var num = 0;
 						for (var record_id in values)
 							if (values[record_id][category[i]] === options[k])
 								num++;
 						html += '<li style="text-align:left;" class="nostyle2" data-num="'+num+'"  onclick="statistics_choice_category()"  >';
-						
+
 						html += '<i class="fa fa-chevron-right" aria-hidden="true" ></i>';
 						html += '<input type="checkbox" name="category" data-type="'+category[i]+'" value="'+options[k]+'" >';
 						html += '<label >';
@@ -2759,7 +2759,7 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 
 					html += '<br>';
 				}
-		
+
 		html += '</div>';
 
 		// 右邊
@@ -2785,7 +2785,7 @@ function statistics_flexform(form, filter, category, onDone, show, del) {
 		}
 
 		html += '</div>';
-		
+
 		return onDone(null, html);
 	});
 }
@@ -2794,7 +2794,7 @@ function statistics_choice_category() {
 	// 找出目前checkbox勾選哪些
 	var all_choice = {};
 	var categorys = document.getElementsByName('category');
-	for (var i in categorys) 
+	for (var i in categorys)
 		if (categorys[i].checked) {
 			if (!all_choice[categorys[i].getAttribute('data-type')])
 				all_choice[categorys[i].getAttribute('data-type')] = [];
@@ -2804,11 +2804,11 @@ function statistics_choice_category() {
 	var datas = document.getElementsByName('form_data');
 	for (var i = 0 ; i < datas.length ; i++) {
 		datas[i].style.display = "block";
-		for (var key in all_choice) 
+		for (var key in all_choice)
 			if (all_choice[key].indexOf(datas[i].getAttribute('data-category-' + key)) === -1)
 				datas[i].style.display = "none";
 	}
-	
+
 }
 
 function enable_checkbox() {
@@ -2829,12 +2829,12 @@ function flexform_register(input, onDone){
 			SR.API._ACCOUNT_LOGIN(input, function(){
 				window.location = '/main';
 			});
-					
+
 		}
 	}
 
 	if (input.account === '' || input.password === '' || input.email === '') {
-		return alert('please fill in complete registeration data \n請填寫完整註冊資料');	
+		return alert('please fill in complete registeration data \n請填寫完整註冊資料');
 	}
 	SR.API._ACCOUNT_REGISTER(input, onDone);
 }
@@ -2866,7 +2866,7 @@ function list_query(para, onDone) {
 	var form_name = para.form_name;
 	var use_field = para.use_field;				// 用到的欄位
 	var query_func_name = para.query_func_name;
-	if (typeof(para.query_func_name) === 'undefined') 
+	if (typeof(para.query_func_name) === 'undefined')
 		query_func_name = 'default_query_function';
 	var n_of_line = (para.n_of_line || 2); 		// 一行的數量
 	if (n_of_line < 2)
@@ -2882,11 +2882,11 @@ function list_query(para, onDone) {
 			return onDone('Input use_field must a array');
 		if (use_field.length ===0)
 			return onDone('The input use_field length must be greater than 0.');
-		use_field_data = {}; 
+		use_field_data = {};
 		for (var i in use_field) {
 			var have = false;
-			for (var j in rf.fields) 
-				if (rf.fields[j].id === use_field[i]) 
+			for (var j in rf.fields)
+				if (rf.fields[j].id === use_field[i])
 					have = true;
 			if (!have)
 				return onDone('Do not have ' + use_field[i] + ' field!');
@@ -2900,7 +2900,7 @@ function list_query(para, onDone) {
 			for (var j in rf.fields)
 				if (rf.fields[j].id === use_field[i])
 					var field = rf.fields[j];
-			
+
 			console.log(field);
 			if (count === 0)
 				html += '<tr>';
@@ -2916,12 +2916,12 @@ function list_query(para, onDone) {
 			if (getParameterByName(field.id))
 				value = getParameterByName(field.id);
 
-			
+
 			html += '<td>' + field.name + '</td>';
 			use_field_data[field.id] = field.type;
 			if (field.type === 'string') {
 				html += '<td>' + '<input type="text" id="ql_'+field.id+'" style="text-align: center;" value="'+value+'">' + '</td>';
-				
+
 			} else if (field.type === 'choice') {
 				html += '<td>';
 				html += '<select id="ql_'+field.id+'">';
@@ -2940,8 +2940,8 @@ function list_query(para, onDone) {
 					start_date = value.split(',')[0];
 					end_date = value.split(',')[1];
 				}
-				date_pickers.push('ql_start_' + field.id);	
-				date_pickers.push('ql_end_' + field.id);	
+				date_pickers.push('ql_start_' + field.id);
+				date_pickers.push('ql_end_' + field.id);
 				html += '<td>' + '<input type="text" id="ql_start_'+field.id+'" placeholder="年/月/日" style="text-align: center;" value="'+start_date+'" readonly="readonly">' + '</td>';
 				html += '<td>－</td>';
 				html += '<td>' + '<input type="text" id="ql_end_'+field.id+'" placeholder="年/月/日" style="text-align: center;" value="'+end_date+'" readonly="readonly">' + '</td>';
