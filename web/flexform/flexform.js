@@ -2394,7 +2394,12 @@ function check_upload(hide, upload_record_id) {
 		// 檢查上傳數量
 		if (result_field.fields[i].num) {
 			var upload_id = dom.value.split(",");
-			var use_num = upload_id.length -1;
+			var use_num = upload_id.length - 1;
+			if (result_field.fields[i].name === '說明照片'
+			    || result_field.fields[i].name === '說明錄音檔') {
+				use_num = upload_id.length / 2 - 1;
+			}
+
 			if (use_num > result_field.fields[i].num) {
 				err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
 				// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
