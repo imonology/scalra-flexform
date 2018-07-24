@@ -1673,13 +1673,47 @@ var create_table2 = function (form, para) {
 							*/
 
 							if (value[fields[i].id].length !== 0) {
-								let data = value[fields[i].id].split(',');
-								for (var index in data) {
-									const tmp_img = {};
-									tmp_img.image = data[index];
-									tmp_img.text = '';
-									console.log(data[index]);
-									html += show_imgs(tmp_img);
+								// console.log('========');
+								// console.log(value[fields[i].id]);
+								try {
+									let data = JSON.parse(value[fields[i].id]);
+
+									if (data.length !== 0) {
+										for (var index in data) {
+											const tmp_img = {};
+											if (data[index].image !== undefined
+											    && data[index].image !== '') {
+												tmp_img.image = data[index].image;
+											}
+											if (data[index].text !== undefined) {
+												tmp_img.text = data[index].text;
+											}
+											// tmp_img.text = '';
+											// console.log(data[index]);
+											if (tmp_img.image !== '') {
+												// console.log('using json parse');
+												html += show_imgs(tmp_img);
+											}
+										}
+									}
+								} catch (e) {
+									// fallback
+									console.log('fallback');
+									// console.log(value[fields[i].id]);
+									if (value[fields[i].id].length !== 0) {
+										// console.log(value[fields[i].id]);
+										let data = value[fields[i].id].split(',');
+										// console.log(data);
+										for (var index in data) {
+											const tmp_img = {};
+											tmp_img.image = data[index];
+											tmp_img.text = '';
+											// console.log(data[index]);
+											if (tmp_img.image !== '') {
+												html += show_imgs(tmp_img);
+											}
+										}
+									}
 								}
 							}
 
