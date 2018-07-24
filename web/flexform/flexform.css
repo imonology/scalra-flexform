@@ -223,3 +223,19 @@ ul.tabs li.active  {
 ul.tabs li.active a:hover {
 	background: #fff;
 }
+#list_bar {
+    font-family: '微軟正黑體';
+    font-weight: 400;
+	margin-top: 15px;
+    margin-bottom: 15px;
+	font-size: 14px;
+    color: #333333;
+}
+#show_line_area {
+    margin-left: 10px;
+	float: left;
+}
+#search_area {
+	margin-right: 10px;
+	float: right;
+}

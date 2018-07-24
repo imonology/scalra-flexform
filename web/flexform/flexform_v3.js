@@ -407,3 +407,108 @@ var create_table_v3 = function (form, para) {
 	
 	return html;
 }
+
+function flexform_show_table_v3(flexform_values, pa) {
+	// console.log('flexform_values = ');
+	// console.log(flexform_values);
+	var para = pa || {};
+	// para.colStyle = [{ cssKey: cssValue }]
+	para.colStyle = para.colStyle || [];
+	// para.hideTitle = true || false
+	para.hideTitle = para.hideTitle || false;
+	// para.tableName = ''
+	para.tableName = para.tableName || null;
+	var html = '';
+	
+	// 一次顯示多少entries和search
+	html += '<div id="list_bar">';
+	html += '<div id="show_line_area">';
+	html += 'Show '
+	html += '<select id="show_line">';
+	html += '<option value="10">10</option>';
+	html += '<option value="15">15</option>';
+	html += '<option value="20">20</option>';
+	html += '<option value="30">30</option>';
+	html += '</select>';
+	html += ' Entries';
+	html += '</div>';
+	html += '<div id="search_area">';
+	html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
+	html += '<input type="text" id="search_list" style="width:auto;">';
+	html += '</div>';
+	html += '</div>';
+	
+	var table_para = {};
+	table_para.data_num = flexform_values.data.length;
+	html += '';
+	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="customTable" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + '>';
+	// html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
+	// field
+	if (!!para.hideTitle) {
+		html += '<tr style="display: none;"></tr><tr style="display: none;">';
+	} else {
+		html += '<tr>';
+	}
+	// for (var i in flexform_values.field) 
+	// 	html += '<th  onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+i+'\')" >' + flexform_values.field[i].value + '</th>';
+	var count = 0;
+	var width = 1.0 / flexform_values.field.length * 100;
+	// console.log('寬度');
+	// console.log(width);
+	for (var i in flexform_values.field) {
+		var content = '';
+		content += '<li  class="drop-down-menu" onClick="javascript:switch_sort_up_down(\''+flexform_table_num+'\',\''+count+'\', this)" value="-1">';
+		if (flexform_values.field[i].value)
+			content += flexform_values.field[i].value;
+		else
+			content += flexform_values.field[i].key;
+		content += '  <i class="" aria-hidden="true"></i>';
+		// content += '<ul>'
+		// content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+count+'\', \'BigToSmall\')">由大到小排序</li>'
+		// content += '<li onClick="javascript:flexform_sort_table(\''+flexform_table_num+'\',\''+count+'\', \'SmallToBig\')">由小到大排序</li>'
+		// content += '</ul>'
+		content += '</li>';
+
+		let style = '';
+		if (para.colStyle[i]) {
+			if (!para.colStyle[i].width) {
+				para.colStyle[i].width = width;
+			}
+
+			style = obj2inlineCSS(para.colStyle[i]);
+		} else {
+			style = 'width: ' + width + '%';
+		}
+
+		// html += `<th style="${style}" class="text-center">${content}</th>`;
+		html += '<th style="' + style+ '" class="text-center">' + content + '</th>';
+		count ++;
+	}
+	html += '</tr>';
+	
+	for (var i in flexform_values.data) {
+		if (para.show_lines) {
+			// html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
+			html += '<tr ' + ( i>para.show_lines-1?'style="display: none;"':'') +  'data-recordid="' + flexform_values.data[i].record_id + '">';
+		} else {
+			// html += `<tr data-recordid="${flexform_values.data[i].record_id}">`;
+			html += '<tr data-recordid="' + flexform_values.data[i].record_id + '">';
+		}
+
+		for (var j in flexform_values.field) 
+			html += '<td style="' + obj2inlineCSS(para.colStyle[j]) + '">' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+			// html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+		html += '</tr>';
+	}
+	
+	
+	html += '</table>';
+	if (para.show_lines) {
+		table_para.show_lines = para.show_lines
+		html += '<button id="btnShowMore" onclick="flexform_table_show_more(this, \''+flexform_table_num+'\')">Show more '+(flexform_values.data.length - para.show_lines - 1)+' row</button>';
+	}
+	flexform_table_num++;
+	flexform_tables_para.push(table_para);
+	return html;
+} // function flexform_show_table()
+

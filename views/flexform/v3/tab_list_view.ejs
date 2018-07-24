@@ -7,17 +7,31 @@
 <script>
 <%
 var f1 = encodeURIComponent(JSON.stringify(para));
-var forms = [];
+var forms = {};
 var error = false;
 var error_message = '';
-for (var i in para)	{
+// var form_count = 0;
+function l_query_form(para) {
+	return function(onD) {
+		l_do_query_form(para, onD);
+	}
+}
+function l_do_query_form(p, onDone) {
+	var i = p.use_page;
+	LOG.warn('i = ' + i);
+	LOG.warn(para);
 	SR.API.QUERY_FORM( para[i].form_query, function (err, form) {
 		if (err) {
 			error = true;
 			error_message = err;
 			return err;
 		}
-		forms.push(form);
+		forms[i] = [];
+		forms[i].push(form);
+		if (!para[i].related_form) {
+			return onDone(null);
+		}
+		
 		var related_form_count = 0;
 		for (var j in para[i].related_form){
 			SR.API.QUERY_FORM( para[i].related_form[j].form_query, function (err, form) {
@@ -26,56 +40,89 @@ for (var i in para)	{
 					error_message = err;
 					return err;
 				}
-				forms.push(form);
+				forms[i].push(form);
 				related_form_count++;
 				if (related_form_count === para[i].related_form.length) {
-					var f2 = encodeURIComponent(JSON.stringify(forms));
-					%> 
-						var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
-						var forms = JSON.parse(decodeURIComponent("<%-f2 %>")); 
-						var use_page = 0;
-					<%
+					
+					return onDone(null);
 				}
 			});
 		}
 	});
 }
+var jq = SR.JobQueue.createQueue();
+for (var i in para)	{
+	jq.add(l_query_form({use_page: i}));
+}
+jq.run(function (err) {
+	var f2 = encodeURIComponent(JSON.stringify(forms));
+	%> 
+		var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
+		var forms = JSON.parse(decodeURIComponent("<%-f2 %>")); 
+		var use_page = 0;
+	<%	
+});	
 %>
 
 var add_forms = {};
 var onConnect = function () {
 	init_tab();
-	init_html(function(err, html){
-		document.getElementById('sub_title').innerHTML = para[use_page].s_title;
-		document.getElementById('form_area').innerHTML = html;	
-		if (typeof(date_pickers) !== 'undefined') {
-			for (var i=0; i < date_pickers.length; i++) {
-				$(function() {
-					$("#" + date_pickers[i]).datepicker(datepicker_setting);
-				});
-			}
+	init_html(init_onDone);
+}
+
+function init_onDone(err, html) {
+	document.getElementById('sub_title').innerHTML = para[use_page].s_title;
+	document.getElementById('form_area').innerHTML = html;	
+	if (typeof(date_pickers) !== 'undefined') {
+		for (var i=0; i < date_pickers.length; i++) {
+			$(function() {
+				$("#" + date_pickers[i]).datepicker(datepicker_setting);
+			});
 		}
-		$('.tags').tagsInput();
-		init_submit_btn();
-		enable_js();
-	});
+	}
+	$('.tags').tagsInput();
+	init_submit_btn();
+	enable_js();
 }
 
 function init_tab() {
 	var html = '';
 	html += '<ul class="tabs">';
-	html += '<li class="active">個案建立</li>';
-	html += '<li>派案管理</li>';
-	html += '<li>案件管理</li>';
+	for (var i in para) {
+		html += '<li '+(i==='0'?'class="active"': '')+' onclick="switch_tab('+i+')">'+para[i].s_title+'</li>';
+	}
 	html += '</ul>';
 	html += '<div style="clear:both;"></div>';
-	// html += '<p>123</p>';
 	document.getElementById('tab_area').innerHTML = html;	
 }
 
+function switch_tab(n) {
+	use_page = parseInt(n);
+
+	init_html(init_onDone);
+}
+
 function init_html(onDone) {
+	if (para[use_page].type === 'view') {
+		init_view(onDone);
+	} else if (para[use_page].type === 'list') {
+		init_list(onDone);
+	}
+}
+		
+function init_list(onDone) {
+	var flextable_data = SR.API.flexform_to_flexform_table({form: forms[use_page][0]}); // 目前list只支援顯示一個form
+	var html = flexform_show_table_v3( flextable_data ) ;
+	return onDone(null, html);
+}
+		
+// 底下是view
+
+function init_view(onDone) {
 	var html = '';
-	for (var i in forms) {
+	
+	var page_forms = forms[use_page];
+	for (var i in page_forms) {
 		if (i !== '0') {
 			add_forms[(parseInt(i)-1)] = [];
 			html += '<hr>'
@@ -90,7 +137,7 @@ function init_html(onDone) {
 			html += '<div id="expansion_form_'+(parseInt(i)-1)+'">';
 		}
 		
-		html += create_table_v3(forms[i], get_form_para());
+		html += create_table_v3(page_forms[i], get_form_para());
 
 		html += '</div>';
 
@@ -100,7 +147,11 @@ function init_html(onDone) {
 }
 		
 function init_submit_btn() {
-	document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="">送出</button>';
+	if (para[use_page].mode !== 'show') {
+		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="">送出</button>';
+	} else {
+		document.getElementById('button_area').innerHTML = '';
+	}
 }
 		
 function enable_js() {
