@@ -5,7 +5,10 @@ var create_table_v3 = function (form, para) {
 	var show = para.show;
 	var del = para.del;
 	var customized = para.customized;
-
+	if (typeof(para.id_num) === 'undefined')
+		var id_num = '';
+	else
+		var id_num = para.id_num;
 	var hide = (hide ? hide : []);
 	if (!td_style)
 		td_style =  ['width:15%;','text-align:left;'];
@@ -24,6 +27,7 @@ var create_table_v3 = function (form, para) {
 				var save_id = record_id + '-' + fields[i].id;
 			else
 				var save_id = fields[i].id;
+			save_id += id_num;
 			if (value && value[fields[i].id]) {
 				var save_value = value[fields[i].id];
 			} else
@@ -391,7 +395,10 @@ var create_table_v3 = function (form, para) {
 		html += '</table>';
 		form_data = form.data;
 		form_data['name'] = form.name;
-
+		// if (write)
+		// 	html += '<button class="btn btn-primary" onClick="check_upload(\''+hide+'\' '+(record_id?', \''+record_id+ '\'':'')+' )">'+(value?'確定修改':'送出')+'</button>';
+		// if (del)
+		// 	html += '<button class="btn btn-primary" onClick="delete_field(\''+form.name+'\', \''+record_id+'\')" >刪除</button>';
 		return html;
 	}
 	
@@ -512,3 +519,177 @@ function flexform_show_table_v3(flexform_values, pa) {
 	return html;
 } // function flexform_show_table()
 
+// 如果有upload_record_id，則是修改，若沒有則是新增
+function check_upload_v3() {
+	console.log('upload');
+	console.log(forms[use_page]);
+	console.log('add_forms');
+	console.log(add_forms)
+	var hide = [];
+	var err_message = '';
+	var f_dom = undefined;
+	var values = {};
+	function check(result_field, add_num) {
+		for (var i in result_field.fields) {
+			var use_id = result_field.fields[i].id;
+			if (typeof(add_num) !== 'undefined') 
+				use_id += add_num;
+			// 檢查必填欄位
+			if (typeof(upload_record_id)!== 'undefined')
+				var dom = document.getElementById(upload_record_id + '-' + use_id);
+			else
+				var dom = document.getElementById(use_id);
+			if (result_field.fields[i].type === 'address')
+				var dom = document.getElementById(use_id+ '_postal_code');
+			var is_hide = false;
+			for (var t in hide) 
+				if (hide[t] === result_field.fields[i].id) is_hide = true;
+			if (is_hide)
+				continue;
+
+			if (!dom) 
+				continue;
+			
+			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
+				// if (result_field.fields[i].type === 'address')
+				// 	console.log('有一個address')
+				// console.log(result_field.fields[i].type)
+				if (!is_hide) {
+					if (dom.value === '') {
+						err_message += result_field.fields[i].name + ' 為必填欄位\n';
+						// alert(result_field.fields[i].name + ' 為必填欄位');
+						if (!f_dom)
+							f_dom = dom;
+							// dom.focus();
+						// return;
+					} else if (result_field.fields[i].type === 'address') {
+						var dom2 = document.getElementById(use_id+ '_address');
+						if (dom2.value === ''){
+							err_message += result_field.fields[i].name + ' 為必填欄位\n';
+							if (!f_dom)
+								f_dom = dom2;
+						}
+					}
+				}
+			}
+			if (result_field.fields[i].show === true) {
+				if (result_field.fields[i].type === 'address') {
+					var dom2 = document.getElementById(use_id+ '_address');
+					values[use_id] = {postal_code: dom.value, address: dom2.value};
+				} else
+					values[use_id] = dom.value;
+			}
+			if (result_field.fields[i].type === 'email' && dom.value !== '') {
+				if (!l_validateEmail(dom.value)){
+					err_message += result_field.fields[i].name + ' 格式錯誤，需為E-mail格式!\n';
+					if (!f_dom)
+						f_dom = dom;
+				}
+			} 
+			if (result_field.fields[i].type === 'account' && dom.value !== '') {
+				if (!l_validateAccount(dom.value)) {
+					err_message += result_field.fields[i].name + ' 格式錯誤\n';
+					if (!f_dom)
+						f_dom = dom;
+				}
+			}
+
+			// 檢查上傳數量
+			if (result_field.fields[i].num) {
+				var upload_id = dom.value.split(",");
+				var use_num = upload_id.length -1;
+				if (use_num > result_field.fields[i].num) {
+					err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
+					// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
+					// return ;
+				}
+			}
+		}
+	}
+	for (var check_form_num in forms[use_page]) {
+		var form = forms[use_page][check_form_num];
+		check(form.data);
+		if (check_form_num !== '0') {
+			for (var add_num in add_forms[parseInt(check_form_num) -1]) {
+				check(form.data, add_num);
+			}
+		}
+	}
+	
+	if (err_message.length !== 0) {
+		alert(err_message);
+		if (f_dom)
+			f_dom.focus();
+		return;
+	}
+// 	var result_field = form_data;
+// 	hide = hide.split(",");
+// 	var err_message = '';
+// 	var f_dom = undefined;
+// 	var values = {};
+// 	for (var i in result_field.fields) {
+// 		// 檢查必填欄位
+// 		if (upload_record_id)
+// 			var dom = document.getElementById(upload_record_id + '-' + result_field.fields[i].id);
+// 		else
+// 			var dom = document.getElementById(result_field.fields[i].id);
+// 		var is_hide = false;
+// 		for (var t in hide) 
+// 			if (hide[t] === result_field.fields[i].id) is_hide = true;
+// 		if (is_hide)
+// 			continue;
+
+// 		if (!dom)
+// 			continue;
+// 		if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
+// 			if (!is_hide && dom.value === '') {
+// 				err_message += result_field.fields[i].name + ' 為必填欄位\n';
+// 				// alert(result_field.fields[i].name + ' 為必填欄位');
+// 				if (!f_dom)
+// 					f_dom = dom;
+// 					// dom.focus();
+// 				// return;
+// 			}
+// 			console.log(is_hide)
+// 			values[result_field.fields[i].id] = dom.value;
+// 		} else if (result_field.fields[i].show === true) 
+// 			values[result_field.fields[i].id] = dom.value;
+// 		if (result_field.fields[i].type === 'email' && dom.value !== '') {
+// 			if (!l_validateEmail(dom.value)){
+// 				err_message += result_field.fields[i].name + ' 格式錯誤，需為E-mail格式!\n';
+// 				if (!f_dom)
+// 					f_dom = dom;
+// 			}
+// 		} 
+// 		if (result_field.fields[i].type === 'account' && dom.value !== '') {
+// 			if (!l_validateAccount(dom.value)) {
+// 				err_message += result_field.fields[i].name + ' 格式錯誤\n';
+// 				if (!f_dom)
+// 					f_dom = dom;
+// 			}
+// 		}
+
+// 		// 檢查上傳數量
+// 		if (result_field.fields[i].num) {
+// 			var upload_id = dom.value.split(",");
+// 			var use_num = upload_id.length -1;
+// 			if (use_num > result_field.fields[i].num) {
+// 				err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
+// 				// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
+// 				// return ;
+// 			}
+// 		}
+// 	}
+
+// 	if (err_message.length !== 0) {
+// 		alert(err_message);
+// 		if (f_dom)
+// 			f_dom.focus();
+// 		return;
+// 	}
+
+// 	if (window.flexform_custom_upload) // check custom funciton
+// 		flexform_custom_upload(result_field, upload_record_id, values);
+// 	else
+// 		default_upload(result_field, upload_record_id, values);
+}

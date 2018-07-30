@@ -26,6 +26,18 @@ function l_do_query_form(p, onDone) {
 			error_message = err;
 			return err;
 		}
+		
+		if (typeof(para[i].default_value) !== 'undefined') {
+			var default_keys = Object.keys(para[i].default_value);
+			for (var j in form.data.fields) {
+				for (var k in default_keys) {
+					if (form.data.fields[j].id === default_keys[k]) {
+						form.data.fields[j].default_value = para[i].default_value[default_keys[k]];
+					}
+				}
+			}
+		}
+		
 		forms[i] = [];
 		forms[i].push(form);
 		if (!para[i].related_form) {
@@ -128,7 +140,7 @@ function init_view(onDone) {
 			html += '<hr>'
 			html += '<div class="add_expansion_title">';
 			html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[(parseInt(i)-1)].form_title + '</p></div>';
-			html += '<div class="add_expansion_form" onclick="add_expansion_form('+(parseInt(i)-1)+')"><span class="plus_btn">+</span></div>';
+			html += '<div class="add_expansion_form" onclick="add_expansion_form('+(parseInt(i-1))+')"><span class="plus_btn">+</span></div>';
 			html += '</div>';
 		}
 		if (i === '0') {
@@ -148,7 +160,7 @@ function init_view(onDone) {
 		
 function init_submit_btn() {
 	if (para[use_page].mode !== 'show') {
-		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="">送出</button>';
+		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="check_upload_v3()">送出</button>';
 	} else {
 		document.getElementById('button_area').innerHTML = '';
 	}
@@ -189,7 +201,9 @@ function add_expansion_form(n) {
 	html += '<div class="add_expansion_title">';
 	html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[n].form_title + '</p></div>';
 	html += '<div class="minus_expansion_form" onclick="minus_expansion_form('+n+', '+expansion_form_number+')"><span class="plus_btn">-</span></div>';
-	html += create_table_v3(forms[(n+1).toString()], get_form_para());
+	var form_para = get_form_para();
+	form_para.id_num = expansion_form_number;
+	html += create_table_v3(forms[use_page][n+1], form_para);
 	html += '</div>';
 	add_forms[n].push(expansion_form_number);
 	document.getElementById("expansion_form_"+n).innerHTML += html;
