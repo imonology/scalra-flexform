@@ -529,7 +529,10 @@ function check_upload_v3() {
 	var err_message = '';
 	var f_dom = undefined;
 	var values = {};
-	function check(result_field, add_num) {
+	function check(result_field, para) {
+		var add_num = para.add_num;
+		var form_name = para.form_name;
+		var value = {};
 		for (var i in result_field.fields) {
 			var use_id = result_field.fields[i].id;
 			if (typeof(add_num) !== 'undefined') 
@@ -575,9 +578,10 @@ function check_upload_v3() {
 			if (result_field.fields[i].show === true) {
 				if (result_field.fields[i].type === 'address') {
 					var dom2 = document.getElementById(use_id+ '_address');
-					values[use_id] = {postal_code: dom.value, address: dom2.value};
-				} else
-					values[use_id] = dom.value;
+					value[use_id] = {postal_code: dom.value, address: dom2.value};
+				} else {
+					value[use_id] = dom.value;
+				}
 			}
 			if (result_field.fields[i].type === 'email' && dom.value !== '') {
 				if (!l_validateEmail(dom.value)){
@@ -605,91 +609,74 @@ function check_upload_v3() {
 				}
 			}
 		}
+		values[form_name].push(value);
 	}
 	for (var check_form_num in forms[use_page]) {
 		var form = forms[use_page][check_form_num];
-		check(form.data);
+		// console.log(form);
+		values[form.name] = [];
+		check(form.data, {form_name: form.name});
 		if (check_form_num !== '0') {
 			for (var add_num in add_forms[parseInt(check_form_num) -1]) {
-				check(form.data, add_num);
+				check(form.data, {add_num: add_num, form_name: form.name});
 			}
 		}
 	}
-	
+	default_upload_v3(values);
 	if (err_message.length !== 0) {
 		alert(err_message);
 		if (f_dom)
 			f_dom.focus();
 		return;
 	}
-// 	var result_field = form_data;
-// 	hide = hide.split(",");
-// 	var err_message = '';
-// 	var f_dom = undefined;
-// 	var values = {};
-// 	for (var i in result_field.fields) {
-// 		// 檢查必填欄位
-// 		if (upload_record_id)
-// 			var dom = document.getElementById(upload_record_id + '-' + result_field.fields[i].id);
-// 		else
-// 			var dom = document.getElementById(result_field.fields[i].id);
-// 		var is_hide = false;
-// 		for (var t in hide) 
-// 			if (hide[t] === result_field.fields[i].id) is_hide = true;
-// 		if (is_hide)
-// 			continue;
+	
+	
+}
 
-// 		if (!dom)
-// 			continue;
-// 		if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
-// 			if (!is_hide && dom.value === '') {
-// 				err_message += result_field.fields[i].name + ' 為必填欄位\n';
-// 				// alert(result_field.fields[i].name + ' 為必填欄位');
-// 				if (!f_dom)
-// 					f_dom = dom;
-// 					// dom.focus();
-// 				// return;
-// 			}
-// 			console.log(is_hide)
-// 			values[result_field.fields[i].id] = dom.value;
-// 		} else if (result_field.fields[i].show === true) 
-// 			values[result_field.fields[i].id] = dom.value;
-// 		if (result_field.fields[i].type === 'email' && dom.value !== '') {
-// 			if (!l_validateEmail(dom.value)){
-// 				err_message += result_field.fields[i].name + ' 格式錯誤，需為E-mail格式!\n';
-// 				if (!f_dom)
-// 					f_dom = dom;
-// 			}
-// 		} 
-// 		if (result_field.fields[i].type === 'account' && dom.value !== '') {
-// 			if (!l_validateAccount(dom.value)) {
-// 				err_message += result_field.fields[i].name + ' 格式錯誤\n';
-// 				if (!f_dom)
-// 					f_dom = dom;
-// 			}
-// 		}
+function default_upload_v3(values) {
+	console.log('uploading');
+	var main_form = forms[use_page][0].name;
+	console.log(main_form)
+	var main_para = {form_name: main_form, values: values[main_form][0]};
 
-// 		// 檢查上傳數量
-// 		if (result_field.fields[i].num) {
-// 			var upload_id = dom.value.split(",");
-// 			var use_num = upload_id.length -1;
-// 			if (use_num > result_field.fields[i].num) {
-// 				err_message += result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!\n';
-// 				// alert(result_field.fields[i].name + ' 數量不可超過 ' + result_field.fields[i].num + ' 個!');
-// 				// return ;
-// 			}
-// 		}
-// 	}
 
-// 	if (err_message.length !== 0) {
-// 		alert(err_message);
-// 		if (f_dom)
-// 			f_dom.focus();
-// 		return;
-// 	}
-
-// 	if (window.flexform_custom_upload) // check custom funciton
-// 		flexform_custom_upload(result_field, upload_record_id, values);
-// 	else
-// 		default_upload(result_field, upload_record_id, values);
+	
+	
+	SR.API.UPDATE_FIELD(main_para, function (err, result) {
+		if (err) {
+			console.error(err);
+			alert(err);
+			return;
+		}
+		var pointer_id = result.record_id;
+		var total_p = [];
+		for (var i in para[use_page].related_form){
+			var form_name = para[use_page].related_form[i].form_query.name;
+			var pointer = para[use_page].related_form[i].pointer
+			for (var j in values[form_name]){
+				var p = {form_name: form_name, values: values[form_name][j] };
+				p.values[pointer] = pointer_id;
+				total_p.push(p);
+			}
+		}
+		
+		var max_num = total_p.length;
+		var run_num = 0;
+		for (var i in total_p) {
+			console.log(total_p[i]);
+			SR.API.UPDATE_FIELD(total_p[i], function (err, result) {
+				if (err) {
+					console.error(err);
+					alert(err);
+					return;
+				}
+				run_num++;
+				if (run_num === max_num) {
+					alert('上傳成功');
+					window.location.reload();
+				}
+			});
+		}
+		
+	});
 }

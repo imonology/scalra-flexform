@@ -85,14 +85,7 @@ var onConnect = function () {
 function init_onDone(err, html) {
 	document.getElementById('sub_title').innerHTML = para[use_page].s_title;
 	document.getElementById('form_area').innerHTML = html;	
-	if (typeof(date_pickers) !== 'undefined') {
-		for (var i=0; i < date_pickers.length; i++) {
-			$(function() {
-				$("#" + date_pickers[i]).datepicker(datepicker_setting);
-			});
-		}
-	}
-	$('.tags').tagsInput();
+
 	init_submit_btn();
 	enable_js();
 }
@@ -148,7 +141,10 @@ function init_view(onDone) {
 		} else {
 			html += '<div id="expansion_form_'+(parseInt(i)-1)+'">';
 		}
-		
+
+		if (para[use_page].mode === 'new') {
+			page_forms[i].data.values = {};
+		}
 		html += create_table_v3(page_forms[i], get_form_para());
 
 		html += '</div>';
@@ -171,6 +167,15 @@ function enable_js() {
 		var $this = $(this), _clickTab = $this.find('a').attr('href');
 		$this.addClass('active').siblings('.active').removeClass('active');
 	});
+	if (typeof(date_pickers) !== 'undefined') {
+		for (var i=0; i < date_pickers.length; i++) {
+			$(function() {
+				$("#" + date_pickers[i]).datepicker(datepicker_setting);
+			});
+		}
+	}
+	$('.tags').tagsInput();
+	
 }
 
 function get_form_para() {
@@ -207,6 +212,7 @@ function add_expansion_form(n) {
 	html += '</div>';
 	add_forms[n].push(expansion_form_number);
 	document.getElementById("expansion_form_"+n).innerHTML += html;
+	enable_js();
 }
 		
 function minus_expansion_form(n, expansion_form_number) {
