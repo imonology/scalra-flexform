@@ -1,5 +1,7 @@
 var create_table_v3 = function (form, para) {
 	var hide = para.hide;
+	console.log('hide = ');
+	console.log(hide)
 	var write = para.write;
 	var td_style = para.td_style;
 	var show = para.show;
@@ -425,6 +427,8 @@ function flexform_show_table_v3(flexform_values, pa) {
 	para.hideTitle = para.hideTitle || false;
 	// para.tableName = ''
 	para.tableName = para.tableName || null;
+	var hide = para.hide;
+
 	var html = '';
 	
 	// 一次顯示多少entries和search
@@ -462,7 +466,16 @@ function flexform_show_table_v3(flexform_values, pa) {
 	var width = 1.0 / flexform_values.field.length * 100;
 	// console.log('寬度');
 	// console.log(width);
+	function check_continue(field) { // 檢查該欄位是否要顯示
+		if (field.type === 'line' || field.type === 'print')
+			return true;
+		for (var j in hide) 
+			if ( field.id === hide[j] ) 
+				return true;
+	}
 	for (var i in flexform_values.field) {
+		if ( check_continue(flexform_values.field[i]) ) 
+			continue;
 		var content = '';
 		content += '<li  class="drop-down-menu" onClick="javascript:switch_sort_up_down(\''+flexform_table_num+'\',\''+count+'\', this)" value="-1">';
 		if (flexform_values.field[i].value)
@@ -502,8 +515,11 @@ function flexform_show_table_v3(flexform_values, pa) {
 			html += '<tr data-recordid="' + flexform_values.data[i].record_id + '">';
 		}
 
-		for (var j in flexform_values.field) 
+		for (var j in flexform_values.field) {
+			if ( check_continue(flexform_values.field[j]) )
+				continue;
 			html += '<td style="' + obj2inlineCSS(para.colStyle[j]) + '">' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+		}
 			// html += `<td style="${obj2inlineCSS(para.colStyle[j])}">` + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
 		html += '</tr>';
 	}
@@ -521,8 +537,8 @@ function flexform_show_table_v3(flexform_values, pa) {
 
 // 如果有upload_record_id，則是修改，若沒有則是新增
 function check_upload_v3() {
-	console.log('upload');
-	console.log(forms[use_page]);
+	// console.log('upload');
+	// console.log(forms[use_page]);
 	console.log('add_forms');
 	console.log(add_forms)
 	var hide = [];
@@ -533,6 +549,7 @@ function check_upload_v3() {
 		var add_num = para.add_num;
 		var form_name = para.form_name;
 		var value = {};
+		var default_values = para.default_values;
 		for (var i in result_field.fields) {
 			var use_id = result_field.fields[i].id;
 			if (typeof(add_num) !== 'undefined') 
@@ -609,12 +626,15 @@ function check_upload_v3() {
 				}
 			}
 		}
+		console.log('default_values');
+		console.log(default_values);
 		values[form_name].push(value);
 	}
 	for (var check_form_num in forms[use_page]) {
 		var form = forms[use_page][check_form_num];
 		// console.log(form);
 		values[form.name] = [];
+		
 		check(form.data, {form_name: form.name});
 		if (check_form_num !== '0') {
 			for (var add_num in add_forms[parseInt(check_form_num) -1]) {
@@ -622,7 +642,7 @@ function check_upload_v3() {
 			}
 		}
 	}
-	default_upload_v3(values);
+	
 	if (err_message.length !== 0) {
 		alert(err_message);
 		if (f_dom)
@@ -630,7 +650,7 @@ function check_upload_v3() {
 		return;
 	}
 	
-	
+	default_upload_v3(values);
 }
 
 function default_upload_v3(values) {
