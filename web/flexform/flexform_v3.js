@@ -428,30 +428,12 @@ function flexform_show_table_v3(flexform_values, pa) {
 	// para.tableName = ''
 	para.tableName = para.tableName || null;
 	var hide = para.hide;
-
+	var show = para.show;
+	var page_entries = para.page_entries;
 	var html = '';
-	
-	// 一次顯示多少entries和search
-	html += '<div id="list_bar">';
-	html += '<div id="show_line_area">';
-	html += 'Show '
-	html += '<select id="show_line">';
-	html += '<option value="10">10</option>';
-	html += '<option value="15">15</option>';
-	html += '<option value="20">20</option>';
-	html += '<option value="30">30</option>';
-	html += '</select>';
-	html += ' Entries';
-	html += '</div>';
-	html += '<div id="search_area">';
-	html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
-	html += '<input type="text" id="search_list" style="width:auto;">';
-	html += '</div>';
-	html += '</div>';
-	
+
 	var table_para = {};
 	table_para.data_num = flexform_values.data.length;
-	html += '';
 	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="customTable" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + '>';
 	// html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
 	// field
@@ -466,6 +448,19 @@ function flexform_show_table_v3(flexform_values, pa) {
 	var width = 1.0 / flexform_values.field.length * 100;
 	// console.log('寬度');
 	// console.log(width);
+	if ( typeof(show) !== 'undefined' ) { // 依照show重新排序顯示位置和顯示名稱
+		var new_field = [];
+		for (var i in show) {
+			for (var j in flexform_values.field) {
+				if (show[i].id === flexform_values.field[j].id) {
+					flexform_values.field[j].value = show[i].name;
+					new_field.push(flexform_values.field[j]);
+				}
+			}
+		}
+		flexform_values.field = new_field;
+	}
+	
 	function check_continue(field) { // 檢查該欄位是否要顯示
 		if (field.type === 'line' || field.type === 'print')
 			return true;
@@ -473,6 +468,8 @@ function flexform_show_table_v3(flexform_values, pa) {
 			if ( field.id === hide[j] ) 
 				return true;
 	}
+
+	
 	for (var i in flexform_values.field) {
 		if ( check_continue(flexform_values.field[i]) ) 
 			continue;
@@ -507,6 +504,9 @@ function flexform_show_table_v3(flexform_values, pa) {
 	html += '</tr>';
 	
 	for (var i in flexform_values.data) {
+		console.log('page_entries = ');
+		console.log(page_entries);
+		
 		if (para.show_lines) {
 			// html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
 			html += '<tr ' + ( i>para.show_lines-1?'style="display: none;"':'') +  'data-recordid="' + flexform_values.data[i].record_id + '">';
@@ -548,8 +548,8 @@ function check_upload_v3() {
 	function check(result_field, para) {
 		var add_num = para.add_num;
 		var form_name = para.form_name;
+		var default_value = para.default_value;
 		var value = {};
-		var default_values = para.default_values;
 		for (var i in result_field.fields) {
 			var use_id = result_field.fields[i].id;
 			if (typeof(add_num) !== 'undefined') 
@@ -614,7 +614,7 @@ function check_upload_v3() {
 						f_dom = dom;
 				}
 			}
-
+			
 			// 檢查上傳數量
 			if (result_field.fields[i].num) {
 				var upload_id = dom.value.split(",");
@@ -626,19 +626,29 @@ function check_upload_v3() {
 				}
 			}
 		}
-		console.log('default_values');
-		console.log(default_values);
+		
+		if (typeof(default_value) !== 'undefined') 
+			for (var id in default_value)
+				value[id] = default_value[id];
 		values[form_name].push(value);
 	}
 	for (var check_form_num in forms[use_page]) {
 		var form = forms[use_page][check_form_num];
 		// console.log(form);
 		values[form.name] = [];
-		
-		check(form.data, {form_name: form.name});
+
+		if (form.name === para[use_page].form_query.name)
+			var default_value = para[use_page].default_value;
+		else {
+			for (var k in para[use_page].related_form) {
+				if (form.name === para[use_page].related_form[k].form_query.name)
+					var default_value = para[use_page].related_form[k].default_value;
+			}
+		}
+		check(form.data, {form_name: form.name, default_value: default_value});
 		if (check_form_num !== '0') {
 			for (var add_num in add_forms[parseInt(check_form_num) -1]) {
-				check(form.data, {add_num: add_num, form_name: form.name});
+				check(form.data, {add_num: add_num, form_name: form.name, default_value: default_value});
 			}
 		}
 	}

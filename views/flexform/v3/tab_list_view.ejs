@@ -186,16 +186,72 @@ function init_html(onDone) {
 		
 function init_list(onDone) {
 	var flextable_data = SR.API.flexform_to_flexform_table({form: forms[use_page][0]}); // 目前list只支援顯示一個form
-	
-	var html = flexform_show_table_v3( flextable_data, {hide: para[use_page].hide } ) ;
+	flextable_data = do_add_field(flextable_data, para[use_page].add_field);
+	final_flextable_data = flextable_data;
+	var html = '';
+	// 一次顯示多少entries和search
+	html += '<div id="list_bar">';
+	html += '<div id="show_line_area">';
+	html += 'Show '
+	html += '<select id="show_line" onchange="switch_show_entries(this)">';
+	html += '<option value="10">10</option>';
+	html += '<option value="15">15</option>';
+	html += '<option value="20">20</option>';
+	html += '<option value="30">30</option>';
+	html += '</select>';
+	html += ' Entries';
+	html += '</div>';
+	html += '<div id="search_area">';
+	html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
+	html += '<input type="text" id="search_list" style="width:auto;">';
+	html += '</div>';
+	html += '</div>';
+	// list table內容
+	html += '<div id="list_area">';
+	html += flexform_show_table_v3( flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: 10} } ) ;
+	html += '</div>';
+	console.log('datas = ');
+	console.log(flextable_data);
 	return onDone(null, html);
+}
+var final_flextable_data = null;
+	
+function switch_show_entries(select) {
+	var show_entries = parseInt(select.value);
+	document.getElementById('list_area').innerHTML = flexform_show_table_v3( final_flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: show_entries} } ) ;
+}
+	
+	
+function do_add_field(flextable_data, add_field) {
+	if (typeof(add_field) === 'undefined')
+		return flextable_data;
+	for (var i in add_field) {
+		if (add_field[i].type === 'link') {
+			var add_value = [];
+			for (var j in flextable_data.data) {
+				var temp = '<a href="' + add_field[i].link_url + '?';
+				var first = true;
+				for (var k in add_field[i].value) {
+					if (first) 
+						first = false;
+					else
+						temp += '&';
+					temp += add_field[i].value[k] + '=' + flextable_data.data[j][add_field[i].value[k]] ;
+				}
+				temp += '">'+add_field[i].link_name+'</a>';
+				add_value.push(temp);
+			}
+			flextable_data = SR.API.flexform_table_add_field({insert_num : flextable_data.field.length, flexform_table : flextable_data, field : {id: add_field[i].field_id, value: add_field[i].field_name}, datas : add_value});
+		}
+	}
+	console.log(flextable_data)
+	return flextable_data;
 }
 		
 // 底下是view
 
 function init_view(onDone) {
 	var html = '';
-	
 	var page_forms = forms[use_page];
 	for (var i in page_forms) {
 		if (i !== '0') {
