@@ -420,6 +420,7 @@ var create_table_v3 = function (form, para) {
 function flexform_show_table_v3(flexform_values, pa) {
 	// console.log('flexform_values = ');
 	// console.log(flexform_values);
+	
 	var para = pa || {};
 	// para.colStyle = [{ cssKey: cssValue }]
 	para.colStyle = para.colStyle || [];
@@ -431,10 +432,9 @@ function flexform_show_table_v3(flexform_values, pa) {
 	var show = para.show;
 	var page_entries = para.page_entries;
 	var html = '';
-
 	var table_para = {};
 	table_para.data_num = flexform_values.data.length;
-	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="customTable" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + '>';
+	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="list_table" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + '>';
 	// html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
 	// field
 	if (!!para.hideTitle) {
@@ -502,11 +502,14 @@ function flexform_show_table_v3(flexform_values, pa) {
 		count ++;
 	}
 	html += '</tr>';
-	
+
+	var page = page_entries.page;
+	var entries = page_entries.entries;
 	for (var i in flexform_values.data) {
-		console.log('page_entries = ');
-		console.log(page_entries);
-		
+		if (typeof(page_entries) !== 'undefined') {
+			if (i < (page-1)*entries || i >= page*entries ) // 依照page和entires顯示指定頁面
+				continue;
+		}
 		if (para.show_lines) {
 			// html += `<tr ${i>show_lines-1?'style="display: none;"':''} data-recordid="${flexform_values.data[i].record_id}">`;
 			html += '<tr ' + ( i>para.show_lines-1?'style="display: none;"':'') +  'data-recordid="' + flexform_values.data[i].record_id + '">';

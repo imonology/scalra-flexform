@@ -183,18 +183,20 @@ function init_html(onDone) {
 		init_list(onDone);
 	}
 }
-		
+
+var final_flextable_data = null;
 function init_list(onDone) {
 	var flextable_data = SR.API.flexform_to_flexform_table({form: forms[use_page][0]}); // 目前list只支援顯示一個form
 	flextable_data = do_add_field(flextable_data, para[use_page].add_field);
 	final_flextable_data = flextable_data;
 	var html = '';
+	var default_entries = 3;
 	// 一次顯示多少entries和search
 	html += '<div id="list_bar">';
 	html += '<div id="show_line_area">';
 	html += 'Show '
 	html += '<select id="show_line" onchange="switch_show_entries(this)">';
-	html += '<option value="10">10</option>';
+	html += '<option value="3">3</option>';
 	html += '<option value="15">15</option>';
 	html += '<option value="20">20</option>';
 	html += '<option value="30">30</option>';
@@ -208,17 +210,66 @@ function init_list(onDone) {
 	html += '</div>';
 	// list table內容
 	html += '<div id="list_area">';
-	html += flexform_show_table_v3( flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: 10} } ) ;
+	html += flexform_show_table_v3( flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: default_entries} } ) ;
 	html += '</div>';
-	console.log('datas = ');
-	console.log(flextable_data);
+	html += '<div id="switch_page_area">';
+	html += get_switch_page_area( flextable_data, default_entries );
+	html += '</div>';
 	return onDone(null, html);
 }
-var final_flextable_data = null;
+
+function get_switch_page_area(flextable_data, entries) {
+	var html = '';
+	var n = flextable_data.data.length;
+	if (n <= entries) // 全部數量小於一頁顯示的數量
+		return html;
+	var page_num = parseInt(n/entries); // 算出總需要頁數
+	if ( n % entries !== 0 )
+		page_num++;
+	var width = (page_num + 2) * 40
+
+	html += '<table class="page_controler" style="width:'+width+'px;border-collapse: collapse;float:right;margin-top: 4px;"><tr>';
+	var border_sytle = 'style="width:40px;border-style: solid;border-width: 1px;border-color: rgba(204, 204, 204, 1);text-indent: 0px;text-align: center;"';
+	html += '<td '+border_sytle+' onclick="switch_page(this)"><</td>';
+	for (var i = 0 ; i < page_num ; i++) {
+		html += '<td '+border_sytle+' '+(i===0? 'class="active"': '')+' onclick="switch_page(this)">'+(i+1)+'</td>'
+	}
+	html += '<td '+border_sytle+' onclick="switch_page(this)">></td>';
+	html += '</tr>';
+	console.log(html)
+	return html;
+}
 	
 function switch_show_entries(select) {
 	var show_entries = parseInt(select.value);
 	document.getElementById('list_area').innerHTML = flexform_show_table_v3( final_flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: show_entries} } ) ;
+	document.getElementById('switch_page_area').innerHTML = get_switch_page_area(final_flextable_data, show_entries);
+	enable_js();
+}
+	
+function switch_page(obj) {
+	var page = obj.innerHTML;
+	if (page === '&gt;' || page === '&lt;') {
+		var all = $('table.page_controler td');
+		for (var i in all) {
+			if (all[i].className === 'active') {
+				if (page === '&lt;' && i !== 1 ) {
+					all[parseInt(i)-1].click();
+					break;
+				}
+				if (page === '&gt;' && i !== all.length -1 ) {
+					all[parseInt(i)+1].click();
+					break;
+				}
+			}
+		}
+	} else {
+		var entries = parseInt(document.getElementById('show_line').value);
+		page = parseInt(page);
+		
+		document.getElementById('list_area').innerHTML = flexform_show_table_v3( final_flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: page, entries: entries} } ) ;
+	}
+	
 }
 	
 	
@@ -292,6 +343,11 @@ function enable_js() {
 	$('ul.tabs li').click(function() {
 		var $this = $(this), _clickTab = $this.find('a').attr('href');
 		$this.addClass('active').siblings('.active').removeClass('active');
+	});
+	$('table.page_controler td').click(function() {
+		var $this = $(this), _clickTab = $this.find('a').attr('href');
+		if (!isNaN($this.text()))
+			$this.addClass('active').siblings('.active').removeClass('active');
 	});
 	if (typeof(date_pickers) !== 'undefined') {
 		for (var i=0; i < date_pickers.length; i++) {
