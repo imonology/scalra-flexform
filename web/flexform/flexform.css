@@ -251,3 +251,29 @@ table.page_controler td {
 	margin-right: 10px;
 	float: right;
 }
+#screen {
+	position: absolute;
+	width: 100%;
+	z-index: 1;
+	background-color: rgba(174, 174, 174, 0.917647058823529);
+}
+#pop_up_window {
+	display:none;
+	position: absolute;
+	background: #fff;
+    z-index: 2;
+	margin: auto;
+	left: 0;
+	right: 0;
+	top: 30%;
+	width: fit-content;
+	min-width: 200px;
+	border-width: 1px;
+    border-style: solid;
+    border-color: rgba(204, 204, 204, 1);
+    border-radius: 5px;
+}
+#close_pop_up_window {
+	position: absolute;
+	right: 6px;
+}

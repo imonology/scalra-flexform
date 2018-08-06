@@ -185,37 +185,54 @@ function init_html(onDone) {
 }
 
 var final_flextable_data = null;
-function init_list(onDone) {
+	
+function processing_data(onDone) {
 	var flextable_data = SR.API.flexform_to_flexform_table({form: forms[use_page][0]}); // 目前list只支援顯示一個form
 	flextable_data = do_add_field(flextable_data, para[use_page].add_field);
-	final_flextable_data = flextable_data;
-	var html = '';
-	var default_entries = 3;
-	// 一次顯示多少entries和search
-	html += '<div id="list_bar">';
-	html += '<div id="show_line_area">';
-	html += 'Show '
-	html += '<select id="show_line" onchange="switch_show_entries(this)">';
-	html += '<option value="3">3</option>';
-	html += '<option value="15">15</option>';
-	html += '<option value="20">20</option>';
-	html += '<option value="30">30</option>';
-	html += '</select>';
-	html += ' Entries';
-	html += '</div>';
-	html += '<div id="search_area">';
-	html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
-	html += '<input type="text" id="search_list" style="width:auto;">';
-	html += '</div>';
-	html += '</div>';
-	// list table內容
-	html += '<div id="list_area">';
-	html += flexform_show_table_v3( flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: default_entries} } ) ;
-	html += '</div>';
-	html += '<div id="switch_page_area">';
-	html += get_switch_page_area( flextable_data, default_entries );
-	html += '</div>';
-	return onDone(null, html);
+	if(para[use_page].before_show_call_func && Object.keys(window).indexOf(para[use_page].before_show_call_func) !== -1) {
+		var do_func = window[para[use_page].before_show_call_func];
+		do_func(flextable_data, para, function(err, datas){
+
+			return onDone(null, flextable_data);
+		});
+	} else {
+		return onDone(null, flextable_data);
+	}
+	
+
+}
+	
+function init_list(onDone) {
+	processing_data(function(err, flextable_data){
+		final_flextable_data = flextable_data;
+		var html = '';
+		var default_entries = 3;
+		// 一次顯示多少entries和search
+		html += '<div id="list_bar">';
+		html += '<div id="show_line_area">';
+		html += 'Show '
+		html += '<select id="show_line" onchange="switch_show_entries(this)">';
+		html += '<option value="3">3</option>';
+		html += '<option value="15">15</option>';
+		html += '<option value="20">20</option>';
+		html += '<option value="30">30</option>';
+		html += '</select>';
+		html += ' Entries';
+		html += '</div>';
+		html += '<div id="search_area">';
+		html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
+		html += '<input type="text" id="search_list" style="width:auto;">';
+		html += '</div>';
+		html += '</div>';
+		// list table內容
+		html += '<div id="list_area">';
+		html += flexform_show_table_v3( flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: default_entries} } ) ;
+		html += '</div>';
+		html += '<div id="switch_page_area">';
+		html += get_switch_page_area( flextable_data, default_entries );
+		html += '</div>';
+		return onDone(null, html);
+	});
 }
 
 function get_switch_page_area(flextable_data, entries) {
@@ -236,7 +253,7 @@ function get_switch_page_area(flextable_data, entries) {
 	}
 	html += '<td '+border_sytle+' onclick="switch_page(this)">></td>';
 	html += '</tr>';
-	console.log(html)
+	// console.log(html)
 	return html;
 }
 	
@@ -413,7 +430,12 @@ function minus_expansion_form(n, expansion_form_number) {
 
 	<div id="mainContent">
 		<section id="three" class="wrapper style2 special">
-			<div class="inner">
+			<div class="inner" id="main_area">
+				<div id="screen"></div>
+				<div id="pop_up_window">
+					<div id="close_pop_up_window"><i class="fa fa-envelope"></i></i></div>
+					<div id="pop_up_window_content"></div>
+				</div>
 				<div id="tab_area"></div>
 				<h2 id='sub_title'></h2>
 				<div id="form_area"></div>
