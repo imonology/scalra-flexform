@@ -1613,7 +1613,7 @@ var create_table2 = function (form, para) {
 							html += '<input type="hidden" name="toPreserveFileName" value="true" checked>';
 							html += '<input type="file" name="upload" id="upload_file" multiple="multiple">';
 							html += '<button class="btn btn-primary" onClick="uploadFile( \''+num+'\' , \''+save_id+'\', onPhotoUploaded, undefined, undefined, \''+form.name+'\', \''+fields[i].id+'\' )">Upload</button>';
-							html += '<input type="hidden" value="'+save_value+'" id="' + save_id + '">';
+							html += '<input type="hidden" value="'+save_value.replace(/"/g, '&quot;')+'" id="' + save_id + '">';
 
 							html += '<div id="'+save_id+'-show_upload_img">';
 							console.log(save_value);
