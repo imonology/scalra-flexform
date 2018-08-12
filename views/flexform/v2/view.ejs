@@ -1,6 +1,11 @@
 <% layout('template/common') %>
 <% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
 	
+<!-- datepicker -->
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>	
+	
 <script src="/web/flexform/jquery.tagsinput.js"></script>
 
 
@@ -56,6 +61,23 @@
 	}
 %>
 
+var date_pickers = [];
+var datepicker_setting = {
+	//defaultDate : (new Date(new Date().getFullYear() - 60 + "/01/01") - new Date()) / (1000 * 60 * 60 * 24),
+	defaultDate : new Date,
+	yearRange : "-100:+0",
+	maxDate : '+0',
+	dayNamesMin : ['日', '一', '二', '三', '四', '五', '六'],
+	monthNamesShort	: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+	//可使用下拉式選單 - 月份
+	changeMonth : true,
+	//可使用下拉式選單 - 年份
+	changeYear : true,
+	//設定 下拉式選單月份 在 年份的後面
+	showMonthAfterYear : true,
+	dateFormat: 'yy-mm-dd'
+}
+	
 var onConnect = function () {
 	init_html(function(err, html){
 		console.log('hide = ');
@@ -70,6 +92,10 @@ var onConnect = function () {
 			}
 		}
 		$('.tags').tagsInput();
+		// 解決chockbox無法按的BUG
+		$('input[type=checkbox]+label').click(function(){
+			$(this).prev().prop('checked', !$(this).prev().is(':checked'));
+		});
 	});
 }
 

@@ -1817,13 +1817,18 @@ var create_table2 = function (form, para) {
 						break;
 					case 'boolean':
 						if (write) {
-							html += `<input id=${save_id} type="checkbox" class="checkbox-billable" checked=${save_value} /><label> </label>`
+							html += '<input id="'+save_id+'" type="checkbox" class="checkbox-billable" '+((typeof(save_value) === 'boolean' && save_value )?'checked':'')+' /><label> </label>';
 						} else {
 							html += save_value ? '是' : '否'
 						}
 						break;
 					case 'timestamp':
-						html += moment(save_value).format('YYYY-MM-DD HH:mm');
+						if (write && ! fields[i].default_value) {
+							html += '<input type="text" id="'+save_id+'" value="'+save_value+'">';
+							date_pickers.push(save_id);	
+						} else {
+							html += save_value ? '是' : '否'
+						}
 						break;
 					case 'print': // 單純印出
 						break;
