@@ -663,11 +663,15 @@ function check_upload_v3() {
 		return;
 	}
 	
-	default_upload_v3(values);
+	if (window.flexform_v3_before_upload) 
+		flexform_v3_before_upload(values);
+	else
+		default_upload_v3(values);
 }
 
 function default_upload_v3(values) {
 	console.log('uploading');
+	console.log(values);
 	var main_form = forms[use_page][0].name;
 	console.log(main_form)
 	var main_para = {form_name: main_form, values: values[main_form][0]};

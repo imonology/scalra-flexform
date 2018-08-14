@@ -20,6 +20,14 @@ function l_do_query_form(p, onDone) {
 	var i = p.use_page;
 	LOG.warn('i = ' + i);
 	LOG.warn(para);
+	if (typeof(para[i].form_query)==='undefined' && typeof(para[i].form) === 'undefined') {
+		return onDone(null);
+	} 
+	if (typeof(para[i].form)!== 'undefined') {
+		forms[i] = [];
+		forms[i].push(para[i].form);
+		return onDone(null);
+	}
 	SR.API.QUERY_FORM( para[i].form_query, function (err, form) {
 		if (err) {
 			error = true;
@@ -141,16 +149,28 @@ jq.run(function (err) {
 		var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
 		var forms = JSON.parse(decodeURIComponent("<%-f2 %>")); 
 		var use_page = 0;
+		var getGlobalVariable_func = '<%=(typeof(getGlobalVariable)!=="undefined"?getGlobalVariable:"")%>'; // 自定義global變數
+		var account = '<%=login.account%>';
 	<%	
 });	
 %>
 
 	
-	
+var g_value = {};
 var add_forms = {};
 var onConnect = function () {
-	init_tab();
-	init_html(init_onDone);
+
+	if (getGlobalVariable_func !== '' && Object.keys(window).indexOf(getGlobalVariable_func) !== -1) {
+		var do_func = window[getGlobalVariable_func];
+		console.log(window)
+		do_func(function(err, datas){
+			init_tab();
+			init_html(init_onDone);
+		});
+	} else {
+		init_tab();
+		init_html(init_onDone);
+	}
 }
 
 function init_onDone(err, html) {
@@ -221,10 +241,12 @@ function init_list(onDone) {
 		html += '</select>';
 		html += ' Entries';
 		html += '</div>';
-		html += '<div id="search_area">';
-		html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
-		html += '<input type="text" id="search_list" style="width:auto;">';
-		html += '</div>';
+		if(typeof(para[use_page].search_bar)!=='undefined' && para[use_page].search_bar) {
+			html += '<div id="search_area">';
+			html += '<p style="display:inline; margin-right: 10px;">Search:</p>';
+			html += '<input type="text" id="search_list" style="width:auto;">';
+			html += '</div>';
+		}
 		html += '</div>';
 		// list table內容
 		html += '<div id="list_area">';
@@ -318,7 +340,7 @@ function do_add_field(flextable_data, add_field) {
 	return flextable_data;
 }
 		
-// 底下是view
+// ------------------------------------ 底下是view --------------------------------------------
 
 function init_view(onDone) {
 	var html = '';
@@ -356,6 +378,16 @@ function init_submit_btn() {
 	} else {
 		document.getElementById('button_area').innerHTML = '';
 	}
+}
+	
+function flexform_v3_before_upload(values) {
+	if (typeof(para[use_page].onBeforeUpload_name) !== 'undefined' && typeof(window[para[use_page].onBeforeUpload_name]) !== 'undefined' ){
+		var do_func = window[para[use_page].onBeforeUpload_name];
+		do_func(values, function(err, datas){
+			default_upload_v3(datas);
+		});
+	} else 
+		default_upload_v3(values);
 }
 		
 function enable_js() {
