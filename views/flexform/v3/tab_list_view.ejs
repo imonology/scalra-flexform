@@ -159,7 +159,6 @@ jq.run(function (err) {
 var g_value = {};
 var add_forms = {};
 var onConnect = function () {
-
 	if (getGlobalVariable_func !== '' && Object.keys(window).indexOf(getGlobalVariable_func) !== -1) {
 		var do_func = window[getGlobalVariable_func];
 		console.log(window)
@@ -450,9 +449,18 @@ function add_expansion_form(n) {
 }
 		
 function minus_expansion_form(n, expansion_form_number) {
-	
 	$("#expansion_form_"+n+"-"+expansion_form_number).remove();
 	add_forms[n].splice(add_forms[n].indexOf(expansion_form_number), 1);
+}
+	
+function flexform_v3_upload_onDone(result) {
+	if (para[use_page].onDone_name !== '' && Object.keys(window).indexOf(para[use_page].onDone_name) !== -1) {
+		var do_func = window[para[use_page].onDone_name];
+		do_func(result);
+	} else {
+		alert('上傳成功');
+		window.location.reload();
+	}
 }
 
 </script>

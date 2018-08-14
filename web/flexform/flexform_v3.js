@@ -676,9 +676,6 @@ function default_upload_v3(values) {
 	console.log(main_form)
 	var main_para = {form_name: main_form, values: values[main_form][0]};
 
-
-	
-	
 	SR.API.UPDATE_FIELD(main_para, function (err, result) {
 		if (err) {
 			console.error(err);
@@ -709,8 +706,12 @@ function default_upload_v3(values) {
 				}
 				run_num++;
 				if (run_num === max_num) {
-					alert('上傳成功');
-					window.location.reload();
+					if (window.flexform_v3_upload_onDone) 
+						flexform_v3_upload_onDone(result);
+					else {
+						alert('上傳成功');
+						window.location.reload();
+					}
 				}
 			});
 		}
