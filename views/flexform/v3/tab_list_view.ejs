@@ -181,6 +181,8 @@ function init_onDone(err, html) {
 }
 
 function init_tab() {
+	if (para.length === 1)
+		return '';
 	var html = '';
 	html += '<ul class="tabs">';
 	for (var i in para) {
@@ -344,6 +346,23 @@ function do_add_field(flextable_data, add_field) {
 function init_view(onDone) {
 	var html = '';
 	var page_forms = forms[use_page];
+	
+	console.log('page_forms')
+	console.log(page_forms);
+	// 填入動態select選項
+	for (var i in page_forms) {
+		var fields = page_forms[i].data.fields;
+		for (var i in fields) 
+			if (fields[i].type === 'choice') {
+				if ( typeof(fields[i].setting) !== 'undefined' && fields[i].setting.option ) {
+					if (typeof(fields[i].setting.option) !== 'undefined' && typeof(window[fields[i].setting.option]) !== 'undefined' ){
+						var do_func = window[fields[i].setting.option];
+						fields[i].option = do_func();
+					}
+				}
+			}
+	}
+	
 	for (var i in page_forms) {
 		if (i !== '0') {
 			add_forms[(parseInt(i)-1)] = [];
@@ -414,6 +433,9 @@ function get_form_para() {
 	var form_para = {};
 	if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
 		form_para.customized = para[use_page].customized;
+	}
+	if (typeof(para[use_page].lock)!=='undefined' && para[use_page].lock) {
+		form_para.lock = para[use_page].lock;
 	}
 	form_para.hide = para[use_page].hide;
 	if (para[use_page].mode === 'show') {

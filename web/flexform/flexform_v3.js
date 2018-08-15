@@ -6,6 +6,7 @@ var create_table_v3 = function (form, para) {
 	var td_style = para.td_style;
 	var show = para.show;
 	var del = para.del;
+	var lock = para.lock || [];
 	var customized = para.customized;
 	if (typeof(para.id_num) === 'undefined')
 		var id_num = '';
@@ -17,6 +18,14 @@ var create_table_v3 = function (form, para) {
 	var html = '';
 	
 	var fields = form.data.fields;
+	
+	function check_lock(id, lock) {
+		for(var i in lock){
+			if (lock[i] === id)
+				return true;
+		}
+		return false;
+	}
 
 	function c_table(fields, value, record_id) {
 		if (!write&& !value)
@@ -24,7 +33,7 @@ var create_table_v3 = function (form, para) {
 		var html = '';
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
-			
+			var is_lock = check_lock(fields[i].id, lock);
 			if (record_id)
 				var save_id = record_id + '-' + fields[i].id;
 			else
@@ -75,7 +84,7 @@ var create_table_v3 = function (form, para) {
 				switch (fields[i].type) {
 					// FIXME: should make 'upload' not just for pics but files in general
 					case 'record':
-						if (write) {
+						if (write && !is_lock) {
 							// var record_id = '<%= UTIL.createToken() %>';
 							// set upload item limit
 							var num = (fields[i].num ? fields[i].num : 5);
@@ -113,7 +122,7 @@ var create_table_v3 = function (form, para) {
 						}
 						break;
 					case 'upload': // 照片
-						if (write) {
+						if (write && !is_lock) {
 							var image_id = '<%= UTIL.createToken() %>';
 
 							// set upload item limit
@@ -152,7 +161,7 @@ var create_table_v3 = function (form, para) {
 						break;
 
 					case 'textarea':
-						if (write ) {
+						if (write  && !is_lock) {
 							html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
 							html += '<input type="hidden" id="'+save_id+'-encode" value="">';
 							html += '<input type="file" id="inputTxt-'+save_id+'">';
@@ -170,7 +179,7 @@ var create_table_v3 = function (form, para) {
 						break;
 
 					case 'date':
-						if (write && ! fields[i].default_value) {
+						if (write && ! fields[i].default_value  && !is_lock) {
 							html += '<input type="text" id="'+save_id+'" value="'+save_value+'" placeholder="年-月-日">';
 							date_pickers.push(save_id);	
 						} else {
@@ -179,7 +188,7 @@ var create_table_v3 = function (form, para) {
 						break;
 
 					case 'autocomplete': 
-						if (write) {
+						if (write  && !is_lock) {
 							html += '<input type="text" id="' + save_id + '" value="'+save_value+'">';
 							$( function() {
 
@@ -265,21 +274,22 @@ var create_table_v3 = function (form, para) {
 						}				
 						break;
 					case 'tag': 
-						if (write) {
+						if (write && !is_lock) {
 							html += '<input type="text" class="tags" id="' + save_id +'" value="'+save_value+'">';
 						} else {
 							html += save_value;
 						}
 						break;
 					case 'choice':
-						if (write) {
+						if (write && !is_lock) {
 							// console.log('fields[i] = ')
 							// console.log(fields[i])
 							if (typeof(fields[i].option) === 'object')
 								var options = fields[i].option;
 							else if (typeof(fields[i].option) !== 'undefined')
 								var options = fields[i].option.split(',');
-
+							else
+								var options = [];
 							html += '<select id="'+ save_id + '">';
 							for (var j=0; j < options.length; j++) {
 
@@ -319,26 +329,26 @@ var create_table_v3 = function (form, para) {
 						}
 						break;
 					case 'password':
-						if (write) {
+						if (write && !is_lock) {
 							html += '<input type="password" id="' + save_id +'" value="'+save_value+'">';					
 						} else {
 							html += save_value;
 						}
 						break;
 					case 'boolean':
-						if (write) {
+						if (write && !is_lock) {
 							html += `<input id=${save_id} type="checkbox" class="checkbox-billable" checked=${save_value} /><label> </label>`
 						} else {
 							html += save_value ? '是' : '否'
 						}
 						break;
-					case 'timestamp':
-						html += moment(save_value).format('YYYY-MM-DD HH:mm');
-						break;
+					// case 'timestamp':
+					// 	html += moment(save_value).format('YYYY-MM-DD HH:mm');
+					// 	break;
 					case 'print': // 單純印出
 						break;
 					case 'address':
-						if (write && ! fields[i].default_value) {
+						if (write && ! fields[i].default_value  && !is_lock) {
 							// html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
 							html += '<input type="text" id="'+save_id+'_postal_code" style="float: left;width: 10%;margin-left: 9px;" placeholder="郵遞區號">';
 							html += '<input type="text" id="'+save_id+'_address" style="float: left;width: 85%;margin-left: 9px;">';
@@ -348,7 +358,7 @@ var create_table_v3 = function (form, para) {
 						}
 						break;
 					case 'radio':
-						if (write && ! fields[i].default_value) {	
+						if (write && ! fields[i].default_value && !is_lock) {	
 							if (typeof(fields[i].option) === 'object')
 								var options = fields[i].option;
 							else if (typeof(fields[i].option) !== 'undefined')
@@ -362,8 +372,11 @@ var create_table_v3 = function (form, para) {
 							html += save_value;
 						}
 						break;
+					case 'null':
+						html += save_value;
+						break;
 					default:
-						if (write && ! fields[i].default_value) {
+						if (write && ! fields[i].default_value && !is_lock) {
 							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
 						} else {
 							html += save_value;
