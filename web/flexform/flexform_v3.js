@@ -34,9 +34,10 @@ var create_table_v3 = function (form, para) {
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
 			var is_lock = check_lock(fields[i].id, lock);
-			if (record_id)
+			if (record_id) {
+				upload_record_id = record_id;
 				var save_id = record_id + '-' + fields[i].id;
-			else
+			} else
 				var save_id = fields[i].id;
 			save_id += id_num;
 			if (value && value[fields[i].id]) {
@@ -358,13 +359,14 @@ var create_table_v3 = function (form, para) {
 						}
 						break;
 					case 'radio':
+						console.log('有radoi')
 						if (write && ! fields[i].default_value && !is_lock) {	
 							if (typeof(fields[i].option) === 'object')
 								var options = fields[i].option;
 							else if (typeof(fields[i].option) !== 'undefined')
 								var options = fields[i].option.split(',');
 							for (var j in options) {
-								html += '<label><input name="'+save_id+'" type="radio" value="'+options[j]+'" >'+options[j]+'</label>';
+								html += '<label><input name="'+save_id+'" type="radio" value="'+options[j]+'" '+(save_value === options[j] ? 'checked' : '')+'>'+options[j]+'</label>';
 							}
 
 						} else {
@@ -561,6 +563,7 @@ function check_upload_v3() {
 	var err_message = '';
 	var f_dom = undefined;
 	var values = {};
+
 	function check(result_field, para) {
 		var add_num = para.add_num;
 		var form_name = para.form_name;
@@ -572,9 +575,10 @@ function check_upload_v3() {
 				use_id += add_num;
 			// 檢查必填欄位
 			if (typeof(upload_record_id)!== 'undefined')
-				var dom = document.getElementById(upload_record_id + '-' + use_id);
+				var dom_id = upload_record_id + '-' + use_id;
 			else
-				var dom = document.getElementById(use_id);
+				var dom_id = use_id
+			var dom = document.getElementById(dom_id);
 			if (result_field.fields[i].type === 'address')
 				var dom = document.getElementById(use_id+ '_postal_code');
 			var is_hide = false;
@@ -583,8 +587,25 @@ function check_upload_v3() {
 			if (is_hide)
 				continue;
 
-			if (!dom) 
-				continue;
+			if (!dom) {
+				if (result_field.fields[i].type === 'radio') {
+					console.log('radio value = ')
+					console.log($("input[name="+dom_id+"]:checked").val());
+					console.log(dom_id)
+					console.log('upload_record_id = ')
+					console.log(upload_record_id)
+					if (!$("input[name="+dom_id+"]:checked").val()) {
+						if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
+							err_message += result_field.fields[i].name + ' 為必填欄位\n';
+						}
+					} else {
+						
+						value[use_id] = $("input[name="+dom_id+"]:checked").val();
+					}
+					continue;
+				} else
+					continue;
+			}
 			
 			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 				// if (result_field.fields[i].type === 'address')
@@ -630,6 +651,7 @@ function check_upload_v3() {
 						f_dom = dom;
 				}
 			}
+
 			
 			// 檢查上傳數量
 			if (result_field.fields[i].num) {
@@ -688,7 +710,9 @@ function default_upload_v3(values) {
 	var main_form = forms[use_page][0].name;
 	console.log(main_form)
 	var main_para = {form_name: main_form, values: values[main_form][0]};
-
+	
+	if (typeof(upload_record_id)!== 'undefined')
+		main_para.record_id = upload_record_id;
 	SR.API.UPDATE_FIELD(main_para, function (err, result) {
 		if (err) {
 			console.error(err);

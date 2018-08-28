@@ -1909,9 +1909,9 @@ var create_table_v3 = function (form, para) {
 		html += '<table border="1" class="customTable" style="margin:0">';
 		for (var i in fields) {
 			
-			if (record_id)
+			if (record_id) {
 				var save_id = record_id + '-' + fields[i].id;
-			else
+			} else
 				var save_id = fields[i].id;
 			if (value && value[fields[i].id]) {
 				var save_value = value[fields[i].id];

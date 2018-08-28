@@ -1021,12 +1021,14 @@ SR.API.add('UPDATE_FIELD', {
 			// var today=new Date();
 			var today2 = new moment();
 			// .format('YYYY-MM-DD HH:mm')
-			if (form.data.fields[j].type === 'date' )
-				values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD');
-				// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
-			else if (form.data.fields[j].type === 'datetime' )
-				values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
-				// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+			if ( !(typeof(form.data.fields[j].option) !== 'undefined' && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
+				if (form.data.fields[j].type === 'date' )
+					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD');
+					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+				else if (form.data.fields[j].type === 'datetime' )
+					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
+					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+			}
 		}
 
 		if (form.data.fields[j].type === 'email') {
@@ -1264,12 +1266,14 @@ SR.API.add('UPDATE_FORM', {
 			if (!value_array[i][form.data.fields[j].id]) {
 				// var today=new Date();
 				var today2 = new moment();
-				if (form.data.fields[j].type === 'date' )
-					value_array[i][form.data.fields[j].id] = today2.format('YYYY-MM-DD');
-					// value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
-				else if (form.data.fields[j].type === 'datetime' )
-					value_array[i][form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
-					// value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+				if ( !(typeof(form.data.fields[j].option) !== 'undefined' && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
+					if (form.data.fields[j].type === 'date' )
+						value_array[i][form.data.fields[j].id] = today2.format('YYYY-MM-DD');
+						// value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+					else if (form.data.fields[j].type === 'datetime' )
+						value_array[i][form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
+						// value_array[i][form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+				}
 			}
 			if (form.data.fields[j].type === 'email') {
 				// LOG.warn('印出email');
