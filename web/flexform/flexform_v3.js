@@ -589,11 +589,6 @@ function check_upload_v3() {
 
 			if (!dom) {
 				if (result_field.fields[i].type === 'radio') {
-					console.log('radio value = ')
-					console.log($("input[name="+dom_id+"]:checked").val());
-					console.log(dom_id)
-					console.log('upload_record_id = ')
-					console.log(upload_record_id)
 					if (!$("input[name="+dom_id+"]:checked").val()) {
 						if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 							err_message += result_field.fields[i].name + ' 為必填欄位\n';
@@ -719,6 +714,7 @@ function default_upload_v3(values) {
 			alert(err);
 			return;
 		}
+		console.log('進到')
 		var pointer_id = result.record_id;
 		var total_p = [];
 		for (var i in para[use_page].related_form){
@@ -733,6 +729,8 @@ function default_upload_v3(values) {
 		
 		var max_num = total_p.length;
 		var run_num = 0;
+		if (max_num === 0)
+			onDoneFunction();
 		for (var i in total_p) {
 			console.log(total_p[i]);
 			SR.API.UPDATE_FIELD(total_p[i], function (err, result) {
@@ -743,15 +741,18 @@ function default_upload_v3(values) {
 				}
 				run_num++;
 				if (run_num === max_num) {
-					if (window.flexform_v3_upload_onDone) 
-						flexform_v3_upload_onDone(result);
-					else {
-						alert('上傳成功');
-						window.location.reload();
-					}
+					onDoneFunction();
 				}
 			});
 		}
 		
+		function onDoneFunction() {
+			if (window.flexform_v3_upload_onDone) 
+				flexform_v3_upload_onDone(result);
+			else {
+				alert('上傳成功');
+				window.location.reload();
+			}
+		}
 	});
 }

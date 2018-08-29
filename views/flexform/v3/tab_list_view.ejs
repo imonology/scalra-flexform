@@ -331,7 +331,10 @@ function do_add_field(flextable_data, add_field) {
 						temp += '&';
 					temp += add_field[i].value[k] + '=' + flextable_data.data[j][add_field[i].value[k]] ;
 				}
-				temp += '">'+add_field[i].link_name+'</a>';
+				temp += '"';
+				if (add_field[i].link_type && add_field[i].link_type === 'new_tab') 
+					temp += ' target="_blank" ';
+				temp += '>'+add_field[i].link_name+'</a>';
 				add_value.push(temp);
 			}
 			flextable_data = SR.API.flexform_table_add_field({insert_num : flextable_data.field.length, flexform_table : flextable_data, field : {id: add_field[i].field_id, value: add_field[i].field_name}, datas : add_value});
