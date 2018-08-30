@@ -359,7 +359,6 @@ var create_table_v3 = function (form, para) {
 						}
 						break;
 					case 'radio':
-						console.log('有radoi')
 						if (write && ! fields[i].default_value && !is_lock) {	
 							if (typeof(fields[i].option) === 'object')
 								var options = fields[i].option;
