@@ -626,6 +626,10 @@ function check_upload_v3() {
 			if (result_field.fields[i].show === true) {
 				if (result_field.fields[i].type === 'address') {
 					var dom2 = document.getElementById(use_id+ '_address');
+					if ( isNaN(dom.value) )
+						err_message += result_field.fields[i].name + '的郵遞區號需為數字 \n';
+					else if (dom.value.length !== 3 && dom.value.length !==0)
+						err_message += '請輸入3碼的郵遞區號 \n';
 					value[use_id] = {postal_code: dom.value, address: dom2.value};
 				} else {
 					value[use_id] = dom.value;
