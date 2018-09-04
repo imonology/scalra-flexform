@@ -842,19 +842,36 @@ SR.API.add('JOIN_FORM_FUNCTION', {
 			keys.push(form2.data.fields[i].id)
 			o_form.data.fields.push(form2.data.fields[i]);
 		}
-
-	for (var record_id in o_form.data.values){
+	LOG.warn('keys = ')
+	LOG.warn(keys);
+	if (args.link_key === 'record_id') {
 		for (var record_id2 in form2.data.values) {
-
-			if (form2.data.values[record_id2][joint_form_key] === o_form.data.values[record_id][args.link_key])
+			if ( o_form.data.values[ form2.data.values[record_id2][joint_form_key] ] ){
+				LOG.warn('有')
 				for (var i in keys) {
 					if (args.joint_value && args.joint_value.indexOf(keys[i])=== -1 )
 						continue;
-					if (!o_form.data.values[record_id][keys[i]]) // do not cover original data
-						o_form.data.values[record_id][keys[i]] = form2.data.values[record_id2][keys[i]]
+					if (!o_form.data.values[ form2.data.values[record_id2][joint_form_key] ][keys[i]]) // do not cover original data
+						o_form.data.values[ form2.data.values[record_id2][joint_form_key] ][keys[i]] = form2.data.values[record_id2][keys[i]];
 				}
+			} else {
+				LOG.warn('沒有')
+				LOG.warn(form2.data.values[record_id2][joint_form_key])
+			}
 		}
+	} else {
+		for (var record_id in o_form.data.values){
+			for (var record_id2 in form2.data.values) {
+				if (form2.data.values[record_id2][joint_form_key] === o_form.data.values[record_id][args.link_key])
+					for (var i in keys) {
+						if (args.joint_value && args.joint_value.indexOf(keys[i])=== -1 )
+							continue;
+						if (!o_form.data.values[record_id][keys[i]]) // do not cover original data
+							o_form.data.values[record_id][keys[i]] = form2.data.values[record_id2][keys[i]];
+					}
+			}
 
+		}
 	}
 	onDone(null, o_form);
 

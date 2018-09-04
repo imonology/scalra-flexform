@@ -308,7 +308,7 @@ function switch_page(obj) {
 	} else {
 		var entries = parseInt(document.getElementById('show_line').value);
 		page = parseInt(page);
-		
+
 		document.getElementById('list_area').innerHTML = flexform_show_table_v3( final_flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: page, entries: entries} } ) ;
 	}
 	
@@ -319,6 +319,7 @@ function do_add_field(flextable_data, add_field) {
 	if (typeof(add_field) === 'undefined')
 		return flextable_data;
 	for (var i in add_field) {
+
 		if (add_field[i].type === 'link') {
 			var add_value = [];
 			for (var j in flextable_data.data) {
