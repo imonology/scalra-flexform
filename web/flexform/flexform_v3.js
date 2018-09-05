@@ -1,3 +1,4 @@
+var upload_record_id = [];
 var create_table_v3 = function (form, para) {
 	var hide = para.hide;
 	console.log('hide = ');
@@ -32,10 +33,13 @@ var create_table_v3 = function (form, para) {
 			return '';
 		var html = '';
 		html += '<table border="1" class="customTable" style="margin:0">';
+		if (record_id)
+			upload_record_id.push(record_id);
 		for (var i in fields) {
+
 			var is_lock = check_lock(fields[i].id, lock);
+
 			if (record_id) {
-				upload_record_id = record_id;
 				var save_id = record_id + '-' + fields[i].id;
 			} else
 				var save_id = fields[i].id;
@@ -77,7 +81,7 @@ var create_table_v3 = function (form, para) {
 				html += '<tr><td colspan="'+(col_f + col_v)+'"><hr></td>';
 			} else {
 				// display field name
-	
+
 				html += '<td  '+(fields[i].type === 'print'? 'class="print"' : '')+' style="'+(td_style?td_style[0]:'')+' ; vertical-align:middle;" colspan="'+col_f+'">' + fields[i].name + (fields[i].must ? '' : '') +  ' </td>';
 				// show field content
 				html += '<td style="'+(td_style?td_style[1]:'')+'" colspan="'+col_v+'">';
@@ -349,12 +353,20 @@ var create_table_v3 = function (form, para) {
 					case 'print': // 單純印出
 						break;
 					case 'address':
+						if (save_value === '') {
+							var postal_code = '';
+							var address = '';
+						} else {
+							var postal_code = save_value.postal_code;
+							var address = save_value.address;
+						}
 						if (write && ! fields[i].default_value  && !is_lock) {
 							// html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
-							html += '<input type="text" id="'+save_id+'_postal_code" style="float: left;width: 10%;margin-left: 9px;" placeholder="郵遞區號">';
-							html += '<input type="text" id="'+save_id+'_address" style="float: left;width: 85%;margin-left: 9px;">';
+							html += '<input type="text" id="'+save_id+'_postal_code" style="float: left;width: 10%;margin-left: 9px;" placeholder="郵遞區號" value="'+postal_code+'">';
+							html += '<input type="text" id="'+save_id+'_address" style="float: left;width: 85%;margin-left: 9px;" value="'+address+'">';
 						} else {
 							// 待修改
+
 							html += save_value;
 						}
 						break;
@@ -567,19 +579,35 @@ function check_upload_v3() {
 		var add_num = para.add_num;
 		var form_name = para.form_name;
 		var default_value = para.default_value;
+		var u_record_id = para.upload_record_id;
+
 		var value = {};
 		for (var i in result_field.fields) {
 			var use_id = result_field.fields[i].id;
+			var o_id = result_field.fields[i].id;
 			if (typeof(add_num) !== 'undefined') 
 				use_id += add_num;
 			// 檢查必填欄位
-			if (typeof(upload_record_id)!== 'undefined')
-				var dom_id = upload_record_id + '-' + use_id;
-			else
-				var dom_id = use_id
-			var dom = document.getElementById(dom_id);
-			if (result_field.fields[i].type === 'address')
-				var dom = document.getElementById(use_id+ '_postal_code');
+
+			if (typeof(u_record_id)!== 'undefined')
+				use_id = u_record_id + '-' + use_id;
+			
+			if (result_field.fields[i].type === 'address') {
+				var address_id = use_id + '_address';
+				var use_id = use_id+ '_postal_code';
+			}
+			// if (typeof(u_record_id)!== 'undefined')
+			// 	dom_id = u_record_id + '-' + dom_id;
+			// console.log('dom_id = ')
+			// console.log(dom_id)
+			if (result_field.fields[i].type === 'address') {
+				console.log('有地址')
+				console.log(use_id)
+			}
+			console.log('比較')
+			console.log(use_id)
+			var dom = document.getElementById(use_id);
+
 			var is_hide = false;
 			for (var t in hide) 
 				if (hide[t] === result_field.fields[i].id) is_hide = true;
@@ -588,19 +616,20 @@ function check_upload_v3() {
 
 			if (!dom) {
 				if (result_field.fields[i].type === 'radio') {
-					if (!$("input[name="+dom_id+"]:checked").val()) {
+
+					if (!$("input[name="+use_id+"]:checked").val()) {
 						if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 							err_message += result_field.fields[i].name + ' 為必填欄位\n';
 						}
 					} else {
 						
-						value[use_id] = $("input[name="+dom_id+"]:checked").val();
+						value[o_id] = $("input[name="+use_id+"]:checked").val();
 					}
 					continue;
 				} else
 					continue;
 			}
-			
+
 			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 				// if (result_field.fields[i].type === 'address')
 				// 	console.log('有一個address')
@@ -614,7 +643,7 @@ function check_upload_v3() {
 							// dom.focus();
 						// return;
 					} else if (result_field.fields[i].type === 'address') {
-						var dom2 = document.getElementById(use_id+ '_address');
+						var dom2 = document.getElementById(address_id);
 						if (dom2.value === ''){
 							err_message += result_field.fields[i].name + ' 為必填欄位\n';
 							if (!f_dom)
@@ -625,14 +654,16 @@ function check_upload_v3() {
 			}
 			if (result_field.fields[i].show === true) {
 				if (result_field.fields[i].type === 'address') {
-					var dom2 = document.getElementById(use_id+ '_address');
+
+					var dom2 = document.getElementById(address_id);
 					if ( isNaN(dom.value) )
 						err_message += result_field.fields[i].name + '的郵遞區號需為數字 \n';
 					else if (dom.value.length !== 3 && dom.value.length !==0)
 						err_message += '請輸入3碼的郵遞區號 \n';
-					value[use_id] = {postal_code: dom.value, address: dom2.value};
+					
+					value[o_id] = {postal_code: dom.value, address: dom2.value};
 				} else {
-					value[use_id] = dom.value;
+					value[o_id] = dom.value;
 				}
 			}
 			if (result_field.fields[i].type === 'email' && dom.value !== '') {
@@ -681,7 +712,8 @@ function check_upload_v3() {
 					var default_value = para[use_page].related_form[k].default_value;
 			}
 		}
-		check(form.data, {form_name: form.name, default_value: default_value});
+
+		check(form.data, {form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_form_num]});
 		if (check_form_num !== '0') {
 			for (var add_num in add_forms[parseInt(check_form_num) -1]) {
 				check(form.data, {add_num: add_num, form_name: form.name, default_value: default_value});
@@ -709,22 +741,29 @@ function default_upload_v3(values) {
 	console.log(main_form)
 	var main_para = {form_name: main_form, values: values[main_form][0]};
 	
-	if (typeof(upload_record_id)!== 'undefined')
-		main_para.record_id = upload_record_id;
+	if (upload_record_id.length !== 0)
+		main_para.record_id = upload_record_id[0];
+	console.log('main_para')
+	console.log(main_para);
 	SR.API.UPDATE_FIELD(main_para, function (err, result) {
 		if (err) {
 			console.error(err);
 			alert(err);
 			return;
 		}
-		console.log('進到')
 		var pointer_id = result.record_id;
 		var total_p = [];
+		var k = 1;
 		for (var i in para[use_page].related_form){
 			var form_name = para[use_page].related_form[i].form_query.name;
-			var pointer = para[use_page].related_form[i].pointer
+			var pointer = para[use_page].related_form[i].pointer;
+			
 			for (var j in values[form_name]){
 				var p = {form_name: form_name, values: values[form_name][j] };
+				if (upload_record_id.length > k) {
+					p.record_id = upload_record_id[k]
+					k++;
+				}
 				p.values[pointer] = pointer_id;
 				total_p.push(p);
 			}
@@ -748,11 +787,11 @@ function default_upload_v3(values) {
 				}
 			});
 		}
-		
+
 		function onDoneFunction() {
-			if (window.flexform_v3_upload_onDone) 
+			if (window.flexform_v3_upload_onDone) {
 				flexform_v3_upload_onDone(result);
-			else {
+			} else {
 				alert('上傳成功');
 				window.location.reload();
 			}

@@ -34,20 +34,22 @@ function l_do_query_form(p, onDone) {
 			error_message = err;
 			return err;
 		}
-		
+
+		var clone_f = JSON.parse(JSON.stringify(form));
 		if (typeof(para[i].default_value) !== 'undefined') {
 			var default_keys = Object.keys(para[i].default_value);
-			for (var j in form.data.fields) {
+
+			for (var j in clone_f.data.fields) {
 				for (var k in default_keys) {
-					if (form.data.fields[j].id === default_keys[k]) {
-						form.data.fields[j].default_value = para[i].default_value[default_keys[k]];
+					if (clone_f.data.fields[j].id === default_keys[k]) {
+						clone_f.data.fields[j].default_value = para[i].default_value[default_keys[k]];
 					}
 				}
 			}
 		}
 		
 		forms[i] = [];
-		var clone_f = JSON.parse(JSON.stringify(form));
+		
 		forms[i].push(clone_f);
 		
 		if (!para[i].related_form) {
@@ -350,9 +352,8 @@ function do_add_field(flextable_data, add_field) {
 function init_view(onDone) {
 	var html = '';
 	var page_forms = forms[use_page];
-	
-	console.log('page_forms')
-	console.log(page_forms);
+	console.log('page_forms = ')
+	console.log(page_forms)
 	// 填入動態select選項
 	for (var i in page_forms) {
 		var fields = page_forms[i].data.fields;
@@ -385,6 +386,7 @@ function init_view(onDone) {
 		if (para[use_page].mode === 'new') {
 			page_forms[i].data.values = {};
 		}
+		
 		html += create_table_v3(page_forms[i], get_form_para());
 
 		html += '</div>';
