@@ -566,6 +566,7 @@ function flexform_show_table_v3(flexform_values, pa) {
 
 // 如果有upload_record_id，則是修改，若沒有則是新增
 function check_upload_v3() {
+
 	// console.log('upload');
 	// console.log(forms[use_page]);
 	console.log('add_forms');
@@ -600,12 +601,7 @@ function check_upload_v3() {
 			// 	dom_id = u_record_id + '-' + dom_id;
 			// console.log('dom_id = ')
 			// console.log(dom_id)
-			if (result_field.fields[i].type === 'address') {
-				console.log('有地址')
-				console.log(use_id)
-			}
-			console.log('比較')
-			console.log(use_id)
+
 			var dom = document.getElementById(use_id);
 
 			var is_hide = false;
@@ -616,7 +612,6 @@ function check_upload_v3() {
 
 			if (!dom) {
 				if (result_field.fields[i].type === 'radio') {
-
 					if (!$("input[name="+use_id+"]:checked").val()) {
 						if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 							err_message += result_field.fields[i].name + ' 為必填欄位\n';
@@ -699,8 +694,9 @@ function check_upload_v3() {
 				value[id] = default_value[id];
 		values[form_name].push(value);
 	}
-	for (var check_form_num in forms[use_page]) {
-		var form = forms[use_page][check_form_num];
+	var check_num = 0;
+	for (var form_num in forms[use_page]) {
+		var form = forms[use_page][form_num];
 		// console.log(form);
 		values[form.name] = [];
 
@@ -713,10 +709,12 @@ function check_upload_v3() {
 			}
 		}
 
-		check(form.data, {form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_form_num]});
-		if (check_form_num !== '0') {
-			for (var add_num in add_forms[parseInt(check_form_num) -1]) {
-				check(form.data, {add_num: add_num, form_name: form.name, default_value: default_value});
+		check(form.data, {form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_num]});
+		check_num++;
+		if (form_num !== '0') {
+			for (var add_num in add_forms[parseInt(form_num) -1]) {
+				check(form.data, {add_num: add_num, form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_num]});
+				check_num++;
 			}
 		}
 	}
