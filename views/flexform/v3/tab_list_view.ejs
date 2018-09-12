@@ -524,12 +524,30 @@ function add_expansion_form(n) {
 	form.data.values = {};
 	
 	document.getElementById("expansion_form_"+n).innerHTML += create_expansion_form_html(n, form);
+	console.log('upload_record_id');
+	console.log(upload_record_id)
+	// console.log('add_forms = ')
+	// console.log(add_forms)
+	var insert_num = n+1;
+	for ( var i = 0 ; i <= n ; i++ ) {
+		insert_num += Object.keys(add_forms[i]).length;
+	}
+	// console.log('n = ' + n)
+	// console.log('insert_num = ' + insert_num)
+	upload_record_id.splice(insert_num, 0, '')
+
 	enable_js();
 }
 		
 function minus_expansion_form(n, expansion_form_number) {
+	var delete_num = n+2 + add_forms[n].indexOf(expansion_form_number);
+	for ( var i = 0 ; i < n ; i++ ) {
+		delete_num += Object.keys(add_forms[i]).length;
+	}
+	upload_record_id.splice(delete_num, 1)
 	$("#expansion_form_"+n+"-"+expansion_form_number).remove();
 	add_forms[n].splice(add_forms[n].indexOf(expansion_form_number), 1);
+
 }
 	
 function flexform_v3_upload_onDone(result) {

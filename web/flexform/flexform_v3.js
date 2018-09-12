@@ -590,7 +590,7 @@ function check_upload_v3() {
 				use_id += add_num;
 			// 檢查必填欄位
 
-			if (typeof(u_record_id)!== 'undefined')
+			if (typeof(u_record_id)!== 'undefined' && u_record_id !== '')
 				use_id = u_record_id + '-' + use_id;
 			
 			if (result_field.fields[i].type === 'address') {
@@ -612,6 +612,7 @@ function check_upload_v3() {
 
 			if (!dom) {
 				if (result_field.fields[i].type === 'radio') {
+					console.log(use_id)
 					if (!$("input[name="+use_id+"]:checked").val()) {
 						if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
 							err_message += result_field.fields[i].name + ' 為必填欄位\n';
@@ -711,6 +712,7 @@ function check_upload_v3() {
 
 		check(form.data, {form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_num]});
 		check_num++;
+
 		if (form_num !== '0') {
 			for (var add_num in add_forms[parseInt(form_num) -1]) {
 				check(form.data, {add_num: add_num, form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_num]});
@@ -759,7 +761,8 @@ function default_upload_v3(values) {
 			for (var j in values[form_name]){
 				var p = {form_name: form_name, values: values[form_name][j] };
 				if (upload_record_id.length > k) {
-					p.record_id = upload_record_id[k]
+					if (upload_record_id[k] !== '')
+						p.record_id = upload_record_id[k]
 					k++;
 				}
 				p.values[pointer] = pointer_id;
