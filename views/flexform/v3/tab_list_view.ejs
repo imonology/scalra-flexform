@@ -538,26 +538,40 @@ function add_expansion_form(n) {
 
 	enable_js();
 }
-		
+
+var delete_list = {};
+
 function minus_expansion_form(n, expansion_form_number) {
 	var delete_num = n+2 + add_forms[n].indexOf(expansion_form_number);
 	for ( var i = 0 ; i < n ; i++ ) {
 		delete_num += Object.keys(add_forms[i]).length;
 	}
+	
+	if ( !delete_list[forms[use_page][n+1].name] )
+		delete_list[forms[use_page][n+1].name] = [];
+	if ( upload_record_id[delete_num] !== '' )
+		delete_list[forms[use_page][n+1].name].push( upload_record_id[delete_num] );
+	console.log('delete list = ');
+	console.log(delete_list)
 	upload_record_id.splice(delete_num, 1)
 	$("#expansion_form_"+n+"-"+expansion_form_number).remove();
 	add_forms[n].splice(add_forms[n].indexOf(expansion_form_number), 1);
-
 }
 	
 function flexform_v3_upload_onDone(result) {
-	if (para[use_page].onDone_name !== '' && Object.keys(window).indexOf(para[use_page].onDone_name) !== -1) {
-		var do_func = window[para[use_page].onDone_name];
-		do_func(result);
-	} else {
-		alert('上傳成功');
-		window.location.reload();
-	}
+	SR.API.DELETE_FIELD_LIST({delete_list: delete_list}, function (err, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		if (para[use_page].onDone_name !== '' && Object.keys(window).indexOf(para[use_page].onDone_name) !== -1) {
+			var do_func = window[para[use_page].onDone_name];
+			do_func(result);
+		} else {
+			alert('上傳成功');
+			window.location.reload();
+		}
+	});
 }
 
 </script>

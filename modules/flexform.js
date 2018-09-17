@@ -899,6 +899,32 @@ SR.API.add('DELETE_FIELD', {
 	});
 });
 
+SR.API.add('DELETE_FIELD_LIST', {
+	delete_list: 	'object'
+}, function (args, onDone) {
+	var jq = SR.JobQueue.createQueue();
+	var l_do_delete_field = function (para) {
+		return function (onD) {
+			SR.API.DELETE_FIELD(para, function(err, result){
+				if (err){
+					LOG.warn(err);
+					return onD(err);
+				}
+				onD();
+			});
+		}
+	}
+	for (var form_name in args.delete_list) {
+		for (var i in args.delete_list[form_name]) {
+			jq.add(l_do_delete_field( { form_name: form_name, record_id: args.delete_list[form_name][i] } ));
+		}
+	}
+	jq.run(function (err) {
+		return onDone(null);
+	});
+	// return onDone(null);
+});
+
 // helpers to check for int or float
 function isInt(n){
     return Number(n) === n && n % 1 === 0;

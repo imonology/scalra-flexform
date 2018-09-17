@@ -715,7 +715,8 @@ function check_upload_v3() {
 
 		if (form_num !== '0') {
 			for (var add_num in add_forms[parseInt(form_num) -1]) {
-				check(form.data, {add_num: add_num, form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_num]});
+				console.log('add_num = ' + add_num)
+				check(form.data, {add_num: add_forms[parseInt(form_num) -1][add_num], form_name: form.name, default_value: default_value, upload_record_id: upload_record_id[check_num]});
 				check_num++;
 			}
 		}
