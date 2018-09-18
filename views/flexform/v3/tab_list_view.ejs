@@ -177,9 +177,21 @@ var onConnect = function () {
 function init_onDone(err, html) {
 	document.getElementById('sub_title').innerHTML = para[use_page].s_title;
 	document.getElementById('form_area').innerHTML = html;	
-
+	if ( typeof(para[use_page].add_button) !== 'undefined' && para[use_page].add_button ) {
+		var add_btn = '<button class="btn btn-primary" onclick="click_add_btn()" style="left:5px;">新增</button>';
+		document.getElementById('sub_title').innerHTML += add_btn
+	}
 	init_submit_btn();
 	enable_js();
+}
+	
+function click_add_btn() {
+	if(para[use_page].add_button_func && Object.keys(window).indexOf(para[use_page].add_button_func) !== -1) {
+		var do_func = window[para[use_page].add_button_func];
+		do_func(para, function(err, datas){
+
+		});
+	} 
 }
 
 function init_tab() {
@@ -413,7 +425,7 @@ function init_view(onDone) {
 }
 		
 function init_submit_btn() {
-	if (para[use_page].mode !== 'show') {
+	if (para[use_page].type === 'view' && para[use_page].mode !== 'show') {
 		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="check_upload_v3()">送出</button>';
 	} else {
 		document.getElementById('button_area').innerHTML = '';
@@ -542,20 +554,30 @@ function add_expansion_form(n) {
 var delete_list = {};
 
 function minus_expansion_form(n, expansion_form_number) {
-	var delete_num = n+2 + add_forms[n].indexOf(expansion_form_number);
-	for ( var i = 0 ; i < n ; i++ ) {
-		delete_num += Object.keys(add_forms[i]).length;
-	}
-	
-	if ( !delete_list[forms[use_page][n+1].name] )
-		delete_list[forms[use_page][n+1].name] = [];
-	if ( upload_record_id[delete_num] !== '' )
-		delete_list[forms[use_page][n+1].name].push( upload_record_id[delete_num] );
-	console.log('delete list = ');
-	console.log(delete_list)
-	upload_record_id.splice(delete_num, 1)
-	$("#expansion_form_"+n+"-"+expansion_form_number).remove();
-	add_forms[n].splice(add_forms[n].indexOf(expansion_form_number), 1);
+	swal({ 
+		title: "確定刪除嗎", 
+		type: "warning",
+		showCancelButton: true, 
+		confirmButtonColor: "#DD6B55",
+		confirmButtonText: "確定刪除!", 
+	}).then((result) => {
+		if (result.value) {
+			var delete_num = n+2 + add_forms[n].indexOf(expansion_form_number);
+			for ( var i = 0 ; i < n ; i++ ) {
+				delete_num += Object.keys(add_forms[i]).length;
+			}
+
+			if ( !delete_list[forms[use_page][n+1].name] )
+				delete_list[forms[use_page][n+1].name] = [];
+			if ( upload_record_id[delete_num] !== '' )
+				delete_list[forms[use_page][n+1].name].push( upload_record_id[delete_num] );
+			console.log('delete list = ');
+			console.log(delete_list)
+			upload_record_id.splice(delete_num, 1)
+			$("#expansion_form_"+n+"-"+expansion_form_number).remove();
+			add_forms[n].splice(add_forms[n].indexOf(expansion_form_number), 1);
+		}
+	});
 }
 	
 function flexform_v3_upload_onDone(result) {
