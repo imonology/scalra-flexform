@@ -484,6 +484,20 @@ function enable_js() {
 			}
 		})
 	});
+	
+	$('.hasDatepicker').on('focus', function() {
+
+	    // store the element for use inside the position function
+	    var $target = $(this);
+
+	    // get the elements datepicker widget object and set it's position based on the target element
+	    $target.datepicker('widget').position({
+
+	        my: 'left top',
+	        at: 'left bottom',
+	        of: $target
+	    });
+	});
 
 }
 
