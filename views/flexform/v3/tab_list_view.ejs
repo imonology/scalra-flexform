@@ -333,8 +333,25 @@ function do_add_field(flextable_data, add_field) {
 	if (typeof(add_field) === 'undefined')
 		return flextable_data;
 	for (var i in add_field) {
+		var position = (typeof(add_field[i].position) !== 'undefined' ? add_field[i].position : flextable_data.field.length);
+		if (add_field[i].type === 'button') {
+			var add_value = [];
+			for (var j in flextable_data.data) {
+				var temp = '<button id="'+add_field[i].btn_id+'" class="btn btn-modify" onClick="'+add_field[i].func_name+'(';
+				var first = true;
+				for (var k in add_field[i].value) {
+					if (first) 
+						first = false;
+					else
+						temp += ', ';
 
-		if (add_field[i].type === 'link') {
+					temp += '\''+ flextable_data.data[j][add_field[i].value[k]] +'\'';
+				}
+				temp += ')">'+add_field[i].field_name+'</button>';
+				add_value.push(temp);
+			}
+			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {id: add_field[i].func_name, value: add_field[i].field_name}, datas : add_value});
+		} else if (add_field[i].type === 'link') {
 			var add_value = [];
 			for (var j in flextable_data.data) {
 				var temp = '<a href="' + add_field[i].link_url + '?';
@@ -355,7 +372,7 @@ function do_add_field(flextable_data, add_field) {
 			flextable_data = SR.API.flexform_table_add_field({insert_num : flextable_data.field.length, flexform_table : flextable_data, field : {id: add_field[i].field_id, value: add_field[i].field_name}, datas : add_value});
 		}
 	}
-	console.log(flextable_data)
+	// console.log(flextable_data)
 	return flextable_data;
 }
 		
@@ -426,7 +443,7 @@ function init_view(onDone) {
 		
 function init_submit_btn() {
 	if (para[use_page].type === 'view' && para[use_page].mode !== 'show') {
-		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="check_upload_v3()">送出</button>';
+		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="check_upload_v3()" style="left: 446px;">送出</button>';
 	} else {
 		document.getElementById('button_area').innerHTML = '';
 	}

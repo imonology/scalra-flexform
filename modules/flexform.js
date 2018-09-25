@@ -2065,6 +2065,7 @@ SR.API.add('flexform_table_add_field', { // flexform_table_add_field(0, flex_for
 	var flexform_table = args.flexform_table;
 	var field = args.field;
 	var datas = args.datas;
+
 	if (datas.length !== flexform_table.data.length)
 		return flexform_table;
 	flexform_table.field.splice(insert_num, 0, field);
