@@ -453,11 +453,12 @@ function enable_js() {
 			$this.addClass('active').siblings('.active').removeClass('active');
 	});
 	if (typeof(date_pickers) !== 'undefined') {
-		for (var i=0; i < date_pickers.length; i++) {
-			$(function() {
-				$("#" + date_pickers[i]).datepicker(datepicker_setting);
+		$.datepicker.initialized = false;
+		$(function() {
+			date_pickers.forEach(date_picker => {
+				$("#" + date_picker).datepicker(datepicker_setting);
 			});
-		}
+		})
 	}
 	$('.tags').tagsInput();
 	$("input[type='radio']").on('change', function() {
@@ -484,7 +485,7 @@ function enable_js() {
 			}
 		})
 	});
-	
+
 	$('.hasDatepicker').on('focus', function() {
 
 	    // store the element for use inside the position function
@@ -498,7 +499,6 @@ function enable_js() {
 	        of: $target
 	    });
 	});
-
 }
 
 function get_form_para() {
@@ -573,7 +573,8 @@ function minus_expansion_form(n, expansion_form_number) {
 		type: "warning",
 		showCancelButton: true, 
 		confirmButtonColor: "#DD6B55",
-		confirmButtonText: "確定刪除!", 
+		confirmButtonText: "確定刪除！", 
+		cancelButtonText: "取消刪除！",
 	}).then((result) => {
 		if (result.value) {
 			var delete_num = n+2 + add_forms[n].indexOf(expansion_form_number);
