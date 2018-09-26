@@ -515,6 +515,7 @@ SR.API.add('QUERY_FORM', {
 	already_form:	'+object',	//
 	query:	'+object',			// optional query finding exact matches
 	query_partial: '+object',	// query for any value partially matching the specified query keys' values
+	query_time:	'+object',
 	overlap: '+object',			// find records if intervals between 'period' overlaps with [start, end] interval
 	show:	'+array',			// only show specific fields
 	show_unchecked: '+object',	// only show if specified checkboxes are unchecked
@@ -524,7 +525,7 @@ SR.API.add('QUERY_FORM', {
 	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
 }, function (args, onDone) {
 	LOG.warn('QUERY_FORM');
-
+	
 	if (args.already_form) {
 		var form = args.already_form;
 	} else {
@@ -607,9 +608,8 @@ SR.API.add('QUERY_FORM', {
 			continue;
 		}
 		// ignore rows where the fields do not match
+		
 		if (args.query || args.select_time) {
-
-
 			for (var key in args.select_time) {
 				if (fields[key] && fields[key].type === 'date') {
 					// LOG.warn('key: ' + key);
@@ -635,13 +635,14 @@ SR.API.add('QUERY_FORM', {
 				}
 
 				// partial match for 'date' type
-				if (fields[key].type === 'date') {
+				if (fields[key].type === 'date' || fields[key].type === 'datetime' ) {
 					LOG.warn('key: ' + key);
 					LOG.warn('compare record: ' + record[key] + ' with query: ' + compare);
 
 					if (args.start_date && args.end_date) {
 						LOG.warn('compare '+ record[key]+ ' start: ' + args.start_date + ' end: ' + args.end_date );
-						if (record[key] < args.start_date || record[key] > args.end_date) {
+						var current = Date.parse(record[key]);
+						if (current < Date.parse( args.start_date ) || current > Date.parse( args.end_date ) ) {
 							matched = false;
 							break;
 						}
@@ -720,6 +721,19 @@ SR.API.add('QUERY_FORM', {
 			// non of the fields have partial matches at all
 			if (non_matched === Object.keys(args.query_partial).length) {
 				matched = false;
+			}
+		}
+		
+		if (args.query_time) {
+			LOG.warn('進到query_time');
+			for (var key in args.query_time) {
+				var start = args.query_time[key].start;
+				var end = args.query_time[key].end;
+				var current = Date.parse(record[key]);
+				if (current < Date.parse( start ) || current > Date.parse( end ) ) {
+					matched = false;
+					break;
+				}
 			}
 		}
 
