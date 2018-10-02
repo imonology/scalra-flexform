@@ -243,13 +243,13 @@ function init_list(onDone) {
 	processing_data(function(err, flextable_data){
 		final_flextable_data = flextable_data;
 		var html = '';
-		var default_entries = 3;
+		var default_entries = 10;
 		// 一次顯示多少entries和search
 		html += '<div id="list_bar">';
 		html += '<div id="show_line_area">';
 		html += 'Show '
 		html += '<select id="show_line" onchange="switch_show_entries(this)">';
-		html += '<option value="3">3</option>';
+		html += '<option value="10">10</option>';
 		html += '<option value="15">15</option>';
 		html += '<option value="20">20</option>';
 		html += '<option value="30">30</option>';
@@ -335,6 +335,7 @@ function do_add_field(flextable_data, add_field) {
 	for (var i in add_field) {
 
 		if (add_field[i].type === 'link') {
+
 			var add_value = [];
 			for (var j in flextable_data.data) {
 				var temp = '<a href="' + add_field[i].link_url + '?';
@@ -352,7 +353,25 @@ function do_add_field(flextable_data, add_field) {
 				temp += '>'+add_field[i].link_name+'</a>';
 				add_value.push(temp);
 			}
-			flextable_data = SR.API.flexform_table_add_field({insert_num : flextable_data.field.length, flexform_table : flextable_data, field : {id: add_field[i].field_id, value: add_field[i].field_name}, datas : add_value});
+			flextable_data = SR.API.flexform_table_add_field(
+				{
+					insert_num : flextable_data.field.length, 
+					flexform_table : flextable_data, 
+					field : {key: add_field[i].field_id, id: add_field[i].field_id, value: add_field[i].field_name},
+					datas : add_value
+				}
+			);
+		}
+		if (add_field[i].type === 'serial_number') {
+			let sn = [...Array(flextable_data.data.length).keys()].map(x => ++x);
+			flextable_data = SR.API.flexform_table_add_field(
+				{
+					insert_num : flextable_data.field.length,,
+					flexform_table : flextable_data, 
+					field : {key: add_field[i].field_id, id: add_field[i].field_id, value: add_field[i].field_name},
+					datas : sn
+				}
+			);
 		}
 	}
 	console.log(flextable_data)
