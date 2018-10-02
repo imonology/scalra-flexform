@@ -350,7 +350,7 @@ function do_add_field(flextable_data, add_field) {
 				temp += ')">'+add_field[i].field_name+'</button>';
 				add_value.push(temp);
 			}
-			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {id: add_field[i].func_name, value: add_field[i].field_name}, datas : add_value});
+			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {key: add_field[i].func_nameid: add_field[i].func_name, value: add_field[i].field_name}, datas : add_value});
 		} else if (add_field[i].type === 'link') {
 			var add_value = [];
 			for (var j in flextable_data.data) {
@@ -373,7 +373,11 @@ function do_add_field(flextable_data, add_field) {
 				{
 					insert_num : flextable_data.field.length, 
 					flexform_table : flextable_data, 
-					field : {key: add_field[i].field_id, id: add_field[i].field_id, value: add_field[i].field_name},
+					field : {
+						key: add_field[i].field_id, 
+						id: add_field[i].field_id, 
+						value: add_field[i].field_name
+					},
 					datas : add_value
 				}
 			);
@@ -383,13 +387,16 @@ function do_add_field(flextable_data, add_field) {
 				{
 					insert_num : flextable_data.field.length,,
 					flexform_table : flextable_data, 
-					field : {key: add_field[i].field_id, id: add_field[i].field_id, value: add_field[i].field_name},
+					field : {
+						key: add_field[i].field_id, 
+						id: add_field[i].field_id, 
+						value: add_field[i].field_name
+					},
 					datas : sn
 				}
 			);
 		}
 	}
-	// console.log(flextable_data)
 	return flextable_data;
 }
 		
