@@ -185,7 +185,7 @@ var create_table_v3 = function (form, para) {
 
 					case 'date':
 						if (write && ! fields[i].default_value  && !is_lock) {
-							html += '<input type="text" id="'+save_id+'" value="'+save_value+'" placeholder="年-月-日">';
+							html += '<input type="date" id="'+save_id+'" value="'+save_value+'" placeholder="年-月-日">';
 							date_pickers.push(save_id);	
 						} else {
 							html += save_value;

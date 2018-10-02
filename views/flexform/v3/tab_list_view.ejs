@@ -504,14 +504,6 @@ function enable_js() {
 		if (!isNaN($this.text()))
 			$this.addClass('active').siblings('.active').removeClass('active');
 	});
-	if (typeof(date_pickers) !== 'undefined') {
-		$.datepicker.initialized = false;
-		$(function() {
-			date_pickers.forEach(date_picker => {
-				$("#" + date_picker).datepicker(datepicker_setting);
-			});
-		})
-	}
 	$('.tags').tagsInput();
 	$("input[type='radio']").on('change', function() {
 
@@ -536,20 +528,6 @@ function enable_js() {
 				$(this).attr("selected", false);
 			}
 		})
-	});
-
-	$('.hasDatepicker').on('focus', function() {
-
-	    // store the element for use inside the position function
-	    var $target = $(this);
-
-	    // get the elements datepicker widget object and set it's position based on the target element
-	    $target.datepicker('widget').position({
-
-	        my: 'left top',
-	        at: 'left bottom',
-	        of: $target
-	    });
 	});
 }
 
