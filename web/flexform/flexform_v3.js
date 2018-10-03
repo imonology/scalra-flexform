@@ -305,6 +305,27 @@ var create_table_v3 = function (form, para) {
 							html += save_value;
 						}
 						break;
+					case 'multichoice': 
+						let selections;
+						let showErr = err => (console.error(err))
+						if (Array.isArray(fields[i].option)) {
+							selections = fields[i].option;
+							let name = fields[i].id;
+							selections.forEach(selection => {
+								if (!selection.label || !selection.value)
+									showErr("Option error: option should be like option: [{label: 'Nike', value: 'nike'}, {label: 'adidas', value: 'adidas'}]");
+								else {
+									let chekcboxId = name + selection.value;
+									html += '<div class="checkbox item">'
+									html += '<input type="checkbox" name="' + name + '" id="' + chekcboxId + '" value="' + selection.value + '">';
+									html += '<label for="' + chekcboxId + '">' + selection.label + '</label>'
+									html += '</div>'
+								}
+							})
+						} else {
+							showErr("params error: Missing option, should be like option: [{label: 'Nike', value: 'nike'},{label: 'adidas', value: 'adidas'}]");
+						}
+						break;
 					case 'lock':
 						if (write) {
 							var lock_value = getParameterByName(fields[i].id);
