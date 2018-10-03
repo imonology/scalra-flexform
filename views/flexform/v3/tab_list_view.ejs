@@ -145,15 +145,43 @@ var jq = SR.JobQueue.createQueue();
 for (var i in para)	{
 	jq.add(l_query_form({use_page: i}));
 }
+
+
+
 jq.run(function (err) {
-	var f2 = encodeURIComponent(JSON.stringify(forms));
-	%> 
-		var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
-		var forms = JSON.parse(decodeURIComponent("<%-f2 %>")); 
-		var use_page = 0;
-		var getGlobalVariable_func = '<%=(typeof(getGlobalVariable)!=="undefined"?getGlobalVariable:"")%>'; // 自定義global變數
-		var account = '<%=login.account%>';
-	<%	
+	function l_change_options(para) {
+		return function(onD) {
+			var i = para.use_page;
+			var j = para.form_num;
+			var k = para.field_num;
+			var getOptionAPIName = forms[i][j].data.fields[k].get_options_API_name;
+			SR.API[getOptionAPIName]({}, function(err, result) {
+				forms[i][j].data.fields[k].option = result;
+				return onD(null);
+			});
+		}
+	}
+	var jq2 = SR.JobQueue.createQueue();
+	for (var i in forms) 
+		for (var j in forms[i]) {
+			for (var k in forms[i][j].data.fields) {
+				if ( forms[i][j].data.fields[k].get_options_API_name )
+					jq2.add(l_change_options({use_page: i, form_num: j, field_num: k}));
+			}
+		}
+	jq2.run(function (err) { // 當使用choice型別時，用來把options替換成API取得的options
+		var f2 = encodeURIComponent(JSON.stringify(forms));
+		%> 
+			var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
+			var forms = JSON.parse(decodeURIComponent("<%-f2 %>"));
+			console.log('forms = ')
+			console.log(forms)
+			var use_page = 0;
+			var getGlobalVariable_func = '<%=(typeof(getGlobalVariable)!=="undefined"?getGlobalVariable:"")%>'; // 自定義global變數
+			var account = '<%=login.account%>';
+		<%	
+	});
+		
 });	
 %>
 
@@ -396,26 +424,30 @@ function init_view(onDone) {
 				}
 			}
 	}
+
 	
 	for (var i in page_forms) {
 		if (i !== '0') {
 			add_forms[(parseInt(i)-1)] = [];
 			html += '<hr>'
+			
 			html += '<div class="add_expansion_title">';
 			html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[(parseInt(i)-1)].form_title + '</p></div>';
-			html += '<div class="add_expansion_form" onclick="add_expansion_form('+(parseInt(i-1))+')"><span class="plus_btn">+</span></div>';
+			if (para[use_page].related_form[(parseInt(i)-1)].expansion) {
+				html += '<div class="add_expansion_form" onclick="add_expansion_form('+(parseInt(i-1))+')"><span class="plus_btn">+</span></div>';
+			}
 			html += '</div>';
 		}
 		if (i === '0') {
 			html += '<div id="main_form">';
 		} else {
 			html += '<div id="expansion_form_'+(parseInt(i)-1)+'">';
-			console.log('<div id="expansion_form_'+(parseInt(i)-1)+'">')
+			// console.log('<div id="expansion_form_'+(parseInt(i)-1)+'">')
 		}
 
 		if (para[use_page].mode === 'new') {
 			page_forms[i].data.values = {};
-			html += create_table_v3(page_forms[i], get_form_para());
+			html += create_table_v3(page_forms[i], get_form_para(i));
 		} else {
 			var first = true;
 			for (var record_id in page_forms[i].data.values) {
@@ -423,7 +455,7 @@ function init_view(onDone) {
 				form.data.values = {};
 				form.data.values[record_id] = page_forms[i].data.values[record_id];
 				if (first) {
-					html += create_table_v3(form, get_form_para());
+					html += create_table_v3(form, get_form_para(0));
 					first = false;
 				} else {
 					if ((parseInt(i)-1) >= 0)
@@ -491,10 +523,9 @@ function enable_js() {
 	});
 	$("select").on('change', function() {
 		var s_v = $(this).val();
-		console.log( $(this).val() )
 		// $(this).attr('selected', true);
 		$(this).children().each(function(){
-			if ($(this).text()===s_v){
+			if ($(this).val()===s_v){
 				//jQuery給法
 				$(this).attr("selected", true);
 			} else {
@@ -518,7 +549,7 @@ function enable_js() {
 	});
 }
 
-function get_form_para() {
+function get_form_para(i) {
 	var form_para = {};
 	if (typeof(para[use_page].customized)!=='undefined' && para[use_page].customized) {
 		form_para.customized = para[use_page].customized;
@@ -526,7 +557,11 @@ function get_form_para() {
 	if (typeof(para[use_page].lock)!=='undefined' && para[use_page].lock) {
 		form_para.lock = para[use_page].lock;
 	}
-	form_para.hide = para[use_page].hide;
+	if (i === '0' || i === 0) // main page的para
+		form_para.hide = para[use_page].hide;
+	else {
+		form_para.hide = para[use_page].related_form[i-1].hide;
+	}
 	if (para[use_page].mode === 'show') {
 		form_para.write = false;
 	} else {
@@ -552,7 +587,7 @@ function create_expansion_form_html(n, form) { // 第n個expansion_form
 	html += '<div class="add_expansion_title">';
 	html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[n].form_title + '</p></div>';
 	html += '<div class="minus_expansion_form" onclick="minus_expansion_form('+n+', '+expansion_form_number+')"><span class="plus_btn">-</span></div>';
-	var form_para = get_form_para();
+	var form_para = get_form_para(0);
 	form_para.id_num = expansion_form_number;
 	html += create_table_v3(use_form, form_para);
 	

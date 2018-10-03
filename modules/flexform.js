@@ -725,7 +725,7 @@ SR.API.add('QUERY_FORM', {
 		}
 		
 		if (args.query_time) {
-			LOG.warn('進到query_time');
+			// LOG.warn('進到query_time');
 			for (var key in args.query_time) {
 				var start = args.query_time[key].start;
 				var end = args.query_time[key].end;

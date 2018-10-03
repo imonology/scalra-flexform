@@ -1,8 +1,8 @@
 var upload_record_id = [];
 var create_table_v3 = function (form, para) {
 	var hide = para.hide;
-	console.log('hide = ');
-	console.log(hide)
+	// console.log('hide = ');
+	// console.log(hide)
 	var write = para.write;
 	var td_style = para.td_style;
 	var show = para.show;
@@ -289,16 +289,20 @@ var create_table_v3 = function (form, para) {
 						if (write && !is_lock) {
 							// console.log('fields[i] = ')
 							// console.log(fields[i])
-							if (typeof(fields[i].option) === 'object')
+							if (typeof(fields[i].option) === 'object') 
 								var options = fields[i].option;
 							else if (typeof(fields[i].option) !== 'undefined')
 								var options = fields[i].option.split(',');
 							else
 								var options = [];
 							html += '<select id="'+ save_id + '">';
-							for (var j=0; j < options.length; j++) {
-
-								html += '<option value="' + options[j] + '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
+							for (var j in options) {
+								html += '<option value="' ;
+								if (Array.isArray(options))
+									html += options[j];
+								else 
+									html += j;
+								html += '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
 							}
 							html += '</select>';
 						} else {
