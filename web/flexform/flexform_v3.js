@@ -750,12 +750,15 @@ function default_upload_v3(values) {
 		main_para.record_id = upload_record_id[0];
 	console.log('main_para')
 	console.log(main_para);
+	var all_result = {};
 	SR.API.UPDATE_FIELD(main_para, function (err, result) {
 		if (err) {
 			console.error(err);
 			alert(err);
 			return;
 		}
+		all_result[main_para.form_name] = {};
+		all_result[main_para.form_name][result.record_id] = main_para.values;
 		var pointer_id = result.record_id;
 		var total_p = [];
 		var k = 1;
@@ -771,6 +774,7 @@ function default_upload_v3(values) {
 					k++;
 				}
 				p.values[pointer] = pointer_id;
+				p.return_values = true;
 				total_p.push(p);
 			}
 		}
@@ -778,7 +782,8 @@ function default_upload_v3(values) {
 		var max_num = total_p.length;
 		var run_num = 0;
 		if (max_num === 0)
-			onDoneFunction();
+			onDoneFunction(all_result);
+
 		for (var i in total_p) {
 			console.log(total_p[i]);
 			SR.API.UPDATE_FIELD(total_p[i], function (err, result) {
@@ -787,14 +792,17 @@ function default_upload_v3(values) {
 					alert(err);
 					return;
 				}
+				if (!all_result[result.form_name])
+					all_result[result.form_name] = {};
+				all_result[result.form_name][result.record_id] = result.values;
 				run_num++;
 				if (run_num === max_num) {
-					onDoneFunction();
+					onDoneFunction(all_result);
 				}
 			});
 		}
 
-		function onDoneFunction() {
+		function onDoneFunction(result) {
 			if (window.flexform_v3_upload_onDone) {
 				flexform_v3_upload_onDone(result);
 			} else {

@@ -378,11 +378,14 @@ function uploadFile(num, dom_id, onDone, accepted_extensions, upload_id, form_na
 
 } // function uploadFile()
 
-function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id){
+function doUploadFile(num, dom_id, onDone, accepted_extensions, upload_id, upload_dom_id){
 	var type = '';
 	if (!accepted_extensions) {
 		type = 'img';
-		var formData = new FormData($("#frmUploadFile")[0]);	
+		if (upload_dom_id)
+			var formData = new FormData($("#"+upload_dom_id)[0]);	
+		else
+			var formData = new FormData($("#frmUploadFile")[0]);	
 	} else if (accepted_extensions.indexOf('txt') !== -1) {
 		type = 'txt';
 		var formData = new FormData();

@@ -954,15 +954,17 @@ SR.API.add('UPDATE_FIELD', {
 	form_name:	'+string',		// form name
 	record_id: 	'+string',		// unique record id, if not exist, then it's same as UPDATE_FORM
 	values: 	'object',		// data to be stored
+	return_values:	'+boolean'	
 }, function (args, onDone, extra) {
 
 	if (!args.form_id && !args.form_name)
 		return onDone('values not found for form_id or form_name ');
 
 	var form = undefined;
-
+	var update_form_name = '';
 	// get form
 	if (args.form_name) { // by name
+		update_form_name = args.form_name;
 		for (var form_id in l_form) {
 			if (l_form[form_id].name === args.form_name)  {
 				form = l_form[form_id];
@@ -974,6 +976,7 @@ SR.API.add('UPDATE_FIELD', {
 			return onDone('form name invalid: ' + args.form_name);
 		}
 	} else { // by id
+		update_form_name = l_form[args.form_id].name;
 		if (l_form.hasOwnProperty(args.form_id) === false) {
 			return onDone('form id invalid: ' + args.form_id);
 		}
@@ -1105,7 +1108,12 @@ SR.API.add('UPDATE_FIELD', {
 	}
 
 	l_add_form({form: form, values_map: values_map, para: args}, function (err, result) {
-		onDone(null, {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id});
+		var result_para = {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id};
+		if (!!args.return_values && args.return_values) {
+			result_para.values = values_map;
+			result_para.form_name = update_form_name;
+		}
+		onDone(null, result_para);
 	});
 });
 
@@ -1147,7 +1155,7 @@ var l_add = function (para) {
 
 var l_add_form = function (para, onDone) {
 	if (para.para.record_id) {
-		LOG.warn('使用record_id');
+		LOG.warn('使用record_id ' + para.para.record_id);
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
 			return onDone('values not found for record id [' + para.para.record_id + ']');
 
@@ -1156,9 +1164,10 @@ var l_add_form = function (para, onDone) {
 			// LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
 			l_form_values[para.form.id][para.para.record_id].values[key] = para.values_map[key];
 		}
-
+		LOG.warn('準備sync')
 		l_form_values[para.form.id][para.para.record_id].values.sync(function (err) {
 			if (err) {
+				LOG.warn('存入error')
 				return onDone('save to DB error: ' + err);
 			}
 			LOG.warn('存進DB')

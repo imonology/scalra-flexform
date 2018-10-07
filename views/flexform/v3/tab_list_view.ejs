@@ -172,6 +172,7 @@ jq.run(function (err) {
 	jq2.run(function (err) { // 當使用choice型別時，用來把options替換成API取得的options
 		var f2 = encodeURIComponent(JSON.stringify(forms));
 		%> 
+			console.log('近來')
 			var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
 			var forms = JSON.parse(decodeURIComponent("<%-f2 %>"));
 			console.log('forms = ')
@@ -398,8 +399,16 @@ function do_add_field(flextable_data, add_field) {
 				add_value.push(temp);
 			}
 			flextable_data = SR.API.flexform_table_add_field({insert_num : flextable_data.field.length, flexform_table : flextable_data, field : {id: add_field[i].field_id, value: add_field[i].field_name}, datas : add_value});
+		} else if (add_field[i].type === 'custom') {
+			add_field[i].func_name
+			if (typeof(add_field[i].func_name) !== 'undefined' && typeof(window[add_field[i].func_name]) !== 'undefined' ){
+				var do_func = window[add_field[i].func_name];
+				flextable_data = SR.API.flexform_table_add_field(do_func(flextable_data));
+			}
 		}
 	}
+	// console.log('flextable_data = ');
+	// console.log(flextable_data);
 	// console.log(flextable_data)
 	return flextable_data;
 }
@@ -480,7 +489,7 @@ function init_submit_btn() {
 		document.getElementById('button_area').innerHTML = '';
 	}
 }
-	
+
 function flexform_v3_before_upload(values) {
 	if (typeof(para[use_page].onBeforeUpload_name) !== 'undefined' && typeof(window[para[use_page].onBeforeUpload_name]) !== 'undefined' ){
 		var do_func = window[para[use_page].onBeforeUpload_name];
@@ -648,7 +657,7 @@ function minus_expansion_form(n, expansion_form_number) {
 }
 	
 function flexform_v3_upload_onDone(result) {
-	SR.API.DELETE_FIELD_LIST({delete_list: delete_list}, function (err, result) {
+	SR.API.DELETE_FIELD_LIST({delete_list: delete_list}, function (err, d_result) {
 		if (err) {
 			console.log(err);
 			return;
