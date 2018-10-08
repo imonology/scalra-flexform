@@ -114,7 +114,6 @@ function l_do_query_form(p, onDone) {
 	
 										// LOG.warn(add_form.data.values[record_id])
 										for (var l in add_para.add_id) {
-											LOG.warn( add_form.data.values[record_id][add_para.add_id[l]] );
 											forms[i][form_position].data.values[pointers[k]][add_para.add_id[l]] = add_form.data.values[record_id][add_para.add_id[l]];
 										}
 									}
@@ -366,7 +365,7 @@ function do_add_field(flextable_data, add_field) {
 		if (add_field[i].type === 'button') {
 			var add_value = [];
 			for (var j in flextable_data.data) {
-				var temp = '<button id="'+add_field[i].btn_id+'" class="btn btn-modify" onClick="'+add_field[i].func_name+'(';
+				var temp = '<button id="'+add_field[i].btn_id+'" class="'+(typeof(add_field[i].class) !== 'undefined'? add_field[i].class : 'btn btn-primary')+'" onClick="'+add_field[i].func_name+'(';
 				var first = true;
 				for (var k in add_field[i].value) {
 					if (first) 

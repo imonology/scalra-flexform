@@ -392,7 +392,7 @@ var create_table_v3 = function (form, para) {
 					case 'null':
 						html += save_value;
 						break;
-					default:
+					default: // type = string or others
 						if (write && ! fields[i].default_value && !is_lock) {
 							html += '<input type="text" id="' + save_id +'" value="'+save_value+'">';					
 						} else {
