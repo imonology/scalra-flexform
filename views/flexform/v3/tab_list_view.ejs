@@ -3,7 +3,9 @@
 	
 <script src="/web/flexform/jquery.tagsinput.js"></script>
 
-
+<% if (typeof(custom_js) !== 'undefined') { %>
+	<script src="/web/assets/js/<%=custom_js%>"></script>
+<% } %>
 <script>
 <%
 var f1 = encodeURIComponent(JSON.stringify(para));

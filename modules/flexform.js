@@ -1081,7 +1081,8 @@ SR.API.add('UPDATE_FIELD', {
 			// var today=new Date();
 			var today2 = new moment();
 			// .format('YYYY-MM-DD HH:mm')
-			if ( !(typeof(form.data.fields[j].option) !== 'undefined' && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
+			LOG.warn(form.data.fields[j].option)
+			if ( !(!!form.data.fields[j].option && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
 				if (form.data.fields[j].type === 'date' )
 					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD');
 					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
