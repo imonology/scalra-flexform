@@ -273,13 +273,13 @@ function init_list(onDone) {
 	processing_data(function(err, flextable_data){
 		final_flextable_data = flextable_data;
 		var html = '';
-		var default_entries = 3;
+		var default_entries = 10;
 		// 一次顯示多少entries和search
 		html += '<div id="list_bar">';
 		html += '<div id="show_line_area">';
 		html += 'Show '
 		html += '<select id="show_line" onchange="switch_show_entries(this)">';
-		html += '<option value="3">3</option>';
+		html += '<option value="10">10</option>';
 		html += '<option value="15">15</option>';
 		html += '<option value="20">20</option>';
 		html += '<option value="30">30</option>';
