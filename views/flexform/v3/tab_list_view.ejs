@@ -380,7 +380,18 @@ function do_add_field(flextable_data, add_field) {
 				temp += ')">'+add_field[i].field_name+'</button>';
 				add_value.push(temp);
 			}
-			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {id: add_field[i].func_name, value: add_field[i].field_name}, datas : add_value});
+			flextable_data = SR.API.flexform_table_add_field(
+				{
+					insert_num : position, 
+					flexform_table : flextable_data, 
+					field : {
+						key: add_field[i].func_name,
+						id: add_field[i].func_name, 
+						value: add_field[i].field_name
+					}, 
+					datas : add_value
+				}
+			);
 		} else if (add_field[i].type === 'link') {
 			var add_value = [];
 			for (var j in flextable_data.data) {
@@ -399,7 +410,16 @@ function do_add_field(flextable_data, add_field) {
 				temp += '>'+add_field[i].link_name+'</a>';
 				add_value.push(temp);
 			}
-			flextable_data = SR.API.flexform_table_add_field({insert_num : flextable_data.field.length, flexform_table : flextable_data, field : {id: add_field[i].field_id, value: add_field[i].field_name}, datas : add_value});
+
+			flextable_data = SR.API.flexform_table_add_field(
+				{
+					insert_num : flextable_data.field.length,
+					flexform_table : flextable_data,
+					field : {
+						id: add_field[i].field_id,
+						value: add_field[i].field_name},
+						datas : add_value}
+			);
 		} else if (add_field[i].type === 'custom') {
 			add_field[i].func_name
 			if (typeof(add_field[i].func_name) !== 'undefined' && typeof(window[add_field[i].func_name]) !== 'undefined' ){
@@ -411,6 +431,36 @@ function do_add_field(flextable_data, add_field) {
 	// console.log('flextable_data = ');
 	// console.log(flextable_data);
 	// console.log(flextable_data)
+
+/*			flextable_data = SR.API.flexform_table_add_field(
+				{
+					insert_num : flextable_data.field.length, 
+					flexform_table : flextable_data, 
+					field : {
+						key: add_field[i].field_id, 
+						id: add_field[i].field_id, 
+						value: add_field[i].field_name
+					},
+					datas : add_value
+				}
+			)
+		} else if (add_field[i].type === 'serial_number') {
+			let sn = [...Array(flextable_data.data.length).keys()].map(x => ++x);
+			flextable_data = SR.API.flexform_table_add_field(
+				{
+					insert_num : flextable_data.field.length,
+					flexform_table : flextable_data, 
+					field : {
+						key: add_field[i].field_id, 
+						id: add_field[i].field_id, 
+						value: add_field[i].field_name
+					},
+					datas : sn
+				}
+			);
+		}
+	}*/
+
 	return flextable_data;
 }
 		
@@ -511,14 +561,6 @@ function enable_js() {
 		if (!isNaN($this.text()))
 			$this.addClass('active').siblings('.active').removeClass('active');
 	});
-	if (typeof(date_pickers) !== 'undefined') {
-		$.datepicker.initialized = false;
-		$(function() {
-			date_pickers.forEach(date_picker => {
-				$("#" + date_picker).datepicker(datepicker_setting);
-			});
-		})
-	}
 	$('.tags').tagsInput();
 	$("input[type='radio']").on('change', function() {
 
@@ -542,20 +584,6 @@ function enable_js() {
 				$(this).attr("selected", false);
 			}
 		})
-	});
-
-	$('.hasDatepicker').on('focus', function() {
-
-	    // store the element for use inside the position function
-	    var $target = $(this);
-
-	    // get the elements datepicker widget object and set it's position based on the target element
-	    $target.datepicker('widget').position({
-
-	        my: 'left top',
-	        at: 'left bottom',
-	        of: $target
-	    });
 	});
 }
 

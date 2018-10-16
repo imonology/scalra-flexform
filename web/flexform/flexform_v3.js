@@ -185,7 +185,7 @@ var create_table_v3 = function (form, para) {
 
 					case 'date':
 						if (write && ! fields[i].default_value  && !is_lock) {
-							html += '<input type="text" id="'+save_id+'" value="'+save_value+'" placeholder="年-月-日">';
+							html += '<input type="date" id="'+save_id+'" value="'+save_value+'" placeholder="年-月-日">';
 							date_pickers.push(save_id);	
 						} else {
 							html += save_value;
@@ -307,6 +307,28 @@ var create_table_v3 = function (form, para) {
 							html += '</select>';
 						} else {
 							html += save_value;
+						}
+						break;
+					case 'multichoice': 
+						let selections;
+						let showErr = err => (console.error(err))
+						if (Array.isArray(fields[i].option)) {
+							selections = fields[i].option;
+							let name = fields[i].id;
+							selections.forEach(selection => {
+								if (!selection.label || !selection.value) {
+									showErr("Option error: option should be like option: [{label: 'Nike', value: 'nike'}, {label: 'adidas', value: 'adidas'}]");
+								} else {
+									let chekcboxId = name + selection.value;
+									let checked = save_value.indexOf(selection.value) > 0;
+									html += '<div class="checkbox item">'
+									html += '<input type="checkbox" name="' + save_id + '" id="' + chekcboxId + '" value="' + selection.value + '" ' + (checked ? 'checked' : '') + '>';
+									html += '<label for="' + chekcboxId + '">' + selection.label + '</label>'
+									html += '</div>'
+								}
+							})
+						} else {
+							showErr("params error: Missing option, should be like option: [{label: 'Nike', value: 'nike'},{label: 'adidas', value: 'adidas'}]");
 						}
 						break;
 					case 'lock':
@@ -626,8 +648,15 @@ function check_upload_v3() {
 						value[o_id] = $("input[name="+use_id+"]:checked").val();
 					}
 					continue;
-				} else
+				}
+				// get checkboxes' value to array
+				else if (result_field.fields[i].type === 'multichoice') {
+					let valuearray = [...document.querySelectorAll('input[name=' + use_id + ']:checked')].map((c) => c.value);
+					value[o_id] = valuearray;
 					continue;
+				} else {
+					continue;
+				}
 			}
 
 			if (result_field.fields[i].must === true && result_field.fields[i].show === true) {
@@ -702,7 +731,6 @@ function check_upload_v3() {
 	var check_num = 0;
 	for (var form_num in forms[use_page]) {
 		var form = forms[use_page][form_num];
-		// console.log(form);
 		values[form.name] = [];
 
 		if (form.name === para[use_page].form_query.name)
