@@ -213,6 +213,9 @@ function init_onDone(err, html) {
 	}
 	init_submit_btn();
 	enable_js();
+	if (Object.keys(window).indexOf('onFlexFormDone') !== -1) {
+		window['onFlexFormDone']();
+	}
 }
 	
 function click_add_btn() {
