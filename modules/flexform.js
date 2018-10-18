@@ -1160,15 +1160,15 @@ var l_add_form = function (para, onDone) {
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
 			return onDone('values not found for record id [' + para.para.record_id + ']');
 
-		for (key in para.values_map){
+		for (key in para.values_map) {
 			// LOG.warn('存的key ' + key);
 			// LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
 			l_form_values[para.form.id][para.para.record_id].values[key] = para.values_map[key];
 		}
-		LOG.warn('準備sync')
+		LOG.warn('準備sync');
 		l_form_values[para.form.id][para.para.record_id].values.sync(function (err) {
 			if (err) {
-				LOG.warn('存入error')
+				LOG.warn('存入error');
 				return onDone('save to DB error: ' + err);
 			}
 			LOG.warn('存進DB')
