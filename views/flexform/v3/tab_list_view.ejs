@@ -128,7 +128,6 @@ function l_do_query_form(p, onDone) {
 				}
 				
 				jq2.run(function (err) {
-					
 					return onDone(null);
 				});
 				// LOG.warn(forms[i][form_position].data.values)
@@ -150,6 +149,40 @@ for (var i in para)	{
 
 
 jq.run(function (err) {
+	LOG.warn('做完add data的form')
+	// LOG.warn(forms);
+	for (var i in para) {
+		if (!!para[i].query) {
+			LOG.warn(para[i].query);
+			// LOG.warn(forms[i][0].data.values)
+			for (var record_id in forms[i][0].data.values) {
+				var match = true;
+				for (var key in para[i].query) {
+					if ( !forms[i][0].data.values[record_id].hasOwnProperty(key) ) {
+						match = false;
+						continue;
+					}
+					if (typeof(para[i].query[key]) === 'string' ) {
+						if ( forms[i][0].data.values[record_id][key] !== para[i].query[key] )
+						match = false;
+					} else {
+						var match2 = false;
+						for (var j in para[i].query[key]) {
+							if (para[i].query[key][j] === forms[i][0].data.values[record_id][key])
+								match2 = true;
+						}
+						if (!match2)
+							match = false;
+					}
+					
+				}
+
+				if (!match) {
+					delete forms[i][0].data.values[record_id];
+				}
+			}
+		}
+	}
 	function l_change_options(para) {
 		return function(onD) {
 			var i = para.use_page;

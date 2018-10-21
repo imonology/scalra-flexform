@@ -1177,8 +1177,9 @@ var l_add_form = function (para, onDone) {
 	} else {
 		LOG.warn('使用new_record_id');
 		//LOG.warn(para.form.data.values);
-
-		para.form.add({id: para.para.new_record_id, values: para.values_map}, function (err, result) {
+		LOG.warn( para.para.new_record_id)
+		LOG.warn(new Date().toISOString())
+		para.form.add({id: para.para.new_record_id, values: para.values_map, create_time: new Date().toISOString()}, function (err, result) {
 			if (err) {
 				return onDone(err);
 			}
