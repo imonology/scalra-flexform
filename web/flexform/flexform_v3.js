@@ -840,3 +840,41 @@ function default_upload_v3(values) {
 		}
 	});
 }
+
+function sample_create_table(array_table, table_para) {
+	var got_error = false;
+	var html = '';
+	html += '<table ';
+	if (!!table_para)
+		html += table_para;
+	html += '>';
+	for (var i in array_table) {
+		var tr_para = '';
+		if (typeof(array_table[i]) === 'string') {
+			html += array_table[i];
+			continue;
+		}
+		for (var j in array_table[i]) 
+			if ( !!array_table[i][j] && typeof(array_table[i][j]) === 'object' && !Array.isArray(array_table[i][j]) && !!array_table[i][j].tr ) 
+				tr_para = array_table[i][j].tr;
+		html += '<tr ' + tr_para +'>';
+		for (var j in array_table[i]) 
+			if (!!array_table[i][j]) {
+				if (typeof(array_table[i][j]) === 'string')
+					html += '<td>' + array_table[i][j] + '</td>';
+				else if (Array.isArray(array_table[i][j]) && array_table[i][j].length >= 2)
+					html += '<td '+array_table[i][j][0]+'>' + array_table[i][j][1] + '</td>';
+				else {
+					if (!array_table[i][j].tr)
+						got_error = true;
+				}
+			}
+		html += '</tr>';
+	}
+	html += '</table>';
+	if (got_error) {
+		console.log('got error')
+		return '';
+	}
+	return html;
+}
