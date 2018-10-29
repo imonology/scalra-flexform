@@ -224,6 +224,7 @@ jq.run(function (err) {
 var g_value = {};
 var add_forms = {};
 var onConnect = function () {
+
 	if (getGlobalVariable_func !== '' && Object.keys(window).indexOf(getGlobalVariable_func) !== -1) {
 		var do_func = window[getGlobalVariable_func];
 		console.log(window)
@@ -238,6 +239,13 @@ var onConnect = function () {
 }
 
 function init_onDone(err, html) {
+	if (para[use_page].type === 'customized') {
+		$('#customized_tab').show();
+		$("#sub_title").hide();
+	} else {
+		$('#customized_tab').hide();
+		$("#sub_title").show();
+	}
 	document.getElementById('sub_title').innerHTML = para[use_page].s_title;
 	document.getElementById('form_area').innerHTML = html;	
 	if ( typeof(para[use_page].add_button) !== 'undefined' && para[use_page].add_button ) {
@@ -284,6 +292,9 @@ function init_html(onDone) {
 		init_view(onDone);
 	} else if (para[use_page].type === 'list') {
 		init_list(onDone);
+	} else if (para[use_page].type === 'customized') {
+		
+		onDone(null, '');
 	}
 }
 
@@ -741,7 +752,7 @@ function flexform_v3_upload_onDone(result) {
 
 <div id="container">
 	<%	if (typeof nav !== 'undefined') { %>
-		<% include nav %>
+		<%- include nav %>
 	<% } %>
 
 	<div id="mainContent">
@@ -751,6 +762,9 @@ function flexform_v3_upload_onDone(result) {
 				<h2 id='sub_title' class="sub_title"></h2>
 				<div id="form_area"></div>
 				<div id="button_area"></div>
+			</div>
+			<div id="customized_tab" style="display:none;">
+				<%- include ejs1 %>
 			</div>
 		</section>
 	</div>
