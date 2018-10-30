@@ -1,6 +1,6 @@
 <% layout('template/common') %>
 <% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
-	
+
 <script src="/web/flexform/jquery.tagsinput.js"></script>
 
 <% if (typeof(custom_js) !== 'undefined') { %>
@@ -24,7 +24,7 @@ function l_do_query_form(p, onDone) {
 	LOG.warn(para);
 	if (typeof(para[i].form_query)==='undefined' && typeof(para[i].form) === 'undefined') {
 		return onDone(null);
-	} 
+	}
 	if (typeof(para[i].form)!== 'undefined') {
 		forms[i] = [];
 		forms[i].push(para[i].form);
@@ -49,15 +49,15 @@ function l_do_query_form(p, onDone) {
 				}
 			}
 		}
-		
+
 		forms[i] = [];
-		
+
 		forms[i].push(clone_f);
-		
+
 		if (!para[i].related_form) {
 			add_data(forms[i].length -1);
 		}
-		
+
 		var related_form_count = 0;
 		for (var j in para[i].related_form){
 			SR.API.QUERY_FORM( para[i].related_form[j].form_query, function (err, form) {
@@ -70,24 +70,24 @@ function l_do_query_form(p, onDone) {
 				forms[i].push(clone_f);
 				related_form_count++;
 				if (related_form_count === para[i].related_form.length) {
-					
+
 					return onDone(null);
 				}
 			});
 		}
-		
+
 		function add_data(form_position) { // 從其他form新增資料
 			if (typeof(para[i].add_data) !== 'undefined') {
 				LOG.warn('需要新增資料的form');
 				var pointers = Object.keys(forms[i][form_position].data.values); // 新增資料 指向的record_id
-				
+
 				var jq2 = SR.JobQueue.createQueue();
-				
+
 				for (var j in para[i].add_data) {
 					// {form_name: 'CaseOwner', pointer: 'case_form_id', add_id: ['name']},
-					
+
 					jq2.add(l_add_form({add_para: para[i].add_data[j]}));
-					
+
 					function l_add_form(l_add_form_para) {
 						return function(onD) {
 							l_do_add_form(l_add_form_para, onD);
@@ -105,7 +105,7 @@ function l_do_query_form(p, onDone) {
 							for (var k in add_form.data.fields) {
 								for (var l in add_para.add_id) {
 									if (add_form.data.fields[k].id === add_para.add_id[l]) {
-										forms[i][form_position].data.fields.push(add_form.data.fields[k]);			
+										forms[i][form_position].data.fields.push(add_form.data.fields[k]);
 									}
 								}
 							}
@@ -113,7 +113,7 @@ function l_do_query_form(p, onDone) {
 							for (var record_id in add_form.data.values) {
 								for (var k in pointers) {
 									if (add_form.data.values[record_id][add_para.pointer] === pointers[k]) {
-	
+
 										// LOG.warn(add_form.data.values[record_id])
 										for (var l in add_para.add_id) {
 											forms[i][form_position].data.values[pointers[k]][add_para.add_id[l]] = add_form.data.values[record_id][add_para.add_id[l]];
@@ -123,22 +123,22 @@ function l_do_query_form(p, onDone) {
 							}
 							return onDone2(null);
 						});
-						
+
 					}
 				}
-				
+
 				jq2.run(function (err) {
 					return onDone(null);
 				});
 				// LOG.warn(forms[i][form_position].data.values)
 				// LOG.warn(para[i].add_data);
-				
-				
+
+
 			} else {
 				return onDone(null);
 			}
 		}
-		
+
 	});
 }
 var jq = SR.JobQueue.createQueue();
@@ -174,7 +174,7 @@ jq.run(function (err) {
 						if (!match2)
 							match = false;
 					}
-					
+
 				}
 
 				if (!match) {
@@ -196,7 +196,7 @@ jq.run(function (err) {
 		}
 	}
 	var jq2 = SR.JobQueue.createQueue();
-	for (var i in forms) 
+	for (var i in forms)
 		for (var j in forms[i]) {
 			for (var k in forms[i][j].data.fields) {
 				if ( forms[i][j].data.fields[k].get_options_API_name )
@@ -205,22 +205,22 @@ jq.run(function (err) {
 		}
 	jq2.run(function (err) { // 當使用choice型別時，用來把options替換成API取得的options
 		var f2 = encodeURIComponent(JSON.stringify(forms));
-		%> 
+		%>
 			console.log('近來')
-			var para = JSON.parse(decodeURIComponent("<%-f1 %>")); 
+			var para = JSON.parse(decodeURIComponent("<%-f1 %>"));
 			var forms = JSON.parse(decodeURIComponent("<%-f2 %>"));
 			console.log('forms = ')
 			console.log(forms)
 			var use_page = 0;
 			var getGlobalVariable_func = '<%=(typeof(getGlobalVariable)!=="undefined"?getGlobalVariable:"")%>'; // 自定義global變數
 			var account = '<%=login.account%>';
-		<%	
+		<%
 	});
-		
-});	
+
+});
 %>
 
-	
+
 var g_value = {};
 var add_forms = {};
 var onConnect = function () {
@@ -247,7 +247,7 @@ function init_onDone(err, html) {
 		$("#sub_title").show();
 	}
 	document.getElementById('sub_title').innerHTML = para[use_page].s_title;
-	document.getElementById('form_area').innerHTML = html;	
+	document.getElementById('form_area').innerHTML = html;
 	if ( typeof(para[use_page].add_button) !== 'undefined' && para[use_page].add_button ) {
 		var add_btn = '<button class="btn btn-primary" onclick="click_add_btn()" style="left:5px;">新增</button>';
 		document.getElementById('sub_title').innerHTML += add_btn
@@ -258,14 +258,14 @@ function init_onDone(err, html) {
 		window['onFlexFormDone']();
 	}
 }
-	
+
 function click_add_btn() {
 	if(para[use_page].add_button_func && Object.keys(window).indexOf(para[use_page].add_button_func) !== -1) {
 		var do_func = window[para[use_page].add_button_func];
 		do_func(para, function(err, datas){
 
 		});
-	} 
+	}
 }
 
 function init_tab() {
@@ -278,7 +278,7 @@ function init_tab() {
 	}
 	html += '</ul>';
 	html += '<div style="clear:both;"></div>';
-	document.getElementById('tab_area').innerHTML = html;	
+	document.getElementById('tab_area').innerHTML = html;
 }
 
 function switch_tab(n) {
@@ -299,7 +299,7 @@ function init_html(onDone) {
 }
 
 var final_flextable_data = null;
-	
+
 function processing_data(onDone) {
 	var flextable_data = SR.API.flexform_to_flexform_table({form: forms[use_page][0]}); // 目前list只支援顯示一個form
 	flextable_data = do_add_field(flextable_data, para[use_page].add_field);
@@ -312,10 +312,10 @@ function processing_data(onDone) {
 	} else {
 		return onDone(null, flextable_data);
 	}
-	
+
 
 }
-	
+
 function init_list(onDone) {
 	processing_data(function(err, flextable_data){
 		final_flextable_data = flextable_data;
@@ -372,14 +372,14 @@ function get_switch_page_area(flextable_data, entries) {
 	// console.log(html)
 	return html;
 }
-	
+
 function switch_show_entries(select) {
 	var show_entries = parseInt(select.value);
 	document.getElementById('list_area').innerHTML = flexform_show_table_v3( final_flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: 1, entries: show_entries} } ) ;
 	document.getElementById('switch_page_area').innerHTML = get_switch_page_area(final_flextable_data, show_entries);
 	enable_js();
 }
-	
+
 function switch_page(obj) {
 	var page = obj.innerHTML;
 	if (page === '&gt;' || page === '&lt;') {
@@ -402,10 +402,10 @@ function switch_page(obj) {
 
 		document.getElementById('list_area').innerHTML = flexform_show_table_v3( final_flextable_data, {hide: para[use_page].hide, show: para[use_page].show, page_entries: {page: page, entries: entries} } ) ;
 	}
-	
+
 }
-	
-	
+
+
 function do_add_field(flextable_data, add_field) {
 	if (typeof(add_field) === 'undefined')
 		return flextable_data;
@@ -417,7 +417,7 @@ function do_add_field(flextable_data, add_field) {
 				var temp = '<button id="'+add_field[i].btn_id+'" class="'+(typeof(add_field[i].class) !== 'undefined'? add_field[i].class : 'btn btn-primary')+'" onClick="'+add_field[i].func_name+'(';
 				var first = true;
 				for (var k in add_field[i].value) {
-					if (first) 
+					if (first)
 						first = false;
 					else
 						temp += ', ';
@@ -429,13 +429,13 @@ function do_add_field(flextable_data, add_field) {
 			}
 			flextable_data = SR.API.flexform_table_add_field(
 				{
-					insert_num : position, 
-					flexform_table : flextable_data, 
+					insert_num : position,
+					flexform_table : flextable_data,
 					field : {
 						key: add_field[i].func_name,
-						id: add_field[i].func_name, 
+						id: add_field[i].func_name,
 						value: add_field[i].field_name
-					}, 
+					},
 					datas : add_value
 				}
 			);
@@ -445,14 +445,14 @@ function do_add_field(flextable_data, add_field) {
 				var temp = '<a href="' + add_field[i].link_url + '?';
 				var first = true;
 				for (var k in add_field[i].value) {
-					if (first) 
+					if (first)
 						first = false;
 					else
 						temp += '&';
 					temp += add_field[i].value[k] + '=' + flextable_data.data[j][add_field[i].value[k]] ;
 				}
 				temp += '"';
-				if (add_field[i].link_type && add_field[i].link_type === 'new_tab') 
+				if (add_field[i].link_type && add_field[i].link_type === 'new_tab')
 					temp += ' target="_blank" ';
 				temp += '>'+add_field[i].link_name+'</a>';
 				add_value.push(temp);
@@ -481,11 +481,11 @@ function do_add_field(flextable_data, add_field) {
 
 /*			flextable_data = SR.API.flexform_table_add_field(
 				{
-					insert_num : flextable_data.field.length, 
-					flexform_table : flextable_data, 
+					insert_num : flextable_data.field.length,
+					flexform_table : flextable_data,
 					field : {
-						key: add_field[i].field_id, 
-						id: add_field[i].field_id, 
+						key: add_field[i].field_id,
+						id: add_field[i].field_id,
 						value: add_field[i].field_name
 					},
 					datas : add_value
@@ -496,10 +496,10 @@ function do_add_field(flextable_data, add_field) {
 			flextable_data = SR.API.flexform_table_add_field(
 				{
 					insert_num : flextable_data.field.length,
-					flexform_table : flextable_data, 
+					flexform_table : flextable_data,
 					field : {
-						key: add_field[i].field_id, 
-						id: add_field[i].field_id, 
+						key: add_field[i].field_id,
+						id: add_field[i].field_id,
 						value: add_field[i].field_name
 					},
 					datas : sn
@@ -510,7 +510,7 @@ function do_add_field(flextable_data, add_field) {
 
 	return flextable_data;
 }
-		
+
 // ------------------------------------ 底下是view --------------------------------------------
 
 function init_view(onDone) {
@@ -521,7 +521,7 @@ function init_view(onDone) {
 	// 填入動態select選項
 	for (var i in page_forms) {
 		var fields = page_forms[i].data.fields;
-		for (var i in fields) 
+		for (var i in fields)
 			if (fields[i].type === 'choice') {
 				if ( typeof(fields[i].setting) !== 'undefined' && fields[i].setting.option ) {
 					if (typeof(fields[i].setting.option) !== 'undefined' && typeof(window[fields[i].setting.option]) !== 'undefined' ){
@@ -532,12 +532,12 @@ function init_view(onDone) {
 			}
 	}
 
-	
+
 	for (var i in page_forms) {
 		if (i !== '0') {
 			add_forms[(parseInt(i)-1)] = [];
 			html += '<hr>'
-			
+
 			html += '<div class="add_expansion_title">';
 			html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[(parseInt(i)-1)].form_title + '</p></div>';
 			if (para[use_page].related_form[(parseInt(i)-1)].expansion) {
@@ -571,15 +571,15 @@ function init_view(onDone) {
 				}
 			}
 		}
-		
-		
+
+
 		html += '</div>';
 
 	}
-	
+
 	return onDone(null, html);
 }
-		
+
 function init_submit_btn() {
 	if (para[use_page].type === 'view' && para[use_page].mode !== 'show') {
 		document.getElementById('button_area').innerHTML = 	'<button class="btn btn-primary" onClick="check_upload_v3()" style="left: 446px;">送出</button>';
@@ -594,10 +594,10 @@ function flexform_v3_before_upload(values) {
 		do_func(values, function(err, datas){
 			default_upload_v3(datas);
 		});
-	} else 
+	} else
 		default_upload_v3(values);
 }
-		
+
 function enable_js() {
 	$('ul.tabs li').click(function() {
 		var $this = $(this), _clickTab = $this.find('a').attr('href');
@@ -615,7 +615,7 @@ function enable_js() {
 		// $(this).attr("checked", $(this).val());
 		$(this).attr('checked', true);
 		$(this).prop('checked', true);
-		
+
 	});
 	$("input[type='text']").on('keyup', function() {
 		$(this).attr("value",$(this).val())
@@ -654,7 +654,7 @@ function get_form_para(i) {
 	}
 	return form_para;
 }
-		
+
 function get_new_expansion_form_number(n) { // 取得第n個expansion_form的新號碼
 	for (var i = 0 ; i <= add_forms[n].length ; i++) {
 		if (add_forms[n].indexOf(i) === -1) {
@@ -662,7 +662,7 @@ function get_new_expansion_form_number(n) { // 取得第n個expansion_form的新
 		}
 	}
 }
-		
+
 function create_expansion_form_html(n, form) { // 第n個expansion_form
 	var use_form = (form ? form : forms[use_page][n+1] );
 
@@ -675,7 +675,7 @@ function create_expansion_form_html(n, form) { // 第n個expansion_form
 	var form_para = get_form_para(0);
 	form_para.id_num = expansion_form_number;
 	html += create_table_v3(use_form, form_para);
-	
+
 	html += '</div>';
 	html += '</div>';
 	add_forms[n].push(expansion_form_number);
@@ -685,7 +685,7 @@ function create_expansion_form_html(n, form) { // 第n個expansion_form
 function add_expansion_form(n) {
 	var form = JSON.parse(JSON.stringify(forms[use_page][n+1]));
 	form.data.values = {};
-	
+
 	document.getElementById("expansion_form_"+n).innerHTML += create_expansion_form_html(n, form);
 	console.log('upload_record_id');
 	console.log(upload_record_id)
@@ -705,12 +705,12 @@ function add_expansion_form(n) {
 var delete_list = {};
 
 function minus_expansion_form(n, expansion_form_number) {
-	swal({ 
-		title: "確定刪除嗎", 
+	swal({
+		title: "確定刪除嗎",
 		type: "warning",
-		showCancelButton: true, 
+		showCancelButton: true,
 		confirmButtonColor: "#DD6B55",
-		confirmButtonText: "確定刪除！", 
+		confirmButtonText: "確定刪除！",
 		cancelButtonText: "取消刪除！",
 	}).then((result) => {
 		if (result.value) {
@@ -731,7 +731,7 @@ function minus_expansion_form(n, expansion_form_number) {
 		}
 	});
 }
-	
+
 function flexform_v3_upload_onDone(result) {
 	SR.API.DELETE_FIELD_LIST({delete_list: delete_list}, function (err, d_result) {
 		if (err) {
