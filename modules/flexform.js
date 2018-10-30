@@ -525,7 +525,7 @@ SR.API.add('QUERY_FORM', {
 	select_time:	'+object'   // 當query裡面有date，且需要設定搜尋範圍時。 ex:{"date":{"start":"2017-05-05"}}
 }, function (args, onDone) {
 	LOG.warn('QUERY_FORM');
-	
+
 	if (args.already_form) {
 		var form = args.already_form;
 	} else {
@@ -608,7 +608,7 @@ SR.API.add('QUERY_FORM', {
 			continue;
 		}
 		// ignore rows where the fields do not match
-		
+
 		if (args.query || args.select_time) {
 			for (var key in args.select_time) {
 				if (fields[key] && fields[key].type === 'date') {
@@ -723,7 +723,7 @@ SR.API.add('QUERY_FORM', {
 				matched = false;
 			}
 		}
-		
+
 		if (args.query_time) {
 			// LOG.warn('進到query_time');
 			for (var key in args.query_time) {
@@ -954,7 +954,7 @@ SR.API.add('UPDATE_FIELD', {
 	form_name:	'+string',		// form name
 	record_id: 	'+string',		// unique record id, if not exist, then it's same as UPDATE_FORM
 	values: 	'object',		// data to be stored
-	return_values:	'+boolean'	
+	return_values:	'+boolean'
 }, function (args, onDone, extra) {
 
 	if (!args.form_id && !args.form_name)
@@ -1109,7 +1109,19 @@ SR.API.add('UPDATE_FIELD', {
 	}
 
 	l_add_form({form: form, values_map: values_map, para: args}, function (err, result) {
-		var result_para = {desc:'form [' + args.form_id + '] record [' + (args.record_id)?args.record_id:new_record_id + '] updated', record_id:(args.record_id)?args.record_id:new_record_id};
+		if (err) {
+			return onDone('l_add_form failed');
+		}
+
+		if (new_record_id !== result.id) {
+			new_record_id = result.id;
+		}
+
+		var result_para = {
+			desc: 'form [' + args.form_id + '] record [' + (args.record_id) ? args.record_id : new_record_id + '] updated',
+			record_id:(args.record_id) ? args.record_id : new_record_id
+		};
+
 		if (!!args.return_values && args.return_values) {
 			result_para.values = values_map;
 			result_para.form_name = update_form_name;
@@ -1176,18 +1188,23 @@ var l_add_form = function (para, onDone) {
 		});
 	} else {
 		LOG.warn('使用new_record_id');
-		//LOG.warn(para.form.data.values);
-		LOG.warn( para.para.new_record_id)
-		LOG.warn(new Date().toISOString())
+		LOG.warn(para.para.new_record_id);
+		LOG.warn(new Date().toISOString());
 		para.form.add({id: para.para.new_record_id, values: para.values_map, create_time: new Date().toISOString()}, function (err, result) {
 			if (err) {
 				return onDone(err);
 			}
+
+			// 以實際上 DB 儲存的 id 為主
+			if (para.para.new_record_id !== result.id) {
+				para.para.new_record_id = result.id;
+			}
+
 			if (typeof(l_form_values[para.para.form_id][para.para.new_record_id]) !== 'undefined') {
 				para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
 				para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
 				//LOG.warn(para.form.data.values);
-				return onDone(null);
+				return onDone(null, result);
 			} else {
 				LOG.warn(l_form_values);
 				LOG.warn(para.para.form_id);
@@ -2122,5 +2139,3 @@ SR.Callback.onStart(function () {
 	// make sure /web/images directory exists
 	UTIL.validatePath(SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images'));
 })
-
-
