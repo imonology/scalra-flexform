@@ -407,7 +407,7 @@ var create_table_v3 = function (form, para) {
 						} else {
 							// 待修改
 
-							html += save_value;
+							html += postal_code + ' ' + address;
 						}
 						break;
 					case 'radio':
