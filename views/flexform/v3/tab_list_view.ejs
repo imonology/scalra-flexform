@@ -594,8 +594,9 @@ function flexform_v3_before_upload(values) {
 		do_func(values, function(err, datas){
 			default_upload_v3(datas);
 		});
-	} else
+	} else {
 		default_upload_v3(values);
+	}
 }
 
 function enable_js() {
