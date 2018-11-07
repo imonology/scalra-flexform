@@ -206,7 +206,7 @@ jq.run(function (err) {
 	jq2.run(function (err) { // 當使用choice型別時，用來把options替換成API取得的options
 		var f2 = encodeURIComponent(JSON.stringify(forms));
 		%>
-			console.log('近來')
+			console.log('進來')
 			var para = JSON.parse(decodeURIComponent("<%-f1 %>"));
 			var forms = JSON.parse(decodeURIComponent("<%-f2 %>"));
 			console.log('forms = ')
