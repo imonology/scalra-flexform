@@ -643,11 +643,18 @@ function get_form_para(i) {
 	if (typeof(para[use_page].lock)!=='undefined' && para[use_page].lock) {
 		form_para.lock = para[use_page].lock;
 	}
-	if (i === '0' || i === 0) // main page的para
+	if (i === '0' || i === 0) {// main page的para
 		form_para.hide = para[use_page].hide;
-	else {
+		if (typeof para[use_page].invisible !== 'undefined') {
+			form_para.invisible = para[use_page].invisible;
+		}
+	} else {
 		form_para.hide = para[use_page].related_form[i-1].hide;
+		if (para[use_page].related_form[i-1].invisible !== 'undefined') {
+			form_para.invisible = para[use_page].related_form[i-1].invisible;
+		}
 	}
+
 	if (para[use_page].mode === 'show') {
 		form_para.write = false;
 	} else {
@@ -673,7 +680,8 @@ function create_expansion_form_html(n, form) { // 第n個expansion_form
 	html += '<div class="add_expansion_title">';
 	html += '<div class="expansion_form_id"><p class="form_title">' + para[use_page].related_form[n].form_title + '</p></div>';
 	html += '<div class="minus_expansion_form" onclick="minus_expansion_form('+n+', '+expansion_form_number+')"><span class="plus_btn">-</span></div>';
-	var form_para = get_form_para(0);
+	var form_para = get_form_para(n+1);
+	console.log(form_para);
 	form_para.id_num = expansion_form_number;
 	html += create_table_v3(use_form, form_para);
 
