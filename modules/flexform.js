@@ -488,8 +488,9 @@ SR.API.add('CREATE_FORM', {
 
 		SR.DS.init({models: form_models}, function (err, ref) {
 			if (err) {
-				LOG.error(err, form_name);
+				return LOG.error(err, form_name);
 			}
+
 			LOG.warn('INIT FORM成功');
 			LOG.warn('l_form[form.id]');
 			// LOG.warn(l_form[form.id]);
