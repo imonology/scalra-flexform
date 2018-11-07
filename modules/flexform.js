@@ -1113,7 +1113,10 @@ SR.API.add('UPDATE_FIELD', {
 			return onDone('l_add_form failed');
 		}
 
-		if (typeof new_record_id !== 'undefined' && typeof result !== 'undefined' && new_record_id !== result.id) {
+		if (typeof new_record_id !== 'undefined'
+		    && typeof result !== 'undefined'
+		    && typeof result.id !== 'undefined'
+		    && new_record_id !== result.id) {
 			new_record_id = result.id;
 		}
 
