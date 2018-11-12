@@ -1402,7 +1402,8 @@ SR.API.add('UPDATE_FORM', {
 
 SR.API.add('INIT_FORM', {
 	name:	'string',
-	fields:	'array'
+	fields:	'array',
+	values: '+array'
 }, function (args, onDone) {
 
 	var map = SR.State.get(args.name + 'Map');
@@ -1478,7 +1479,21 @@ SR.API.add('INIT_FORM', {
 				return onDone(err);
 			}
 			ref[args.name] = map;
-			onDone(null, ref);
+			if (args.values && args.values.length > 0) {
+				for (let i =0 ; i < args.values.length; i++) {
+					SR.API.UPDATE_FIELD({
+						form_name: args.name,
+						values: args.values[i]
+					}, (err, result) => {
+						if (err) {
+							LOG.error(err);
+							return onDone(err);
+						}
+					})
+				}
+				return onDone(null, ref);
+			} else
+				onDone(null, ref);
 		});
 	});
 });
