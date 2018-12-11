@@ -2309,16 +2309,16 @@ function show_detail(btn){
 
 
 function delete_field(form_name, record_id){
-	console.log('刪除' + form_name + '的' + record_id);
-	SR.API.DELETE_FIELD({form_name:form_name, record_id: record_id}, function(err, result) {
-		if(err){
-			console.log(err);
-			return;
-		}
-		alert('刪除成功!');
-		window.location.reload();
-	});
-	
+	if (confirm('確定要刪除嗎?')) {
+		SR.API.DELETE_FIELD({form_name:form_name, record_id: record_id}, function(err, result) {
+			if(err){
+				console.log(err);
+				return;
+			}
+			alert('刪除成功!');
+			window.location.reload();
+		});
+	}
 }
 
 var l_validateEmail = function (email) {

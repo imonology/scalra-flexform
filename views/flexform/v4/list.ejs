@@ -1,0 +1,219 @@
+<% layout('template/common') %>
+<% block('title').append('<title>'+(typeof(title)!=='undefined' ? title : 'List')+'</title>') %>
+<link rel="stylesheet" href="/web/flexform/bootstrap.min.css" />
+
+
+<script>
+var sub_title = '';
+var do_init_tab = false;
+var choice_tab = '';
+var init_tab = function(point_tab) {
+	var html = '';
+	<% if (typeof(tab) !== 'undefined') { %>
+		var tab = '<%=tab%>'.split(',');
+	<% } else { %>
+		var tab = [];
+	<% } %>
+	html += '<ul class="pagination pagination-lg">';
+	for (var i in tab) {
+		html += '<li '+(point_tab === ''?(i==='0'?'class="active"':''):(tab[i]===point_tab)?'class="active"':'')+'>';
+		html += '<a onclick="switch_tab(this)" style="z-index:2" ';
+		html += 'class="top_hoo"' ;
+		html += ' >'+tab[i];
+		html += '</a>';
+		html += '</li>';
+	}
+	html += '</ul>';
+	document.getElementById('tab_area').innerHTML = html;
+}
+
+var switch_tab = function(obj) {
+	console.log(obj.innerHTML);
+	console.log(location.pathname);
+	document.location = location.pathname + '?tab=' + obj.innerHTML;
+}
+
+<%
+function do_add_field_and_hide(flextable_data, para) {
+	if (typeof(para)=== 'undefined')
+		return flextable_data;
+	var substitute_data = [];
+	for (var i in para.add_field) {
+		var position = (typeof(para.add_field[i].position) !== 'undefined' ? para.add_field[i].position : flextable_data.field.length);
+		if (para.add_field[i].type === 'button') {
+			var add_value = [];
+			for (var j in flextable_data.data) {
+				var temp = '<button id="'+para.add_field[i].btn_id+'" class="btn btn-primary" onClick="'+para.add_field[i].func_name+'(';
+				var first = true;
+				for (var k in para.add_field[i].value) {
+					if (first) 
+						first = false;
+					else
+						temp += ', ';
+
+					temp += '\''+ flextable_data.data[j][para.add_field[i].value[k]] +'\'';
+				}
+				temp += ')">'+para.add_field[i].field_name+'</button>';
+				add_value.push(temp);
+			}
+			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {key: para.add_field[i].func_name, value: para.add_field[i].field_name}, datas : add_value});
+		} else if (para.add_field[i].type === 'substitute') {
+
+			var temp_substitute_data = {target_form : para.add_field[i].target_form, target: para.add_field[i].target, target_value: para.add_field[i].target_value};
+			var value = [];
+			for (var j in flextable_data.data) 
+				value.push(flextable_data.data[j][para.add_field[i].from]);
+			temp_substitute_data['value'] = value;
+			substitute_data.push(temp_substitute_data);
+			var add_value = SR.API.substitute_value(temp_substitute_data);
+			flextable_data = SR.API.flexform_table_add_field({insert_num : position, flexform_table : flextable_data, field : {key: 'add_field_' + i, value: para.add_field[i].field_name}, datas : add_value});
+		}
+	}
+
+	for (var i in para.hide) 
+		for (var j in flextable_data.field)
+			if (para.hide[i] === flextable_data.field[j].id) {
+				flextable_data.field.splice(j, 1);
+				break;
+			}
+	return flextable_data;
+}
+	
+var input_error = false;
+
+if (typeof(form)!== 'undefined' && typeof(para) !== 'undefined') {
+	%> sub_title = '<%=form.name%>'; <%
+	create_flextable_data(form, para);
+} else if (typeof(para)!== 'undefined'){
+	LOG.warn('用這個')
+	if (typeof(tab)!== 'undefined') {
+		if (typeof(tab_choice) === 'undefined')
+			tab_choice = tab[0];
+		var have = false; // 檢查tab_choice是否存在
+		for (var i in tab)
+			if (tab[i] === tab_choice)
+				have = true;
+		if (!have) // tab錯誤的話自動帶入第一個
+			tab_choice = tab[0];
+		%> 
+			do_init_tab = true;
+			choice_tab = '<%=tab_choice%>';
+			<%
+		init_tab_data(para[tab_choice]);
+	} else {
+		init_tab_data(para);
+	}
+} else if (typeof(form)!== 'undefined') {
+	%> sub_title = '<%=form.name%>'; <%
+	create_flextable_data(form);
+} else {
+	input_error = true;
+}
+function init_tab_data(para) {
+	%> sub_title = '<%=para.form_query.name%>'; <%
+	var form_query = para.form_query
+	form_query.query = {};
+
+	if (typeof(para.query_list) !== 'undefined') {
+		var use_field = para.query_list.use_field;
+		var query = para.query_list.query;
+		for (var i in use_field) {
+			if (typeof(query[use_field[i]]) !== 'undefined') {
+				form_query.query[use_field[i]] = query[use_field[i]];
+				if (query[use_field[i]].indexOf(',') !== -1) {
+					form_query.start_date = query[use_field[i]].split(',')[0];
+					form_query.end_date = query[use_field[i]].split(',')[1];
+				}
+			}
+		}
+	}
+	// form_query.query.application_date = 'true';
+	SR.API.QUERY_FORM(form_query, function (err, form) {
+		if (err) {
+			LOG.warn(err);
+			return ;
+		}
+		create_flextable_data(form, para);
+	}); 
+}
+
+function create_flextable_data(form, para) {
+	var flextable_data = SR.API.flexform_to_flexform_table({form: form});
+	flextable_data = do_add_field_and_hide( flextable_data, para );
+	var f = encodeURIComponent(JSON.stringify(flextable_data));
+	%> var flextable_data = JSON.parse(decodeURIComponent("<%-f %>")); <% 
+}
+%>
+	
+
+	
+var onConnect = function () {
+	<% if (input_error) { %>
+		alert('router缺少flexform_table或para');
+	<% } else { %>
+		init_html();
+	<% } %>	   
+}
+
+var init_html = function() {
+	if (do_init_tab)
+		init_tab(choice_tab);
+	var html = '';
+	console.log(flextable_data)
+	html += flexform_show_table( flextable_data ) ;
+	<% 
+		if (typeof(s_title)!=='undefined') {
+		%> sub_title = '<%=s_title%>'; <%
+	}
+		if (typeof(para) !== 'undefined' && typeof(para.add_btn) !== 'undefined') { %>
+		html = '<input type="button" value="<%=para.add_btn.btn_value%>" onclick="<%=para.add_btn.func_name%>()">' + html; 
+	<% } 
+	
+	if (typeof(para) !== 'undefined' && typeof(para.query_list) !== 'undefined') { %>
+		var list_query_para = JSON.parse('<%=JSON.stringify(para.query_list)%>'.replace(/&quot;/g, '"'));
+		list_query(list_query_para, function(err, h){
+			if (err) {
+				console.log(err);
+				return;
+			}
+			html = h + html;
+			do_init(sub_title, html);
+		});
+	<% } else { %> 
+		do_init(sub_title, html);
+	<% } %>
+}
+																				   
+function do_init(sub_title, html){
+	document.getElementById('sub_title').innerHTML = sub_title;
+	document.getElementById('table_area').innerHTML = html;
+	if (typeof(date_pickers) !== 'undefined') {
+		for (var i=0; i < date_pickers.length; i++) {
+			$(function() {
+				$("#" + date_pickers[i]).datepicker(datepicker_setting);
+			});
+		}
+	}
+}
+
+</script>
+
+<div id="container">
+	<%	if (typeof nav !== 'undefined') { %>
+		<% include nav %>
+	<% } %>
+
+	<div id="mainContent">
+		<section id="four" class="wrapper style2 special" style="display: flex; justify-content: center;">
+			<div class="inner">
+				<h2 id='sub_title'></h2>
+				<div id="tab_area"></div>
+				<div id="table_area"></div>
+
+			</div>
+		</section>
+		<div class="wrapper style2 special" style="text-align: center; padding-top: 0">
+			<a class="button alt" href="javascript: history.back()">Back</a>
+		</div>
+	</div>
+</div>
