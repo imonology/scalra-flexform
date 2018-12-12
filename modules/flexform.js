@@ -2154,6 +2154,30 @@ SR.API.add('substitute_value', {
 	return new_value;
 });
 
+SR.API.add('getMoment', {
+	_direct: 	true,
+}, function (args, onDone) {
+	return moment;
+});
+
+SR.API.add('transformFieldNameByLanguageFile', {
+	_direct: 	true,
+	form: 		'object',
+	language: 	'object'
+}, function (args, onDone) {
+	let [form, language] = [args.form, args.language];
+	let form_name = form.name;
+	let names = language.flexform[form_name];
+	// 依照language檔案命名
+	for (let field of form.data.fields) {
+		field.name = (names[field.id] || field.name || field.id );
+	}
+	return form;
+});
+let transform_field_name = (form_name, form) => {
+
+}
+
 SR.Callback.onStart(function () {
 	// make sure /web/images directory exists
 	UTIL.validatePath(SR.path.join(SR.Settings.PROJECT_PATH, 'web', 'images'));

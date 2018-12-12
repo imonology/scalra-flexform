@@ -7,13 +7,32 @@
 <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>	
 	
 <script src="/web/flexform/jquery.tagsinput.js"></script>
-
-
 <script>
 <%
 	var show_form = function(form) {
 		form = JSON.parse(JSON.stringify(form));
-		
+
+		let moment = SR.API.getMoment();
+		for (let field of form.data.fields) {
+			if (field.type === 'date') {
+				if (field.date_limit !== undefined ) {
+					if (field.date_limit.max !== undefined) {
+						field.max = moment()
+							.add( (field.date_limit.max.year || 0), 'year')
+							.add( (field.date_limit.max.month || 0), 'month')
+							.add( (field.date_limit.max.day || 0), 'day')
+							.format( "YYYY-MM-DD" );
+					}
+					if (field.date_limit.min !== undefined) {
+						field.min = moment()
+							.add( (field.date_limit.min.year || 0), 'year')
+							.add( (field.date_limit.min.month || 0), 'month')
+							.add( (field.date_limit.min.day || 0), 'day')
+							.format( "YYYY-MM-DD" );
+					}
+				}
+			}
+		}
 		SR.API.TRANSLATE_FORM_FIELDS({field_data: form.data}, function (err, field_data) {
 			if (err) {
 				return console.error(err);	
@@ -35,7 +54,7 @@
 						if (form.data.fields[i].id === default_keys[j]) 
 							form.data.fields[i].default_value = default_value[default_keys[j]];
 			}
-			LOG.warn(form.data.fields);
+			// LOG.warn(form.data.fields);
 			
 			var f2 = encodeURIComponent(JSON.stringify(hide));
 			if (mode === 'new') 
@@ -56,7 +75,9 @@
 				LOG.warn(err);
 				return ;
 			}
-			LOG.warn('取得的form');
+			// 由language file 轉換 名稱 
+			form = SR.API.transformFieldNameByLanguageFile({form, language});
+			// LOG.warn('取得的form');
 			show_form(form);
 		});
 	}
@@ -122,19 +143,19 @@ function init_html(onDone) {
 			html += '<div id="show" style="border-width:1px;border-style:dashed;border-color:white;padding:3px;">';
 			
 			<% if (typeof(del) !== 'undefined' && del) { %>
-				// html += create_table2(f, {hide: hide, write: false, del: true});
+				// html += create_table_v4(f, {hide: hide, write: false, del: true});
 				create_table_para.write = false;
 				create_table_para.del = true;
 			<% } else { %>
-				// html += create_table2(f, {hide: hide} );
+				// html += create_table_v4(f, {hide: hide} );
 			<% } %>
-			html += create_table2(f, create_table_para );
+			html += create_table_v4(f, create_table_para );
 			html += '</div>';
 		}
 	<% } else { %>
 		console.log('')
 		create_table_para.write = true;
-		html += create_table2(form, create_table_para );   
+		html += create_table_v4(form, create_table_para );   
 	<% } %>
 		
 	<% if ( typeof(additional_area) !== 'undefined' ) { %>

@@ -133,6 +133,8 @@ function init_tab_data(para) {
 			LOG.warn(err);
 			return ;
 		}
+		// 由language file 轉換 名稱 
+		form = SR.API.transformFieldNameByLanguageFile({form, language});
 		create_flextable_data(form, para);
 	}); 
 }
