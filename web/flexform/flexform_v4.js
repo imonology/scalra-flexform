@@ -399,4 +399,18 @@ var create_table_v4 = function (form, para) {
 	return html;
 }
 
-
+function default_upload_v4(field, record_id, values) {
+	var para = {form_name: field.name, values: values};
+	if (record_id)
+		para.record_id = record_id;
+	SR.API.UPDATE_FIELD(para, function (err, result) {
+		if (err) {
+			console.error(err);
+			alert(err);
+			return;
+		}
+		console.log('success');
+		if (window.upload_callback) // check custom funciton
+			upload_callback(result, values);
+	});
+}

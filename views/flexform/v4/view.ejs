@@ -185,14 +185,14 @@ function flexform_custom_upload(field, record_id, values) {
 					return ;
 				}
 				if (typeof(datas) === 'undefined')
-					default_upload(field, record_id, values);
+					default_upload_v4(field, record_id, values);
 				else
-					default_upload(datas.field, datas.record_id, datas.values);
+					default_upload_v4(datas.field, datas.record_id, datas.values);
 			});
 		} else
-			default_upload(field, record_id, values);
+			default_upload_v4(field, record_id, values);
 	<% } else { %>
-		default_upload(field, record_id, values);
+		default_upload_v4(field, record_id, values);
 	<% } %>
 	
 }													
