@@ -1083,13 +1083,13 @@ SR.API.add('UPDATE_FIELD', {
 			var today2 = new moment();
 			// .format('YYYY-MM-DD HH:mm')
 			LOG.warn(form.data.fields[j].option)
-			if ( !(!!form.data.fields[j].option && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
-				if (form.data.fields[j].type === 'date' )
+			// if ( !(!!form.data.fields[j].option && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
+			if (form.data.fields[j].option !== undefined && form.data.fields[j].option.auto_date !== undefined && form.data.fields[j].option.auto_date) {
+				if (form.data.fields[j].type === 'date' ) {
 					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD');
-					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
-				else if (form.data.fields[j].type === 'datetime' )
+				} else if (form.data.fields[j].type === 'datetime' ) {
 					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
-					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+				}
 			}
 		}
 
