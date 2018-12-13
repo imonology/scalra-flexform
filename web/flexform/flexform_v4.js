@@ -283,9 +283,17 @@ var create_table_v4 = function (form, para) {
 								var options = fields[i].option.split(',');
 
 							html += '<select id="'+ save_id + '">';
-							for (var j=0; j < options.length; j++) {
+							if (options === undefined) {
+								html += '';
+							} else if ( Array.isArray(options) ) {
+								for (var j=0; j < options.length; j++) {
 
-								html += '<option value="' + options[j] + '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
+									html += '<option value="' + options[j] + '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
+								}
+							} else {
+								for (let op_key in options) {
+									html += `<option value="${op_key}" ${(save_value!==''&&options[j]===save_value?'selected="true"':'')} >${options[op_key]}</option>`;
+								}
 							}
 							html += '</select>';
 						} else {
