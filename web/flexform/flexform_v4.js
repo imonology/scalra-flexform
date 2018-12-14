@@ -136,7 +136,7 @@ var create_table_v4 = function (form, para) {
 							if (value[fields[i].id])
 								html += show_imgs(value[fields[i].id]);
 							*/
-							if (value[fields[i].id].length !== 0) {
+							if (value[fields[i].id] !== undefined && value[fields[i].id].length !== 0) {
 								var data = JSON.parse( value[fields[i].id] );
 								for (var i in data)
 									html += show_imgs(data[i]);
