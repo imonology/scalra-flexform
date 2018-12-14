@@ -1083,13 +1083,13 @@ SR.API.add('UPDATE_FIELD', {
 			var today2 = new moment();
 			// .format('YYYY-MM-DD HH:mm')
 			LOG.warn(form.data.fields[j].option)
-			if ( !(!!form.data.fields[j].option && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
-				if (form.data.fields[j].type === 'date' )
+			// if ( !(!!form.data.fields[j].option && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
+			if (form.data.fields[j].option !== undefined && form.data.fields[j].option.auto_date !== undefined && form.data.fields[j].option.auto_date) {
+				if (form.data.fields[j].type === 'date' ) {
 					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD');
-					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
-				else if (form.data.fields[j].type === 'datetime' )
+				} else if (form.data.fields[j].type === 'datetime' ) {
 					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
-					// values_map[form.data.fields[j].id] = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate() + ' ' + today.getHours()+':'+today.getMinutes();
+				}
 			}
 		}
 
@@ -2153,6 +2153,30 @@ SR.API.add('substitute_value', {
 			}
 	return new_value;
 });
+
+SR.API.add('getMoment', {
+	_direct: 	true,
+}, function (args, onDone) {
+	return moment;
+});
+
+SR.API.add('transformFieldNameByLanguageFile', {
+	_direct: 	true,
+	form: 		'object',
+	language: 	'object'
+}, function (args, onDone) {
+	let [form, language] = [args.form, args.language];
+	let form_name = form.name;
+	let names = language.flexform[form_name];
+	// 依照language檔案命名
+	for (let field of form.data.fields) {
+		field.name = (names[field.id] || field.name || field.id );
+	}
+	return form;
+});
+let transform_field_name = (form_name, form) => {
+
+}
 
 SR.Callback.onStart(function () {
 	// make sure /web/images directory exists
