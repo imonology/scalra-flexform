@@ -2316,7 +2316,7 @@ function delete_field(form_name, record_id){
 				return;
 			}
 			alert('刪除成功!');
-			window.location.reload();
+			window.history.back();
 		});
 	}
 }
