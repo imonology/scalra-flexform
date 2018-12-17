@@ -147,17 +147,17 @@ var create_table_v4 = function (form, para) {
 
 					case 'textarea':
 						if (write ) {
-							html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
-							html += '<input type="hidden" id="'+save_id+'-encode" value="">';
-							html += '<input type="file" id="inputTxt-'+save_id+'">';
-							html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+save_id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+save_id+'\')">上傳文字檔</button>';
-							html += '</form>';					
+							// html += '<form enctype="multipart/form-data" method="post" action=\'javascript:;\' role="form" id="frmUploadTxt">';
+							// html += '<input type="hidden" id="'+save_id+'-encode" value="">';
+							// html += '<input type="file" id="inputTxt-'+save_id+'">';
+							// html += '<button id="txtBtn-'+textarea_id.length+'" onClick="uploadFile( \'1\' , \''+save_id+'\', onTxtUploaded, \''+['txt']+'\', \'inputTxt-'+save_id+'\')">上傳文字檔</button>';
+							// html += '</form>';					
 							html += '<br>';
-							textarea_id.push(save_id);
-							html += '<textarea rows="3" cols="20" id="'+save_id+'">';
+							// textarea_id.push(save_id);
+							html += '<textarea rows="3" cols="20" id="'+save_id+'"  style="resize: none;">';
 							html += save_value;
 						} else {
-							html += '<textarea rows="3" cols="20" readonly="readonly">';
+							html += '<textarea rows="3" cols="20" readonly="readonly"  style="resize: none;">';
 							html += save_value;
 						}
 						html += '</textarea>';					
