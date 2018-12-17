@@ -180,6 +180,28 @@ var create_table_v4 = function (form, para) {
 						}
 						break;
 
+					case 'number':
+						console.log('number...')
+						console.log(fields[i])
+						if (write && ! fields[i].default_value) {
+							html += `<input type="number" id="${save_id}"`;
+							if (save_value !== '') {
+								html += ` value="${save_value}"`;
+							} else {
+								html += ` value="${fields[i].init_value}"`;
+							}
+							if (fields[i].max !== undefined) {
+								html += ` max=${fields[i].max}`;
+							}
+							if (fields[i].min !== undefined) {
+								html += ` min=${fields[i].min}`;
+							}
+							html += `>`;
+						} else {
+							html += save_value;
+						}
+						break;
+
 					case 'autocomplete': 
 						if (write) {
 							html += '<input type="text" id="' + save_id + '" value="'+save_value+'">';
