@@ -15,19 +15,19 @@
 		let moment = SR.API.getMoment();
 		for (let field of form.data.fields) {
 			if (field.type === 'date') {
-				if (field.date_limit !== undefined ) {
-					if (field.date_limit.max !== undefined) {
+				if (field.limit !== undefined ) {
+					if (field.limit.max !== undefined) {
 						field.max = moment()
-							.add( (field.date_limit.max.year || 0), 'year')
-							.add( (field.date_limit.max.month || 0), 'month')
-							.add( (field.date_limit.max.day || 0), 'day')
+							.add( (field.limit.max.year || 0), 'year')
+							.add( (field.limit.max.month || 0), 'month')
+							.add( (field.limit.max.day || 0), 'day')
 							.format( "YYYY-MM-DD" );
 					}
-					if (field.date_limit.min !== undefined) {
+					if (field.limit.min !== undefined) {
 						field.min = moment()
-							.add( (field.date_limit.min.year || 0), 'year')
-							.add( (field.date_limit.min.month || 0), 'month')
-							.add( (field.date_limit.min.day || 0), 'day')
+							.add( (field.limit.min.year || 0), 'year')
+							.add( (field.limit.min.month || 0), 'month')
+							.add( (field.limit.min.day || 0), 'day')
 							.format( "YYYY-MM-DD" );
 					}
 				}
