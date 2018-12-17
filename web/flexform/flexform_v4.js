@@ -136,7 +136,7 @@ var create_table_v4 = function (form, para) {
 							if (value[fields[i].id])
 								html += show_imgs(value[fields[i].id]);
 							*/
-							if (value[fields[i].id].length !== 0) {
+							if (value[fields[i].id] !== undefined && value[fields[i].id].length !== 0) {
 								var data = JSON.parse( value[fields[i].id] );
 								for (var i in data)
 									html += show_imgs(data[i]);
@@ -314,7 +314,7 @@ var create_table_v4 = function (form, para) {
 								}
 							} else {
 								for (let op_key in options) {
-									html += `<option value="${op_key}" ${(save_value!==''&&options[j]===save_value?'selected="true"':'')} >${options[op_key]}</option>`;
+									html += `<option value="${op_key}" ${(save_value!==''&&op_key===save_value?'selected="true"':'')} >${options[op_key]}</option>`;
 								}
 							}
 							html += '</select>';
