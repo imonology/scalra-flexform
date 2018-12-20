@@ -319,7 +319,11 @@ var create_table_v4 = function (form, para) {
 							}
 							html += '</select>';
 						} else {
-							html += save_value;
+							if (fields[i].option !== undefined && fields[i].option[save_value] !== undefined) {
+								html += fields[i].option[save_value]; // 帶入對應的值
+							} else {
+								html += save_value;
+							}
 						}
 						break;
 					case 'lock':
