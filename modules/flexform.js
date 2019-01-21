@@ -2108,6 +2108,7 @@ SR.API.add('flexform_to_flexform_table', {
 		flexform_table.data.sort(function(a, b){ a[option.sortAsc] < b[option.sortAsc] ? 1 : -1});
 	}
 
+	flexform_table.form_name = form.name;
 	return flexform_table;
 });
 
