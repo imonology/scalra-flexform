@@ -29,6 +29,10 @@ l_models[l_dbForm] = {
 	data: 		'object', 	// 欄位名稱 & 欄位資料
 };
 
+var l_formHistory = {};
+var l_dbFormHistory = 'FlexFormHistory';
+
+
 
 // module object
 var l_module = exports.module = {};
@@ -61,11 +65,20 @@ l_module.start = function (config, onDone) {
 			fome_models[form_name] = {
 				id:				'*string',
 				values:			'object' 	// 欄位資料
-			}
+			};
 		}
 
+		fome_models[l_dbFormHistory] = {
+			id: 			'*string',
+			form: 			'string',
+			field: 			'string',
+			record_id: 		'string',
+			value: 			'string',
+			datetime: 		'string'
+		};
 
 		LOG.warn('目前DB內有 ' + count + ' 個form');
+		LOG.warn(fome_models)
 		if (count !== 0 ) {
 			SR.DS.init({models: fome_models}, function (err, ref) {
 				if (err) {
@@ -99,8 +112,9 @@ l_module.start = function (config, onDone) {
 					// l_form[form_id].add = ref[form_name].add;
 					// l_form[form_id].f_remove = ref[form_name].remove;
 					// l_form[form_id].size = ref[form_name].size;
-
 				}
+
+				l_formHistory = ref[l_dbFormHistory];
 
 				UTIL.safeCall(onDone);
 			});
@@ -508,6 +522,82 @@ SR.API.add('CREATE_FORM', {
 
 	});
 
+});
+
+SR.API.add('LOG_FORM_HISTORY', {
+	form:		'string', // form name
+	record_id: 	'string',
+	values: 	'object'
+}, function (args, onDone) {
+	const datetime = new moment().format('YYYY-MM-DD HH:mm');
+	if (Object.keys(args.values).length === 0) {
+		LOG.warn('不用紀錄')
+		return onDone(null);
+	}
+	let new_log = [];
+	for (let field in args.values) {
+		if (field === 'sync') {
+			continue;
+		}
+		new_log.push({
+			id: UTIL.createToken(),
+			form: args.form,
+			field,
+			record_id: args.record_id,
+			value: args.values[field],
+			datetime
+		});
+	}
+
+	let addHistory = (n, onD) => {
+		l_formHistory.add(new_log[n], function (err, result) {
+			if (err) {
+				return onD(err);
+			}
+			return onD(null);
+		});
+	}
+
+
+	let run_count = 0;
+	let logOnDone = (err) => {
+		if (err) {
+			return onDone(err);
+		}
+		run_count++;
+		if (run_count === new_log.length) {
+			return onDone(null);
+		}
+	}
+
+	for (let i in new_log) {
+		addHistory(i, logOnDone);
+	}
+
+});
+
+SR.API.add('QUERY_FORM_HISTORY', {
+	name: 			'string',
+	field: 			'+string',
+	record_id: 		'+string'
+}, (args, onDone) => {
+	let result = [];
+	for (let record_id in l_formHistory) {
+		let choice = true;
+		if ( l_formHistory[record_id].form !== args.name) {
+			choice = false;
+		}
+		if (args.field !== undefined && l_formHistory[record_id].field !== args.field) {
+			choice = false;
+		}
+		if (args.record_id !== undefined && l_formHistory[record_id].record_id !== args.record_id) {
+			choice = false;
+		}
+		if (choice) {
+			result.push(l_formHistory[record_id]);
+		}
+	}
+	return onDone(null, result);
 });
 
 SR.API.add('QUERY_FORM', {
@@ -1042,9 +1132,15 @@ SR.API.add('UPDATE_FIELD', {
 
 	// LOG.warn('找BUG 1');
 	// override all data for fields with same key (but leave others)
+	let change_values = {};
 	for (var key in args.values) {
 		if (typeof args.values[key] !== 'undefined') {
 			// values_map[args.record_id][key] = args.values[key];
+			if (values_map[key] === undefined) {
+				change_values[key] = args.values[key];
+			} else if (values_map[key] !== args.values[key]) {
+				change_values[key] = args.values[key];
+			}
 			values_map[key] = args.values[key];
 		}
 	}
@@ -1074,6 +1170,7 @@ SR.API.add('UPDATE_FIELD', {
 			// LOG.warn(form.data.fields[j].id + '為default');
 			if (!values_map[form.data.fields[j].id]) {
 				values_map[form.data.fields[j].id] = form.data.fields[j].default;
+				change_values[form.data.fields[j].id] = form.data.fields[j].default;
 				// LOG.warn('新增default');
 			}
 
@@ -1085,10 +1182,15 @@ SR.API.add('UPDATE_FIELD', {
 			LOG.warn(form.data.fields[j].option)
 			// if ( !(!!form.data.fields[j].option && typeof(form.data.fields[j].option.auto_date) !== 'undefined' && !form.data.fields[j].option.auto_date) ) {
 			if (form.data.fields[j].option !== undefined && form.data.fields[j].option.auto_date !== undefined && form.data.fields[j].option.auto_date) {
+				let log_time = '';
 				if (form.data.fields[j].type === 'date' ) {
-					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD');
+					log_time = today2.format('YYYY-MM-DD');
+					values_map[form.data.fields[j].id] = log_time;
+					change_values[form.data.fields[j].id] = log_time;
 				} else if (form.data.fields[j].type === 'datetime' ) {
-					values_map[form.data.fields[j].id] = today2.format('YYYY-MM-DD HH:mm');
+					log_time = today2.format('YYYY-MM-DD HH:mm');
+					values_map[form.data.fields[j].id] = log_time;
+					change_values[form.data.fields[j].id] = log_time;
 				}
 			}
 		}
@@ -1109,7 +1211,7 @@ SR.API.add('UPDATE_FIELD', {
 
 	}
 
-	l_add_form({form: form, values_map: values_map, para: args}, function (err, result) {
+	l_add_form({form: form, values_map: values_map, para: args, change_values}, function (err, result) {
 		if (err) {
 			return onDone('l_add_form failed');
 		}
@@ -1181,19 +1283,29 @@ var l_add_form = function (para, onDone) {
 			// LOG.warn(para.form.data.values[para.para.record_id][key] + ' 設成 ' + para.values_map[key]);
 			l_form_values[para.form.id][para.para.record_id].values[key] = para.values_map[key];
 		}
-		LOG.warn('準備sync');
+		// LOG.warn('準備sync');
 		l_form_values[para.form.id][para.para.record_id].values.sync(function (err) {
 			if (err) {
 				LOG.warn('存入error');
 				return onDone('save to DB error: ' + err);
 			}
-			LOG.warn('存進DB')
-			return onDone(null);
+			// LOG.warn('存進DB')
+			if (para.change_values !== undefined) {
+				SR.API.LOG_FORM_HISTORY({
+					form: l_form[para.para.form_id].name,
+					record_id: para.para.record_id,
+					values: para.change_values
+				}, (err, re) => {
+					return onDone(null);
+				});
+			} else {
+				return onDone(null);
+			}
 		});
 	} else {
-		LOG.warn('使用new_record_id');
-		LOG.warn(para.para.new_record_id);
-		LOG.warn(new Date().toISOString());
+		// LOG.warn('使用new_record_id');
+		// LOG.warn(para.para.new_record_id);
+		// LOG.warn(new Date().toISOString());
 		para.form.add({id: para.para.new_record_id, values: para.values_map, create_time: new Date().toISOString()}, function (err, result) {
 			if (err) {
 				return onDone(err);
@@ -1208,7 +1320,17 @@ var l_add_form = function (para, onDone) {
 				para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
 				para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
 				//LOG.warn(para.form.data.values);
-				return onDone(null, result);
+				if (para.change_values !== undefined) {
+					SR.API.LOG_FORM_HISTORY({
+						form: l_form[para.para.form_id].name,
+						record_id: para.para.new_record_id,
+						values: para.change_values
+					}, (err, re) => {
+						return onDone(null, result);
+					});
+				} else {
+					return onDone(null, result);
+				}
 			} else {
 				LOG.warn(l_form_values);
 				LOG.warn(para.para.form_id);
@@ -1296,10 +1418,9 @@ SR.API.add('UPDATE_FORM', {
 		}
 	}
 
-
+	let change_values_array = [];
 	// store each with unique record_id
 	for (var i=0; i < value_array.length; i++) {
-
 		var record_id = UTIL.createToken();
 		LOG.warn('record_id = ------------');
 		LOG.warn(record_id);
@@ -1377,13 +1498,21 @@ SR.API.add('UPDATE_FORM', {
 				});
 			}
 		}
-
+		change_values_array.push({});
 		// 將修改的內容寫到記憶體內
-		if (have_record_id)
-			for (var key in value_array[i])
+		if (have_record_id) { // edit data
+			for (var key in value_array[i]) {
+				if (form.data.values[record_id][key] !== value_array[i][key]) {
+					change_values_array[i][key] = value_array[i][key];
+				}
 				form.data.values[record_id][key] = value_array[i][key];
+			}
+		} else {
+			// new data
+			change_values_array[i] = value_array[i];
+		}
 
-		jq.add(l_add({form:form, values_map:value_array[i], para:new_para}));
+		jq.add(l_add({form:form, values_map:value_array[i], para:new_para, change_values: change_values_array[i]}));
 
 		record_ids.push(record_id);
 	}
