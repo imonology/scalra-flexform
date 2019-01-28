@@ -33,6 +33,8 @@
 				}
 			}
 		}
+		// 1. 客製化修改欄位: 客製化內容寫在 SR.API.FLEX_FORM_SETTING_FUNCTION 
+		// 2. 修改 pointer 欄位的內容
 		SR.API.TRANSLATE_FORM_FIELDS({field_data: form.data}, function (err, field_data) {
 			if (err) {
 				return console.error(err);	

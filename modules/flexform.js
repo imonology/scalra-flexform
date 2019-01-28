@@ -207,31 +207,91 @@ SR.API.add('TRANSLATE_FORM_FIELDS', {
 	field_data:		'object'
 }, function (args, onDone) {
 	var data = args.field_data;
-	// 先算出有幾個需要改
-	var count = 0;
-	for (var i in data.fields) {
-		var field = data.fields[i];
-		if (data.fields[i].setting)
-			count ++;
-	}
-	if (count === 0)
-		return onDone(null, data);
-	// 修改資料
-	var done_count = 0;
-	for (var i in data.fields) {
-		if (data.fields[i].setting) {
-			var setting = data.fields[i].setting;
-			SR.API.FLEX_FORM_SETTING_FUNCTION({setting: setting, field:data.fields[i]}, function (err, result_field) {
-				data.fields[i] = result_field;
-				done_count++;
-				LOG.warn(count);
-				LOG.warn(done_count);
-				if (done_count === count)
-					onDone(null, data);
-			});
 
+	let count = 0;
+	let done_count = 0;
+	let custom_edit = () => {
+		// 先算出有幾個需要改
+		count = 0;
+		for (var i in data.fields) {
+			var field = data.fields[i];
+			if (data.fields[i].setting)
+				count ++;
+		}
+		if (count === 0)
+			return onDone(null, data);
+		// 修改資料
+		done_count = 0;
+		for (var i in data.fields) {
+			if (data.fields[i].setting) {
+				var setting = data.fields[i].setting;
+				if ( SR.API.FLEX_FORM_SETTING_FUNCTION ) {
+					SR.API.FLEX_FORM_SETTING_FUNCTION({setting: setting, field:data.fields[i]}, function (err, result_field) {
+						data.fields[i] = result_field;
+						done_count++;
+						LOG.warn(count);
+						LOG.warn(done_count);
+						if (done_count === count)
+							onDone(null, data);
+					});
+				} else {
+					return onDone(null, data);
+				}
+
+			}
 		}
 	}
+
+	let change_pointer = (field, onDone) => {
+		if ( field.pointer !== undefined ) {
+			if (field.pointer.form === undefined || field.pointer.field === undefined) {
+				onDone('pointer need form or field');
+			}
+			SR.API.QUERY_FORM({
+				name: field.pointer.form
+			}, function (err, form) {
+				let option = { };
+				option[''] = 'Please choice';
+				for (let record_id in form.data.values) {
+					if (form.data.values[record_id][field.pointer.field] !== undefined) {
+						option[record_id] = form.data.values[record_id][field.pointer.field];
+					}
+				}
+				field.option = option;
+				field.type = 'choice'
+				onDone(null, field);
+			});
+		} else {
+			onDone(null, field);
+		}
+	}
+	count = 0;
+	done_count = 0;
+	for (let field of data.fields) {
+		LOG.warn(field)
+		if (field.type === undefined) {
+			return onDone('field need type!!!');
+		}
+		if (field.type === 'pointer') {
+			count++;
+		}
+	}
+	if (count === 0) {
+		custom_edit();
+	} else {
+		for (let i in data.fields) {
+			if (data.fields[i].type === 'pointer') {
+				change_pointer(data.fields[i], (err, result_field) => {
+					data.fields[i] = result_field;
+					done_count++;
+					if (done_count === count) {
+						custom_edit();
+					}
+				});
+			}	
+		}
+	}
+
 });
 
 // get only the fields and values of a queried form
@@ -1273,6 +1333,21 @@ var l_add = function (para) {
 }
 
 var l_add_form = function (para, onDone) {
+	LOG.warn('para的form');
+	// LOG.warn(para.form.data.fields);
+	// 篩選掉不用紀錄的changes
+	let change_values = {};
+	for (let i in para.form.data.fields) {
+		if (para.change_values[para.form.data.fields[i].id] !== undefined) {
+			if (para.form.data.fields[i].log_history !== undefined &&
+				para.form.data.fields[i].log_history === true) {
+				change_values[para.form.data.fields[i].id] = para.change_values[para.form.data.fields[i].id];
+			}
+		}
+	}
+	LOG.warn(para.change_values)
+	LOG.warn(change_values)
+	
 	if (para.para.record_id) {
 		LOG.warn('使用record_id ' + para.para.record_id);
 		if (para.form.data.values.hasOwnProperty(para.para.record_id) === false)
@@ -1290,11 +1365,11 @@ var l_add_form = function (para, onDone) {
 				return onDone('save to DB error: ' + err);
 			}
 			// LOG.warn('存進DB')
-			if (para.change_values !== undefined) {
+			if (change_values !== undefined) {
 				SR.API.LOG_FORM_HISTORY({
 					form: l_form[para.para.form_id].name,
 					record_id: para.para.record_id,
-					values: para.change_values
+					values: change_values
 				}, (err, re) => {
 					return onDone(null);
 				});
@@ -1320,11 +1395,11 @@ var l_add_form = function (para, onDone) {
 				para.form.data.values[para.para.new_record_id] = l_form_values[para.para.form_id][para.para.new_record_id].values;
 				para.form.data.values[para.para.new_record_id].sync = l_form_values[para.para.form_id][para.para.new_record_id].sync;
 				//LOG.warn(para.form.data.values);
-				if (para.change_values !== undefined) {
+				if (change_values !== undefined) {
 					SR.API.LOG_FORM_HISTORY({
 						form: l_form[para.para.form_id].name,
 						record_id: para.para.new_record_id,
-						values: para.change_values
+						values: change_values
 					}, (err, re) => {
 						return onDone(null, result);
 					});
@@ -2300,7 +2375,7 @@ SR.API.add('transformFieldNameByLanguageFile', {
 	let names = language.flexform[form_name];
 	// 依照language檔案命名
 	for (let field of form.data.fields) {
-		field.name = (names[field.id] || field.name || field.id );
+		field.name = ( names !== undefined ? names[field.id] : field.name || field.id );
 	}
 	return form;
 });
