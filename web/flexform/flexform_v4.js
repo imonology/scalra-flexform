@@ -1,4 +1,4 @@
-
+// ------------------------------------------ View 用 Start ------------------------------------------------
 var create_table_v4 = function (form, para) {
 	var hide = para.hide;
 	var write = para.write;
@@ -343,30 +343,33 @@ var create_table_v4 = function (form, para) {
 						break;
 					case 'lock':
 						if (write) {
-							var lock_value = getParameterByName(fields[i].id);
-							// console.log(fields[i].id)
-							// console.log(lock_value)
-							if (lock_value)
-								var value_list = lock_value.split(',');
-							else
-								value_list = [];
-							if (save_value)
-								value_list = [save_value];
-							html += '<select id="' + save_id + '">';
-							var lock_show = getParameterByName(fields[i].id + '-show')
-							if (lock_show)
-								lock_show = lock_show.split(',');
-							else
-								lock_show = value_list;
+							// console.log('fields[i] = ')
+							// console.log(fields[i])
+							if (typeof(fields[i].option) === 'object')
+								var options = fields[i].option;
+							else if (typeof(fields[i].option) !== 'undefined')
+								var options = fields[i].option.split(',');
 
-							// var lock_show = lock_show.split(',');
-							for (var j=0; j < value_list.length; j++) {	
-								html += '<option value="' + value_list[j] + '" >' + lock_show[j] + '</option>';
+							html += '<select id="'+ save_id + '" disabled="disabled">';
+							if (options === undefined) {
+								html += '';
+							} else if ( Array.isArray(options) ) {
+								for (var j=0; j < options.length; j++) {
+
+									html += '<option value="' + options[j] + '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
+								}
+							} else {
+								for (let op_key in options) {
+									html += `<option value="${op_key}" ${(save_value!==''&&op_key===save_value?'selected="true"':'')} >${options[op_key]}</option>`;
+								}
 							}
 							html += '</select>';
 						} else {
-
-							html += save_value;
+							if (fields[i].option !== undefined && fields[i].option[save_value] !== undefined) {
+								html += fields[i].option[save_value]; // 帶入對應的值
+							} else {
+								html += save_value;
+							}
 						}
 						break;
 					case 'password':
@@ -463,3 +466,210 @@ function default_upload_v4(field, record_id, values) {
 			upload_callback(result, values);
 	});
 }
+
+// ------------------------------------------ View 用 End ------------------------------------------------
+
+// ------------------------------------------ List 用 Start ------------------------------------------------
+
+function flexform_show_table_v4(flexform_values, pa) {
+	var para = pa || {};
+	// para.colStyle = [{ cssKey: cssValue }]
+	para.colStyle = para.colStyle || [];
+	// para.hideTitle = true || false
+	para.hideTitle = para.hideTitle || false;
+	para.selected_columns = para.selected_columns || false;
+	para.selected_rows = para.selected_rows || false;
+	// para.tableName = ''
+	para.tableName = para.tableName || null;
+	para.show_lines = para.show_lines || null;
+	form_name = flexform_values.form_name || null;
+
+	var html = '';
+	var table_para = {};
+	table_para.data_num = flexform_values.data.length;
+	html += `<table id="flexform-table${flexform_table_num}"  border="1" ;
+			class="customTable ${para.selected_rows || para.selected_columns ? 'table-selected' : ''}" ;
+			style="table-layout: fixed;" ${(para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) } 
+			data-flexform_table_num="${flexform_table_num}"
+			${form_name ? 'data-form_name="'+form_name+'"' : '' }
+			${para.selected_columns ? 'data-selected_columns="true"' : '' }
+			${para.selected_rows ? 'data-selected_rows="true"' : '' }>`;
+	
+	// field
+	if (!!para.hideTitle) {
+		html += '<tr style="display: none;"></tr><tr style="display: none;">';
+	} else {
+		html += '<tr>';
+	}
+	var count = 0;
+	var width = 1.0 / flexform_values.field.length * 100;
+	// console.log('寬度');
+	// console.log(width);
+	for (var i in flexform_values.field) {
+		var content = '';
+		// WAIT FIX: switch_sort_up_down只witch顯示的內容，儲存的data都沒有被修改
+		content += '<li  class="drop-down-menu" onClick="javascript:click_field_name(\''+count+'\', this)" value="-1">';
+		if (flexform_values.field[i].value)
+			content += flexform_values.field[i].value;
+		else
+			content += flexform_values.field[i].key;
+		content += '  <i class="" aria-hidden="true"></i>';
+		content += '</li>';
+
+		let style = '';
+		if (para.colStyle[i]) {
+			if (!para.colStyle[i].width) {
+				para.colStyle[i].width = width;
+			}
+
+			style = obj2inlineCSS(para.colStyle[i]);
+		} else {
+			style = 'width: ' + width + '%';
+		}
+
+		html += '<th style="' + style+ '" class="text-center" '+(flexform_values.field[i].id !== undefined ? 'data-fieldname="' + flexform_values.field[i].id + '"': '')+'>' + content + '</th>';
+		count ++;
+	}
+	html += '</tr>';
+	
+	for (var i in flexform_values.data) {
+		html += `<tr `;
+		if (para.show_lines) {
+			html += ` ${i>show_lines-1?'style="display: none;"':''} `;
+		}
+		html += `data-recordid="${flexform_values.data[i].record_id}"
+				onclick="selected_rows(this)"
+				>`;
+
+		for (var j in flexform_values.field) 
+			html += '<td style="' + obj2inlineCSS(para.colStyle[j]) + '">' + (typeof(flexform_values.data[i][ flexform_values.field[j].key ])==='undefined'?'':flexform_values.data[i][ flexform_values.field[j].key ]) + '</td>';
+		html += '</tr>';
+	}
+	
+	
+	html += '</table>';
+	if (para.show_lines) {
+		table_para.show_lines = para.show_lines
+		html += '<button id="btnShowMore" onclick="flexform_table_show_more(this, \''+flexform_table_num+'\')">Show more '+(flexform_values.data.length - para.show_lines - 1)+' row</button>';
+	}
+	flexform_table_num++;
+	flexform_tables_para.push(table_para);
+	return html;
+} // function flexform_show_table()
+
+function hasClass(obj, cls) {  
+    return obj.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));  
+}  
+
+function addClass(obj, cls) {  
+    if (!this.hasClass(obj, cls)) obj.className += " " + cls;  
+}  
+  
+function removeClass(obj, cls) {  
+    if (hasClass(obj, cls)) {  
+        var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');  
+        obj.className = obj.className.replace(reg, ' ');  
+    }  
+}  
+
+function click_field_name(cell_num, obj) {
+	const f_table = obj.parentNode.parentNode.parentNode.parentNode;
+	const table_num = f_table.dataset.flexform_table_num;
+	const [selected_columns, selected_rows] = [f_table.dataset.selected_columns, f_table.dataset.selected_rows];
+	if (selected_columns !== undefined) {
+		const th = obj.parentNode;
+		if (hasClass(th, 'bg-success')) {
+			removeClass(th, 'bg-success');
+		} else {
+			addClass(th, 'bg-success');
+		}
+	} else {
+		for (var i = 0 ; i < f_table.rows[0].cells.length ; i++) {
+			// f_table.rows[0].cells[i].children[0].value = -1;
+			if (f_table.rows[0].cells[i].children[0] !== obj)
+				f_table.rows[0].cells[i].children[0].value = -1;
+			f_table.rows[0].cells[i].children[0].children[0].className = '';
+		}
+		
+		if (obj.value === -1)
+			obj.value = 0
+		if (obj.value ===1) {
+			obj.value = 0;
+			obj.children[0].className = 'fa fa-caret-square-o-up';
+			flexform_sort_table(table_num, cell_num, 'SmallToBig');
+		} else {
+			obj.value = 1;
+			obj.children[0].className = 'fa fa-caret-square-o-down';
+			flexform_sort_table(table_num, cell_num, 'BigToSmall');
+		}
+	}
+}
+
+function selected_rows(tr) {
+	if (hasClass(tr, 'table-success')) {
+		removeClass(tr, 'table-success');
+		removeClass(tr, 'text-dark');
+	} else {
+		addClass(tr, 'table-success');
+		addClass(tr, 'text-dark');
+	}
+}
+
+function get_selected_rows() {
+	let results = [];
+	let tables = $('table');
+	for (let i = 0 ; i < tables.length ; i++) {
+		let table = tables[i];
+		if (table.dataset.selected_rows !== undefined) {
+			let result = {
+				id: table.id,
+				form: '',
+				selected_rows: []
+			};
+			if (table.dataset.form_name !== undefined) {
+				result.form = table.dataset.form_name;
+			}
+			let trs = table.childNodes[0].childNodes;
+			for (let tr of trs) {
+				if (hasClass(tr, 'table-success')) {
+					if (tr.dataset.recordid !== undefined) {
+						result.selected_rows.push(tr.dataset.recordid);
+					}
+				}
+			}
+			results.push(result);
+		}
+	}
+	return results;
+}
+
+function get_selected_columns() {
+	let results = [];
+	let tables = $('table');
+	for (let i = 0 ; i < tables.length ; i++) {
+		let table = tables[i];
+		
+		if (table.dataset.selected_columns !== undefined) {
+			let result = {
+				id: table.id,
+				form: '',
+				selected_columns: []
+			};
+			if (table.dataset.form_name !== undefined) {
+				result.form = table.dataset.form_name;
+			}
+			
+			let ths = table.childNodes[0].childNodes[0].childNodes;
+			for (let th of ths) {
+				if (hasClass(th, 'bg-success')) {
+					if (th.dataset.fieldname !== undefined) {
+						result.selected_columns.push(th.dataset.fieldname);
+					}
+				}
+			}
+			results.push(result);
+		}
+	}
+	return results;
+}
+// ------------------------------------------ List 用 End ------------------------------------------------

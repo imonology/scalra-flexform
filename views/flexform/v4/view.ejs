@@ -33,7 +33,16 @@
 				}
 			}
 		}
-		SR.API.TRANSLATE_FORM_FIELDS({field_data: form.data}, function (err, field_data) {
+		// 1. 客製化修改欄位: 客製化內容寫在 SR.API.FLEX_FORM_SETTING_FUNCTION 
+		// 2. 修改 pointer 欄位的內容
+		let translate_para = {field_data: form.data};
+		if (typeof(_default) !== 'undefined') {
+			translate_para['_default'] = _default;
+		}
+		if (typeof(_lock) !== 'undefined') {
+			translate_para['_lock'] = _lock;
+		}
+		SR.API.TRANSLATE_FORM_FIELDS(translate_para, function (err, field_data) {
 			if (err) {
 				return console.error(err);	
 			}	
