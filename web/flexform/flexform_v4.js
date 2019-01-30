@@ -328,30 +328,33 @@ var create_table_v4 = function (form, para) {
 						break;
 					case 'lock':
 						if (write) {
-							var lock_value = getParameterByName(fields[i].id);
-							// console.log(fields[i].id)
-							// console.log(lock_value)
-							if (lock_value)
-								var value_list = lock_value.split(',');
-							else
-								value_list = [];
-							if (save_value)
-								value_list = [save_value];
-							html += '<select id="' + save_id + '">';
-							var lock_show = getParameterByName(fields[i].id + '-show')
-							if (lock_show)
-								lock_show = lock_show.split(',');
-							else
-								lock_show = value_list;
+							// console.log('fields[i] = ')
+							// console.log(fields[i])
+							if (typeof(fields[i].option) === 'object')
+								var options = fields[i].option;
+							else if (typeof(fields[i].option) !== 'undefined')
+								var options = fields[i].option.split(',');
 
-							// var lock_show = lock_show.split(',');
-							for (var j=0; j < value_list.length; j++) {	
-								html += '<option value="' + value_list[j] + '" >' + lock_show[j] + '</option>';
+							html += '<select id="'+ save_id + '" disabled="disabled">';
+							if (options === undefined) {
+								html += '';
+							} else if ( Array.isArray(options) ) {
+								for (var j=0; j < options.length; j++) {
+
+									html += '<option value="' + options[j] + '" '+(save_value!==''&&options[j]===save_value?'selected="true"':'')+'  >' + options[j] + '</option>';
+								}
+							} else {
+								for (let op_key in options) {
+									html += `<option value="${op_key}" ${(save_value!==''&&op_key===save_value?'selected="true"':'')} >${options[op_key]}</option>`;
+								}
 							}
 							html += '</select>';
 						} else {
-
-							html += save_value;
+							if (fields[i].option !== undefined && fields[i].option[save_value] !== undefined) {
+								html += fields[i].option[save_value]; // 帶入對應的值
+							} else {
+								html += save_value;
+							}
 						}
 						break;
 					case 'password':

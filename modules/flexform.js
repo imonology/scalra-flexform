@@ -204,12 +204,15 @@ SR.API.add('CHECK_UPLOAD_LIMIT_NUM', {
 });
 
 SR.API.add('TRANSLATE_FORM_FIELDS', {
-	field_data:		'object'
+	field_data:		'object',
+	_default: 		'object',
+	_lock: 			'array',
 }, function (args, onDone) {
 	var data = args.field_data;
 
 	let count = 0;
 	let done_count = 0;
+	// 00: function 設定
 	let custom_edit = () => {
 		// 先算出有幾個需要改
 		count = 0;
@@ -218,8 +221,9 @@ SR.API.add('TRANSLATE_FORM_FIELDS', {
 			if (data.fields[i].setting)
 				count ++;
 		}
-		if (count === 0)
-			return onDone(null, data);
+		if (count === 0) {
+			set_default_lock();
+		}
 		// 修改資料
 		done_count = 0;
 		for (var i in data.fields) {
@@ -231,21 +235,22 @@ SR.API.add('TRANSLATE_FORM_FIELDS', {
 						done_count++;
 						LOG.warn(count);
 						LOG.warn(done_count);
-						if (done_count === count)
-							onDone(null, data);
+						if (done_count === count) {
+							set_default_lock();
+						}
 					});
 				} else {
-					return onDone(null, data);
+					set_default_lock();
 				}
 
 			}
 		}
 	}
 
-	let change_pointer = (field, onDone) => {
+	let change_pointer = (field, onD) => {
 		if ( field.pointer !== undefined ) {
 			if (field.pointer.form === undefined || field.pointer.field === undefined) {
-				onDone('pointer need form or field');
+				onD('pointer need form or field');
 			}
 			SR.API.QUERY_FORM({
 				name: field.pointer.form
@@ -259,12 +264,38 @@ SR.API.add('TRANSLATE_FORM_FIELDS', {
 				}
 				field.option = option;
 				field.type = 'choice'
-				onDone(null, field);
+				onD(null, field);
 			});
 		} else {
-			onDone(null, field);
+			onD(null, field);
 		}
 	}
+
+	let set_default_lock = () => {
+		// 處理default和lock
+		let [_default, _lock] = [args._default, args._lock];
+		if (_default) {
+			for (let key in _default) {
+				for (let field of data.fields) {
+					if (field.id === key) {
+						field.default_value = _default[key];
+					}
+				}
+			}
+		}
+		if (_lock) {
+			for (let lock_id of _lock) {
+				for (let field of data.fields) {
+					if (field.id === lock_id) {
+						field.type = 'lock';
+					}
+				}	
+			}
+		}
+		return onDone(null, data);
+	}
+
+	// 01: 主流程
 	count = 0;
 	done_count = 0;
 	for (let field of data.fields) {
