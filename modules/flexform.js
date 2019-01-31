@@ -883,6 +883,11 @@ SR.API.add('QUERY_FORM', {
 					if (record[key] === query_value) {
 						match_count++;
 					}
+				} else if (Array.isArray(compare)) {
+					// field which exist in query array
+					if (compare.includes(record[key])) {
+						match_count++;
+					}
 				} else {
 					if (typeof(compare) === 'object') {
 						LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);

@@ -176,6 +176,21 @@ var create_table_v4 = function (form, para) {
 							// html += '<input type="date" id="'+save_id+'" value="'+save_value+'">';
 							// date_pickers.push(save_id);	
 						} else {
+							html += new Date(save_value).toDateString();
+						}
+						break;
+
+						case 'datetime':
+						if (write && ! fields[i].default_value) {
+							html += `<input type="date" id="${save_id}" value="${save_value}"`;
+							if (fields[i].max !== undefined) {
+								html += ` max=${fields[i].max}`;
+							}
+							if (fields[i].min !== undefined) {
+								html += ` min=${fields[i].min}`;
+							}
+							html += `>`;
+						} else {
 							html += save_value;
 						}
 						break;
