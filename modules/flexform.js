@@ -667,6 +667,45 @@ SR.API.add('LOG_FORM_HISTORY', {
 
 });
 
+SR.API.add('UPDATE_FORM_HISTORY', {
+	record_id: 	'string',
+	values: 	'object'
+}, function (args, onDone) {
+	let record_id = args.record_id;
+	if (l_formHistory[record_id] === undefined) {
+		return onDone('This record_id is not exist.')
+	}
+	let values = args.values;
+	for (let key in values) {
+		// 限制可以改的欄位
+		if (key !== 'form' && key !== 'field' && key !== 'record_id' && key !== 'value' && key !== 'datetime') {
+			delete values[key];
+		}
+	}
+	Object.assign(l_formHistory[record_id], values);
+	l_formHistory[record_id].sync(function (err) {
+		return onDone(err);
+	});
+});
+
+SR.API.add('DELETE_FORM_HISTORY', {
+	record_id: 	'string',
+}, function (args, onDone) {
+	let record_id = args.record_id;
+	if (l_formHistory[record_id] === undefined) {
+		return onDone('This record_id is not exist.')
+	}
+	delete l_formHistory[record_id]
+
+	l_formHistory.remove({id:record_id}, function(err, result){
+		if (err) {
+			return onDone(err);
+		}
+
+		onDone(null, 'delete success' );
+	});
+});
+
 SR.API.add('QUERY_FORM_HISTORY', {
 	name: 			'string',
 	field: 			'+string',
