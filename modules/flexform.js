@@ -905,7 +905,7 @@ SR.API.add('QUERY_FORM', {
 						}
 
 					} else {
-						LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);
+						// LOG.warn('[' + key + '] compare: ' + record[key] + ' with ' + compare);
 						if (record[key] !== compare) {
 							matched = false;
 							break;
