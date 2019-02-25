@@ -1051,6 +1051,8 @@ function formatValue(data, fieldData, editable) {
 			case 'textarea':
 				return '<textarea class="input-' + fieldData.key + '">' + data[fieldData.key] + '</textarea>';
 				// return `<textarea class="input-${fieldData.key}">${data[fieldData.key]}</textarea>`;
+			case 'time':
+				return '<input type="time" class="input-' + fieldData.key + '" value="' + data[fieldData.key] + '" style="color:black"></input>';
 			default:
 				return '<input class="input-' + fieldData.key + '" type="text" value="' + data[fieldData.key] + '" />';
 				// return `<input class="input-${fieldData.key}" type="text" value="${data[fieldData.key]}" />`;
