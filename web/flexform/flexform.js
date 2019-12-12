@@ -1830,7 +1830,7 @@ var create_table2 = function (form, para) {
 							html += '<input type="text" id="'+save_id+'" value="'+save_value+'">';
 							date_pickers.push(save_id);	
 						} else {
-							html += save_value ? '是' : '否'
+							html += moment(save_value).format('YYYY-MM-DD HH:mm');
 						}
 						break;
 					case 'print': // 單純印出
