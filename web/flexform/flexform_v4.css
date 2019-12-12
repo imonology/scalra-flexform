@@ -1,0 +1,16 @@
+
+.bg-success {
+    background-color: #28a745!important;
+}
+
+.table-selected {
+	background-color: #555;
+}
+
+.text-dark {
+    color: #343a40!important;
+}
+
+.table-success, .table-success>td, .table-success>th {
+    background-color: #c3e6cb;
+}

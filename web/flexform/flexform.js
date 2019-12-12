@@ -811,7 +811,7 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 	var html = '';
 	var table_para = {};
 	table_para.data_num = flexform_values.data.length;
-	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="customTable" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + '>';
+	html += '<table id="flexform-table' + flexform_table_num + '"  border="1" class="customTable" style="table-layout: fixed;" ' + (para.tableName ? + 'data-tablename="' + para.tableName + '"' : '' ) + ' data-flexform_table_num="'+flexform_table_num+'">';
 	// html += `<table id="flexform-table${flexform_table_num}"  border="1" class="customTable" style="table-layout: fixed;" ${para.tableName ? `data-tablename="${para.tableName}"` : ''}>`;
 	// field
 	if (!!para.hideTitle) {
@@ -827,6 +827,7 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 	// console.log(width);
 	for (var i in flexform_values.field) {
 		var content = '';
+		// WAIT FIX: switch_sort_up_down只witch顯示的內容，儲存的data都沒有被修改
 		content += '<li  class="drop-down-menu" onClick="javascript:switch_sort_up_down(\''+flexform_table_num+'\',\''+count+'\', this)" value="-1">';
 		if (flexform_values.field[i].value)
 			content += flexform_values.field[i].value;
@@ -851,7 +852,7 @@ function flexform_show_table(flexform_values, show_lines, pa) {
 		}
 
 		// html += `<th style="${style}" class="text-center">${content}</th>`;
-		html += '<th style="' + style+ '" class="text-center">' + content + '</th>';
+		html += '<th style="' + style+ '" class="text-center" '+(flexform_values.field[i].id !== undefined ? 'data-fieldname="' + flexform_values.field[i].id + '"': '')+'>' + content + '</th>';
 		count ++;
 	}
 	html += '</tr>';
@@ -1050,6 +1051,8 @@ function formatValue(data, fieldData, editable) {
 			case 'textarea':
 				return '<textarea class="input-' + fieldData.key + '">' + data[fieldData.key] + '</textarea>';
 				// return `<textarea class="input-${fieldData.key}">${data[fieldData.key]}</textarea>`;
+			case 'time':
+				return '<input type="time" class="input-' + fieldData.key + '" value="' + data[fieldData.key] + '" style="color:black"></input>';
 			default:
 				return '<input class="input-' + fieldData.key + '" type="text" value="' + data[fieldData.key] + '" />';
 				// return `<input class="input-${fieldData.key}" type="text" value="${data[fieldData.key]}" />`;
@@ -2309,16 +2312,16 @@ function show_detail(btn){
 
 
 function delete_field(form_name, record_id){
-	console.log('刪除' + form_name + '的' + record_id);
-	SR.API.DELETE_FIELD({form_name:form_name, record_id: record_id}, function(err, result) {
-		if(err){
-			console.log(err);
-			return;
-		}
-		alert('刪除成功!');
-		window.location.reload();
-	});
-	
+	if (confirm('確定要刪除嗎?')) {
+		SR.API.DELETE_FIELD({form_name:form_name, record_id: record_id}, function(err, result) {
+			if(err){
+				console.log(err);
+				return;
+			}
+			alert('刪除成功!');
+			window.history.back();
+		});
+	}
 }
 
 var l_validateEmail = function (email) {
