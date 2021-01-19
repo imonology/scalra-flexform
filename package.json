@@ -4,7 +4,7 @@
   "description": "A flexible form module for Scalra framework",
   "main": "index.js",
   "dependencies": {
-    "iconv-lite": "^0.4.19",
+    "iconv-lite": "^0.6.2",
     "is-utf8": "^0.2.1",
     "moment": "^2.17.1",
     "node-xlsx": "^0.10.0"
